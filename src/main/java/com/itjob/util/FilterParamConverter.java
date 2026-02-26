@@ -17,6 +17,16 @@ public class FilterParamConverter {
 
 
     /**
+     * Convert Map params to filter array (exclude default pagination params)
+     *
+     * @param allParams Map of all request params
+     * @return String[] of filters
+     */
+    public static String[] convertToFilters(Map<String, String> allParams) {
+        return convertToFilters(allParams, DEFAULT_PAGINATION_PARAMS);
+    }
+
+    /**
      * Convert Map params to filter array (exclude custom params)
      *
      * @param allParams Map of all request params

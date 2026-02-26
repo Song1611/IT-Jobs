@@ -1,21 +1,22 @@
 package com.itjob.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class PageResponse<T> {
 
-    private List<T> items;
+     List<T> items;
 
-    private int page;
-    private int size;
-    private long totalElements;
-    private int totalPages;
+     int page;
+     int size;
+     long totalElements;
+     int totalPages;
 }
 

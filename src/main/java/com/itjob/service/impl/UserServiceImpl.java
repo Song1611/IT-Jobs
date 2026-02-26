@@ -3,34 +3,40 @@ package com.itjob.service.impl;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.dto.response.UserResponse;
 import com.itjob.entity.User;
+import com.itjob.mapper.UserMapper;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.UserService;
+import com.itjob.specification.helper.SpecificationHelper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
+    SpecificationHelper specificationHelper;
+    UserMapper userMapper;
 
     @Override
-    public PageResponse<UserResponse> getUsers(Pageable pageable) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
+    public PageResponse<UserResponse> getUsers(String[] filters, Pageable pageable) {
 
-        Page<User> page = userRepository.findAll(pageable);
+        Specification<User> spec = specificationHelper.buildSpecification(filters);
 
-        List<UserResponse> users = page.getContent()
-                .stream()
-                .map(this::toUserResponse)
-                .toList();
+        Page<User> usersPage = userRepository.findAll(spec,pageable);
+
+        return PageResponse.<UserResponse>builder()
+                .items(usersPage.map(userMapper::toUserResponse).getContent())
+                .page(usersPage.getNumber())
+                .size(usersPage.getSize())
+                .totalElements(usersPage.getTotalElements())
+                .totalPages(usersPage.getTotalPages())
+                .build();
     }
 
     @Override
