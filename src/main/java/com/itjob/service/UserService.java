@@ -7,7 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 public interface UserService {
-    PageResponse<UserResponse> getUsers(Pageable pageable);
+    PageResponse<UserResponse> getUsers(String[] filters, Pageable pageable);
     UserResponse getUserById(String id);
 
 }

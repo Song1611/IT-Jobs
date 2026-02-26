@@ -1,5 +1,6 @@
 package com.itjob.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -7,6 +8,7 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -19,14 +21,14 @@ import java.util.Set;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    String id;
+    UUID id;
     
     String fullName;
     String email;
     String password;
     String phone;
     
-    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
     Gender gender;
     
     LocalDate dateOfBirth;
@@ -40,7 +42,7 @@ public class User {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),

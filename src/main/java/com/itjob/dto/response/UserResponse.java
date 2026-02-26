@@ -1,12 +1,9 @@
 package com.itjob.dto.response;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.itjob.entity.Gender;
-import com.itjob.entity.Role;
-import com.itjob.entity.Skill;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
@@ -16,11 +13,11 @@ import java.util.Set;
 @Getter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
     String id;
     String fullName;
     String email;
-    String password;
     String phone;
     Gender gender;
     LocalDate dateOfBirth;
@@ -28,8 +25,8 @@ public class UserResponse {
     String coverImage;
     String cvUrl;
     String address;
-    Set<Role> roles;
-    Set<Skill> skills;
+    Set<RoleResponse> roles;
+    Set<SkillResponse> skills;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 
