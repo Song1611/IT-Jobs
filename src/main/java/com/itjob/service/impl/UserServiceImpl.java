@@ -3,6 +3,8 @@ package com.itjob.service.impl;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.dto.response.UserResponse;
 import com.itjob.entity.User;
+import com.itjob.exception.AppException;
+import com.itjob.exception.ErrorCode;
 import com.itjob.mapper.UserMapper;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.UserService;
@@ -29,6 +31,10 @@ public class UserServiceImpl implements UserService {
         Specification<User> spec = specificationHelper.buildSpecification(filters);
 
         Page<User> usersPage = userRepository.findAll(spec,pageable);
+
+        if(usersPage.isEmpty() || usersPage.getTotalElements() == 0){
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
 
         return PageResponse.<UserResponse>builder()
                 .items(usersPage.map(userMapper::toUserResponse).getContent())

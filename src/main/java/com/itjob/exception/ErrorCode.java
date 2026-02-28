@@ -1,0 +1,37 @@
+package com.itjob.exception;
+
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+
+@Getter
+public enum ErrorCode {
+
+    // 1000-1999: Validation
+    USERNAME_INVALID(1001, "Username must be at least {min} characters", HttpStatus.BAD_REQUEST),
+    INVALID_PASSWORD(1002, "Password must be at least {min} characters", HttpStatus.BAD_REQUEST),
+    INVALID_DOB(1003, "Your age must be at least {min}", HttpStatus.BAD_REQUEST),
+
+    // 2000-2999: Authentication
+    UNAUTHENTICATED(2001, "Unauthenticated", HttpStatus.UNAUTHORIZED),
+
+    // 3000-3999: Authorization
+    UNAUTHORIZED(3001, "You do not have permission", HttpStatus.FORBIDDEN),
+
+    // 4000-4999: Business
+    USER_EXISTED(4001, "User existed", HttpStatus.BAD_REQUEST),
+    USER_NOT_FOUND(4002, "User not found", HttpStatus.NOT_FOUND),
+
+    // 9000-9999: System
+    UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR
+    ),
+    ;
+    ErrorCode(int code, String message, HttpStatusCode statusCode) {
+        this.code = code;
+        this.message = message;
+        this.statusCode = statusCode;
+    }
+    private final int code;
+    private final String message;
+    private final HttpStatusCode statusCode;
+}
