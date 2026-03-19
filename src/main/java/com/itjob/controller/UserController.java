@@ -30,11 +30,23 @@ public class UserController {
 
     @GetMapping()
     public ApiResponse<PageResponse<UserResponse>> getUsers(@RequestParam Map<String, String> allParams, Pageable pageable) {
-        log.info("Filter search{}", allParams);
+        log.info("=== FILTER DEBUG START ===");
+        log.info("Raw params received: {}", allParams);
+        log.info("Param count: {}", allParams.size());
+        
+        allParams.forEach((key, value) -> {
+            log.info("  Param - Key: '{}', Value: '{}'", key, value);
+        });
 
         String[] filters = FilterParamConverter.convertToFilters(allParams);
 
-        log.info("Converted filters: {}", (Object) filters);
+        log.info("Converted filters array length: {}", filters.length);
+        for (int i = 0; i < filters.length; i++) {
+            log.info("  Filter[{}]: '{}'", i, filters[i]);
+        }
+        log.info("=== FILTER DEBUG END ===");
+
+        log.info("Pageable: {}", pageable);
 
         return ApiResponse.<PageResponse<UserResponse>>builder()
                 .result(userService.getUsers(filters, pageable))

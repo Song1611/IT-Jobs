@@ -12,14 +12,18 @@ import com.itjob.specification.helper.SpecificationHelper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserServiceImpl implements UserService {
     UserRepository userRepository;
     SpecificationHelper specificationHelper;
@@ -28,7 +32,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public PageResponse<UserResponse> getUsers(String[] filters, Pageable pageable) {
 
+        log.info("=== SERVICE LAYER DEBUG ===");
+        log.info("Filters received: {}", filters != null ? Arrays.toString(filters) : "null");
+        
         Specification<User> spec = specificationHelper.buildSpecification(filters);
+        
+        log.info("Specification built: {}", spec != null ? "NOT NULL" : "NULL");
+        log.info("=== SERVICE LAYER DEBUG END ===");
 
         Page<User> usersPage = userRepository.findAll(spec,pageable);
 
