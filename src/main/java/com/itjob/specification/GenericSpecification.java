@@ -50,9 +50,13 @@ public class GenericSpecification<T> implements Specification<T>{
                     root.get(criteria.getKey()),
                     (Comparable)criteria.getValue());
 
-            case LIKE -> criteriaBuilder.like(criteriaBuilder.lower(
-                    root.get(criteria.getKey())),
-                    "%"+criteria.getValue().toString().toLowerCase()+"%");
+            case LIKE -> {
+                String likeValue = "%" + criteria.getValue().toString().toLowerCase() + "%";
+                System.out.println("DEBUG LIKE - Field: " + criteria.getKey() + ", Value: " + likeValue);
+                yield criteriaBuilder.like(criteriaBuilder.lower(
+                        root.get(criteria.getKey())),
+                        likeValue);
+            }
 
             case STARTS_WITH -> criteriaBuilder.like(
                     criteriaBuilder.lower(root.get(criteria.getKey())),

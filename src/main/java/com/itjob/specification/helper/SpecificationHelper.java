@@ -21,7 +21,7 @@ public class SpecificationHelper {
     private final TypeConverter typeConverter;
 
     private static final String SEARCH_SPEC_OPERATOR =
-            "(\\w+?)(>=|<=|:|!|>|<|~|@|#)(.*?)(\\*?)(\\*?)";
+            "(\\w+?)(>=|<=|:|!|>|<|~|@|#)(\\*?)([^*]+)(\\*?)$";
 
     /**
      * Build Specification from array of filter strings
@@ -36,10 +36,14 @@ public class SpecificationHelper {
             return null;
         }
 
+        log.info("Building specification from {} filters", filters.length);
+
         GenericSpecificationBuilder<T> builder = new GenericSpecificationBuilder<>();
         Pattern pattern = Pattern.compile(SEARCH_SPEC_OPERATOR);
 
         for(String filter : filters) {
+            log.info("Processing filter: {}", filter);
+            
             // Check for OR predicate flag (')
             String orPredicate = null;
             if (filter.startsWith(SearchOperation.OR_PREDICATE_FLAG)) {
@@ -56,15 +60,21 @@ public class SpecificationHelper {
             if(matcher.find()){
                 String key = matcher.group(1);        //field name
                 String operation = matcher.group(2);  // operator
-                String value = matcher.group(3);      // value
-                String prefix = matcher.group(4);     // prefix (*)
+                String prefix = matcher.group(3);     // prefix (*)
+                String value = matcher.group(4);      // value
                 String suffix = matcher.group(5);     // suffix (*)
+
+                log.info("Parsed filter - Key: {}, Operation: {}, Value: {}, Prefix: {}, Suffix: {}", 
+                         key, operation, value, prefix, suffix);
 
                 //Sanitize value
                 value = filterValidator.sanitizeValue(value);
 
                 //Convert value to correct type based on operator
                 Object convertedValue = convertValue(operation, value);
+                
+                log.info("Converted value: {} (type: {})", convertedValue, 
+                         convertedValue != null ? convertedValue.getClass().getSimpleName() : "null");
 
                 // Add to builder
                 builder.with(orPredicate,key, operation, convertedValue, prefix, suffix);
