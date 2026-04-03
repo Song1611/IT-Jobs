@@ -8,26 +8,20 @@ import java.util.regex.Pattern;
 
 public final class FilterParser {
 
+    // Supported operators: : ! >= <= > < ~ @ #
     private static final Pattern FILTER_PATTERN = Pattern.compile("^(\\w+)(>=|<=|:|!|>|<|~|@|#)(.*)$");
 
-    private FilterParser(){
+    private FilterParser() {
         throw new UnsupportedOperationException("Utility class");
     }
 
-    public static FilterComponents parse(String filter){
-        if(filter == null || filter.isEmpty()){
-            return null;
-        }
+    public static FilterComponents parse(String filter) {
+        if (filter == null || filter.isEmpty()) return null;
 
         Matcher matcher = FILTER_PATTERN.matcher(filter);
-
-        if(matcher.matches()){
-            String fieldName = matcher.group(1);
-            String operator = matcher.group(2);
-            String value = matcher.group(3);
-            return new FilterComponents(fieldName, operator, value);
+        if (matcher.matches()) {
+            return new FilterComponents(matcher.group(1), matcher.group(2), matcher.group(3));
         }
-
         return null;
     }
 
@@ -41,7 +35,5 @@ public final class FilterParser {
         public boolean isValid() {
             return fieldName != null && operator != null && value != null;
         }
-
     }
-
 }

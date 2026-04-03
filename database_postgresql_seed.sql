@@ -88,19 +88,20 @@ SELECT 'ADMIN', name FROM permissions;
 
 -- ========================================
 -- 4. INSERT USERS
+-- Password: Demo@123 (bcrypt hashed)
 -- ========================================
 INSERT INTO users (full_name, email, password, phone, gender, date_of_birth, avatar, cover_image, cv_url, address)
 VALUES
-('Nguyễn Minh Huy', 'hr.fpt@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000001', 'male', '1999-04-12', 'https://i.pravatar.cc/150?img=11', 'https://picsum.photos/seed/u11/1200/400', 'https://drive.google.com/file/d/cv_nguyen_minh_huy.pdf', '123 Nguyễn Văn Linh, Phường Tân Phú, Quận 7, TP. Hồ Chí Minh'),
-('Trần Thảo Vy', 'hr.vng@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000002', 'female', '2000-08-21', 'https://i.pravatar.cc/150?img=12', 'https://picsum.photos/seed/u12/1200/400', 'https://drive.google.com/file/d/cv_tran_thao_vy.pdf', '456 Lê Văn Việt, Phường Tăng Nhơn Phú A, Quận 9, TP. Hồ Chí Minh'),
-('Lê Quốc Bảo', 'hr.tiki@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000003', 'male', '1998-01-05', 'https://i.pravatar.cc/150?img=13', 'https://picsum.photos/seed/u13/1200/400', 'https://drive.google.com/file/d/cv_le_quoc_bao.pdf', '789 Cộng Hòa, Phường 13, Quận Tân Bình, TP. Hồ Chí Minh'),
-('Phạm Ngọc Anh', 'hr.momo@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000004', 'female', '1997-11-30', 'https://i.pravatar.cc/150?img=14', 'https://picsum.photos/seed/u14/1200/400', 'https://drive.google.com/file/d/cv_pham_ngoc_anh.pdf', '321 Hoàng Văn Thái, Phường Tân Phú, Quận 7, TP. Hồ Chí Minh'),
-('Võ Hoàng Long', 'hr.base@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000005', 'male', '1996-06-18', 'https://i.pravatar.cc/150?img=15', 'https://picsum.photos/seed/u15/1200/400', 'https://drive.google.com/file/d/cv_vo_hoang_long.pdf', '654 Võ Văn Ngân, Phường Linh Chiểu, Thành phố Thủ Đức, TP. Hồ Chí Minh'),
-('Đặng Thu Trang', 'hr.grab@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000006', 'female', '1999-02-14', 'https://i.pravatar.cc/150?img=16', 'https://picsum.photos/seed/u16/1200/400', 'https://drive.google.com/file/d/cv_dang_thu_trang.pdf', '987 Nguyễn Thị Minh Khai, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh'),
-('Nguyễn Gia Hân', 'hr.shopee@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000007', 'other', '2001-09-09', 'https://i.pravatar.cc/150?img=17', 'https://picsum.photos/seed/u17/1200/400', 'https://drive.google.com/file/d/cv_nguyen_gia_han.pdf', '147 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh'),
-('Tạ Văn Sơn', 'hr.tcb@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000008', 'male', '1995-12-02', 'https://i.pravatar.cc/150?img=18', 'https://picsum.photos/seed/u18/1200/400', 'https://drive.google.com/file/d/cv_ta_van_son.pdf', '258 Trần Hưng Đạo, Phường Nguyễn Cư Trinh, Quận 1, TP. Hồ Chí Minh'),
-('Bùi Mỹ Linh', 'hr.viettel@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000009', 'female', '1998-03-25', 'https://i.pravatar.cc/150?img=19', 'https://picsum.photos/seed/u19/1200/400', 'https://drive.google.com/file/d/cv_bui_my_linh.pdf', '369 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh'),
-('Admin System', 'admin@demo.com', '$2a$12$XRcYOwPoThhwZlCGE1XPouOQCSQvHQQxTWQEtJd.WJ4wXPdGQoEk6', '0901000010', 'male', '1990-01-01', 'https://i.pravatar.cc/150?img=20', 'https://picsum.photos/seed/u20/1200/400', 'https://drive.google.com/file/d/cv_admin_system.pdf', '100 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh');
+('Nguyễn Minh Huy', 'hr.fpt@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000001', 'male', '1999-04-12', 'https://i.pravatar.cc/150?img=11', 'https://picsum.photos/seed/u11/1200/400', 'https://drive.google.com/file/d/cv_nguyen_minh_huy.pdf', '123 Nguyễn Văn Linh, Phường Tân Phú, Quận 7, TP. Hồ Chí Minh'),
+('Trần Thảo Vy', 'hr.vng@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000002', 'female', '2000-08-21', 'https://i.pravatar.cc/150?img=12', 'https://picsum.photos/seed/u12/1200/400', 'https://drive.google.com/file/d/cv_tran_thao_vy.pdf', '456 Lê Văn Việt, Phường Tăng Nhơn Phú A, Quận 9, TP. Hồ Chí Minh'),
+('Lê Quốc Bảo', 'hr.tiki@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000003', 'male', '1998-01-05', 'https://i.pravatar.cc/150?img=13', 'https://picsum.photos/seed/u13/1200/400', 'https://drive.google.com/file/d/cv_le_quoc_bao.pdf', '789 Cộng Hòa, Phường 13, Quận Tân Bình, TP. Hồ Chí Minh'),
+('Phạm Ngọc Anh', 'hr.momo@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000004', 'female', '1997-11-30', 'https://i.pravatar.cc/150?img=14', 'https://picsum.photos/seed/u14/1200/400', 'https://drive.google.com/file/d/cv_pham_ngoc_anh.pdf', '321 Hoàng Văn Thái, Phường Tân Phú, Quận 7, TP. Hồ Chí Minh'),
+('Võ Hoàng Long', 'hr.base@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000005', 'male', '1996-06-18', 'https://i.pravatar.cc/150?img=15', 'https://picsum.photos/seed/u15/1200/400', 'https://drive.google.com/file/d/cv_vo_hoang_long.pdf', '654 Võ Văn Ngân, Phường Linh Chiểu, Thành phố Thủ Đức, TP. Hồ Chí Minh'),
+('Đặng Thu Trang', 'hr.grab@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000006', 'female', '1999-02-14', 'https://i.pravatar.cc/150?img=16', 'https://picsum.photos/seed/u16/1200/400', 'https://drive.google.com/file/d/cv_dang_thu_trang.pdf', '987 Nguyễn Thị Minh Khai, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh'),
+('Nguyễn Gia Hân', 'hr.shopee@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000007', 'other', '2001-09-09', 'https://i.pravatar.cc/150?img=17', 'https://picsum.photos/seed/u17/1200/400', 'https://drive.google.com/file/d/cv_nguyen_gia_han.pdf', '147 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh'),
+('Tạ Văn Sơn', 'hr.tcb@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000008', 'male', '1995-12-02', 'https://i.pravatar.cc/150?img=18', 'https://picsum.photos/seed/u18/1200/400', 'https://drive.google.com/file/d/cv_ta_van_son.pdf', '258 Trần Hưng Đạo, Phường Nguyễn Cư Trinh, Quận 1, TP. Hồ Chí Minh'),
+('Bùi Mỹ Linh', 'hr.viettel@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000009', 'female', '1998-03-25', 'https://i.pravatar.cc/150?img=19', 'https://picsum.photos/seed/u19/1200/400', 'https://drive.google.com/file/d/cv_bui_my_linh.pdf', '369 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh'),
+('Admin System', 'admin@demo.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhkO', '0901000010', 'male', '1990-01-01', 'https://i.pravatar.cc/150?img=20', 'https://picsum.photos/seed/u20/1200/400', 'https://drive.google.com/file/d/cv_admin_system.pdf', '100 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh');
 
 -- ========================================
 -- 6. ASSIGN ROLES TO USERS
@@ -524,14 +525,452 @@ AND c.name = 'VNG Corporation'
 LIMIT 1;
 
 -- ========================================
+-- 17. LINK SKILLS TO JOBS
+-- ========================================
+-- ReactJS skill for Frontend job
+INSERT INTO skill_jobs (skill_id, job_id)
+SELECT s.id, j.id
+FROM skills s
+CROSS JOIN jobs j
+WHERE s.name = 'ReactJS'
+AND j.title = 'Senior Frontend Developer (ReactJS)';
+
+-- Java Spring Boot for Backend job
+INSERT INTO skill_jobs (skill_id, job_id)
+SELECT s.id, j.id
+FROM skills s
+CROSS JOIN jobs j
+WHERE s.name = 'Java Spring Boot'
+AND j.title = 'Backend Developer (Java Spring Boot)';
+
+-- Docker, AWS for DevOps job
+INSERT INTO skill_jobs (skill_id, job_id)
+SELECT s.id, j.id
+FROM skills s
+CROSS JOIN jobs j
+WHERE s.name IN ('Docker', 'AWS')
+AND j.title = 'DevOps Engineer';
+
+-- Flutter for Mobile job
+INSERT INTO skill_jobs (skill_id, job_id)
+SELECT s.id, j.id
+FROM skills s
+CROSS JOIN jobs j
+WHERE s.name = 'Flutter'
+AND j.title = 'Mobile Developer (Flutter)';
+
+-- ReactJS for Full Stack job
+INSERT INTO skill_jobs (skill_id, job_id)
+SELECT s.id, j.id
+FROM skills s
+CROSS JOIN jobs j
+WHERE s.name IN ('ReactJS', 'SQL')
+AND j.title = 'Full Stack Developer (Remote)';
+
+-- ========================================
+-- 18. LINK SKILLS TO USERS
+-- ========================================
+-- Assign ReactJS to some users
+INSERT INTO skill_users (skill_id, user_id)
+SELECT s.id, u.id
+FROM skills s
+CROSS JOIN users u
+WHERE s.name = 'ReactJS'
+AND u.email IN ('hr.fpt@demo.com', 'hr.vng@demo.com')
+ON CONFLICT DO NOTHING;
+
+-- Assign Java Spring Boot to some users
+INSERT INTO skill_users (skill_id, user_id)
+SELECT s.id, u.id
+FROM skills s
+CROSS JOIN users u
+WHERE s.name = 'Java Spring Boot'
+AND u.email IN ('hr.tiki@demo.com', 'hr.momo@demo.com')
+ON CONFLICT DO NOTHING;
+
+-- Assign Docker to DevOps users
+INSERT INTO skill_users (skill_id, user_id)
+SELECT s.id, u.id
+FROM skills s
+CROSS JOIN users u
+WHERE s.name = 'Docker'
+AND u.email IN ('hr.base@demo.com', 'hr.grab@demo.com')
+ON CONFLICT DO NOTHING;
+
+-- Assign Flutter to mobile developers
+INSERT INTO skill_users (skill_id, user_id)
+SELECT s.id, u.id
+FROM skills s
+CROSS JOIN users u
+WHERE s.name = 'Flutter'
+AND u.email IN ('hr.shopee@demo.com', 'hr.tcb@demo.com')
+ON CONFLICT DO NOTHING;
+
+-- ========================================
+-- 19. INSERT APPLICATIONS
+-- ========================================
+INSERT INTO applications (job_id, user_id, cv_url, cover_letter, status, applied_at, viewed_by_employer)
+SELECT 
+    j.id,
+    u.id,
+    'https://drive.google.com/file/d/cv_application_1.pdf',
+    'Tôi rất quan tâm đến vị trí này và tin rằng kinh nghiệm của tôi phù hợp với yêu cầu công việc.',
+    'pending',
+    CURRENT_TIMESTAMP - INTERVAL '2 days',
+    FALSE
+FROM jobs j
+CROSS JOIN users u
+WHERE j.title = 'Senior Frontend Developer (ReactJS)'
+AND u.email = 'hr.vng@demo.com'
+LIMIT 1;
+
+INSERT INTO applications (job_id, user_id, cv_url, cover_letter, status, applied_at, reviewed_at, viewed_by_employer, viewed_at)
+SELECT 
+    j.id,
+    u.id,
+    'https://drive.google.com/file/d/cv_application_2.pdf',
+    'Với 3 năm kinh nghiệm Java Spring Boot, tôi tự tin có thể đóng góp tích cực cho team.',
+    'reviewed',
+    CURRENT_TIMESTAMP - INTERVAL '5 days',
+    CURRENT_TIMESTAMP - INTERVAL '3 days',
+    TRUE,
+    CURRENT_TIMESTAMP - INTERVAL '3 days'
+FROM jobs j
+CROSS JOIN users u
+WHERE j.title = 'Backend Developer (Java Spring Boot)'
+AND u.email = 'hr.tiki@demo.com'
+LIMIT 1;
+
+INSERT INTO applications (job_id, user_id, cv_url, cover_letter, status, applied_at, reviewed_at, interview_at, viewed_by_employer, viewed_at)
+SELECT 
+    j.id,
+    u.id,
+    'https://drive.google.com/file/d/cv_application_3.pdf',
+    'Tôi có kinh nghiệm triển khai CI/CD với Jenkins và quản lý infrastructure trên AWS.',
+    'interview',
+    CURRENT_TIMESTAMP - INTERVAL '10 days',
+    CURRENT_TIMESTAMP - INTERVAL '7 days',
+    CURRENT_TIMESTAMP + INTERVAL '2 days',
+    TRUE,
+    CURRENT_TIMESTAMP - INTERVAL '7 days'
+FROM jobs j
+CROSS JOIN users u
+WHERE j.title = 'DevOps Engineer'
+AND u.email = 'hr.base@demo.com'
+LIMIT 1;
+
+-- ========================================
+-- 20. INSERT APPLICATION STATUS HISTORY
+-- ========================================
+INSERT INTO application_status_history (application_id, old_status, new_status, changed_by, notes)
+SELECT 
+    a.id,
+    NULL,
+    'pending',
+    a.user_id,
+    'Ứng viên nộp đơn ứng tuyển'
+FROM applications a
+WHERE a.status = 'pending'
+LIMIT 1;
+
+INSERT INTO application_status_history (application_id, old_status, new_status, changed_by, notes)
+SELECT 
+    a.id,
+    'pending',
+    'reviewed',
+    (SELECT id FROM users WHERE email = 'hr.vng@demo.com'),
+    'HR đã xem xét hồ sơ'
+FROM applications a
+WHERE a.status = 'reviewed'
+LIMIT 1;
+
+INSERT INTO application_status_history (application_id, old_status, new_status, changed_by, notes)
+SELECT 
+    a.id,
+    'reviewed',
+    'interview',
+    (SELECT id FROM users WHERE email = 'hr.tiki@demo.com'),
+    'Mời ứng viên phỏng vấn'
+FROM applications a
+WHERE a.status = 'interview'
+LIMIT 1;
+
+-- ========================================
+-- 21. INSERT POSTS
+-- ========================================
+INSERT INTO posts (author_id, content, view_count, comment_count, reaction_count)
+SELECT 
+    id,
+    'Vừa hoàn thành dự án lớn với ReactJS và NextJS. Cảm ơn team đã support nhiệt tình! 🚀',
+    150,
+    5,
+    23
+FROM users
+WHERE email = 'hr.fpt@demo.com';
+
+INSERT INTO posts (author_id, content, view_count, comment_count, reaction_count)
+SELECT 
+    id,
+    'Chia sẻ kinh nghiệm tối ưu performance cho ứng dụng Spring Boot. Link bài viết trong comment 👇',
+    320,
+    12,
+    45
+FROM users
+WHERE email = 'hr.vng@demo.com';
+
+INSERT INTO posts (author_id, content, responding_to_post_id, response_ordinal, view_count)
+SELECT 
+    u.id,
+    'Bài viết rất hữu ích! Cảm ơn bạn đã chia sẻ.',
+    p.id,
+    '0001',
+    50
+FROM users u
+CROSS JOIN posts p
+WHERE u.email = 'hr.tiki@demo.com'
+AND p.content LIKE '%Spring Boot%'
+LIMIT 1;
+
+-- ========================================
+-- 22. INSERT REACTIONS
+-- ========================================
+INSERT INTO reactions (post_id, user_id, reaction_type)
+SELECT 
+    p.id,
+    u.id,
+    'like'
+FROM posts p
+CROSS JOIN users u
+WHERE p.content LIKE '%ReactJS%'
+AND u.email IN ('hr.vng@demo.com', 'hr.tiki@demo.com', 'hr.momo@demo.com')
+ON CONFLICT (post_id, user_id) DO NOTHING;
+
+INSERT INTO reactions (post_id, user_id, reaction_type)
+SELECT 
+    p.id,
+    u.id,
+    'love'
+FROM posts p
+CROSS JOIN users u
+WHERE p.content LIKE '%Spring Boot%'
+AND u.email IN ('hr.fpt@demo.com', 'hr.base@demo.com')
+ON CONFLICT (post_id, user_id) DO NOTHING;
+
+-- ========================================
+-- 23. INSERT COMMENTS
+-- ========================================
+INSERT INTO comments (post_id, author_id, content, reaction_count)
+SELECT 
+    p.id,
+    u.id,
+    'Bài viết rất hay! Mình cũng đang làm dự án tương tự.',
+    3
+FROM posts p
+CROSS JOIN users u
+WHERE p.content LIKE '%ReactJS%'
+AND u.email = 'hr.vng@demo.com'
+LIMIT 1;
+
+INSERT INTO comments (post_id, author_id, content, reaction_count)
+SELECT 
+    p.id,
+    u.id,
+    'Cảm ơn bạn đã chia sẻ kinh nghiệm quý báu!',
+    5
+FROM posts p
+CROSS JOIN users u
+WHERE p.content LIKE '%Spring Boot%'
+AND u.email = 'hr.tiki@demo.com'
+LIMIT 1;
+
+-- Reply to comment
+INSERT INTO comments (post_id, author_id, content, responding_to_comment_id, reaction_count)
+SELECT 
+    c.post_id,
+    p.author_id,
+    'Cảm ơn bạn! Chúc bạn thành công với dự án nhé!',
+    c.id,
+    2
+FROM comments c
+JOIN posts p ON c.post_id = p.id
+WHERE c.content LIKE '%Bài viết rất hay%'
+LIMIT 1;
+
+-- ========================================
+-- 24. INSERT COMMENT REACTIONS
+-- ========================================
+INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
+SELECT 
+    c.id,
+    u.id,
+    'like'
+FROM comments c
+CROSS JOIN users u
+WHERE c.content LIKE '%Cảm ơn%'
+AND u.email IN ('hr.fpt@demo.com', 'hr.momo@demo.com')
+ON CONFLICT (comment_id, user_id) DO NOTHING;
+
+-- ========================================
+-- 25. INSERT ATTACHMENTS
+-- ========================================
+INSERT INTO attachments (post_id, file_type, file_url)
+SELECT 
+    id,
+    'image',
+    'https://picsum.photos/seed/post1/800/600'
+FROM posts
+WHERE content LIKE '%ReactJS%'
+LIMIT 1;
+
+INSERT INTO attachments (comment_id, file_type, file_url)
+SELECT 
+    id,
+    'image',
+    'https://picsum.photos/seed/comment1/400/300'
+FROM comments
+WHERE content LIKE '%kinh nghiệm%'
+LIMIT 1;
+
+-- ========================================
+-- 26. INSERT BLOGS
+-- ========================================
+INSERT INTO blogs (user_id, category_id, title, excerpt, content, read_time, image)
+SELECT 
+    u.id,
+    bc.id,
+    'Top 10 câu hỏi phỏng vấn ReactJS thường gặp',
+    'Tổng hợp những câu hỏi phỏng vấn ReactJS phổ biến nhất và cách trả lời hiệu quả.',
+    'Trong bài viết này, chúng ta sẽ cùng tìm hiểu 10 câu hỏi phỏng vấn ReactJS thường gặp nhất...',
+    '5 phút đọc',
+    'https://picsum.photos/seed/blog1/800/400'
+FROM users u
+CROSS JOIN blog_categories bc
+WHERE u.email = 'hr.fpt@demo.com'
+AND bc.name = 'Phỏng vấn'
+LIMIT 1;
+
+INSERT INTO blogs (user_id, category_id, title, excerpt, content, read_time, image)
+SELECT 
+    u.id,
+    bc.id,
+    'Lộ trình học Java Spring Boot từ zero đến hero',
+    'Hướng dẫn chi tiết lộ trình học Java Spring Boot cho người mới bắt đầu.',
+    'Java Spring Boot là framework phổ biến nhất cho backend development. Bài viết này sẽ hướng dẫn bạn...',
+    '10 phút đọc',
+    'https://picsum.photos/seed/blog2/800/400'
+FROM users u
+CROSS JOIN blog_categories bc
+WHERE u.email = 'hr.vng@demo.com'
+AND bc.name = 'Học tập'
+LIMIT 1;
+
+INSERT INTO blogs (user_id, category_id, title, excerpt, content, read_time, image)
+SELECT 
+    u.id,
+    bc.id,
+    'Bí quyết viết CV thu hút nhà tuyển dụng',
+    'Những tips quan trọng giúp CV của bạn nổi bật trong hàng trăm hồ sơ ứng tuyển.',
+    'CV là ấn tượng đầu tiên của bạn với nhà tuyển dụng. Dưới đây là những bí quyết...',
+    '7 phút đọc',
+    'https://picsum.photos/seed/blog3/800/400'
+FROM users u
+CROSS JOIN blog_categories bc
+WHERE u.email = 'hr.tiki@demo.com'
+AND bc.name = 'Tìm việc'
+LIMIT 1;
+
+-- ========================================
+-- 27. INSERT FOLLOWS
+-- ========================================
+INSERT INTO follows (user_id, company_id)
+SELECT 
+    u.id,
+    c.id
+FROM users u
+CROSS JOIN companies c
+WHERE u.email = 'hr.vng@demo.com'
+AND c.name IN ('FPT Software', 'Tiki Corporation')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO follows (user_id, company_id)
+SELECT 
+    u.id,
+    c.id
+FROM users u
+CROSS JOIN companies c
+WHERE u.email = 'hr.tiki@demo.com'
+AND c.name IN ('VNG Corporation', 'Momo Technology')
+ON CONFLICT DO NOTHING;
+
+-- ========================================
+-- 28. INSERT JOB VIEWS
+-- ========================================
+INSERT INTO job_views (job_id, user_id, ip_address, user_agent)
+SELECT 
+    j.id,
+    u.id,
+    '192.168.1.100',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+FROM jobs j
+CROSS JOIN users u
+WHERE j.title = 'Senior Frontend Developer (ReactJS)'
+AND u.email IN ('hr.vng@demo.com', 'hr.tiki@demo.com', 'hr.momo@demo.com');
+
+-- Anonymous views
+INSERT INTO job_views (job_id, user_id, ip_address, user_agent)
+SELECT 
+    id,
+    NULL,
+    '203.162.4.' || (random() * 255)::int,
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
+FROM jobs
+LIMIT 10;
+
+-- ========================================
+-- 29. INSERT COMPANY VIEWS
+-- ========================================
+INSERT INTO company_views (company_id, user_id, ip_address, user_agent)
+SELECT 
+    c.id,
+    u.id,
+    '192.168.1.101',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+FROM companies c
+CROSS JOIN users u
+WHERE c.name = 'FPT Software'
+AND u.email IN ('hr.vng@demo.com', 'hr.tiki@demo.com');
+
+-- Anonymous views
+INSERT INTO company_views (company_id, user_id, ip_address, user_agent)
+SELECT 
+    id,
+    NULL,
+    '14.231.50.' || (random() * 255)::int,
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15'
+FROM companies
+LIMIT 15;
+
+-- ========================================
 -- SUCCESS MESSAGE
 -- ========================================
 DO $$
 BEGIN
+    RAISE NOTICE '========================================';
     RAISE NOTICE 'Seed data inserted successfully!';
+    RAISE NOTICE '========================================';
     RAISE NOTICE 'Total users: %', (SELECT COUNT(*) FROM users);
     RAISE NOTICE 'Total companies: %', (SELECT COUNT(*) FROM companies);
     RAISE NOTICE 'Total jobs: %', (SELECT COUNT(*) FROM jobs);
-    RAISE NOTICE 'Total roles: %', (SELECT COUNT(*) FROM roles);
-    RAISE NOTICE 'Total permissions: %', (SELECT COUNT(*) FROM permissions);
+    RAISE NOTICE 'Total applications: %', (SELECT COUNT(*) FROM applications);
+    RAISE NOTICE 'Total skills: %', (SELECT COUNT(*) FROM skills);
+    RAISE NOTICE 'Total posts: %', (SELECT COUNT(*) FROM posts);
+    RAISE NOTICE 'Total comments: %', (SELECT COUNT(*) FROM comments);
+    RAISE NOTICE 'Total blogs: %', (SELECT COUNT(*) FROM blogs);
+    RAISE NOTICE 'Total reviews: %', (SELECT COUNT(*) FROM reviews);
+    RAISE NOTICE 'Total notifications: %', (SELECT COUNT(*) FROM notifications);
+    RAISE NOTICE '========================================';
+    RAISE NOTICE 'Login credentials:';
+    RAISE NOTICE 'Email: hr.fpt@demo.com | Password: Demo@123';
+    RAISE NOTICE 'Email: admin@demo.com | Password: Demo@123';
+    RAISE NOTICE '========================================';
 END $$;

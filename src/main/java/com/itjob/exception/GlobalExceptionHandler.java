@@ -10,7 +10,7 @@ import java.nio.file.AccessDeniedException;
 
 @ControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler { 
 
     @ExceptionHandler(value = Exception.class)
     ResponseEntity<ApiResponse<?>> handlingException (RuntimeException exception) {
@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(
-                ErrorCode.UNCATEGORIZED_EXCEPTION.getCode())
+                ErrorCode.UNCATEGORIZED_EXCEPTION.getStatusCode())
                 .body(apiResponse);
 
     }
