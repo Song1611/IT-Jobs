@@ -32,28 +32,22 @@ DROP TABLE IF EXISTS permissions CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ========================================
 -- USER & AUTHENTICATION
 -- ========================================
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     phone VARCHAR(15),
     gender VARCHAR(10) CHECK (gender IN ('male', 'female', 'other')),
     date_of_birth DATE,
-    
-    -- Media
     avatar VARCHAR(255),
     cover_image VARCHAR(255),
     cv_url VARCHAR(255),
-    
-    -- Location (simple text address - fetch from external API)
     address TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -62,11 +56,9 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 
 -- ========================================
--- RBAC (Role-Based Access Control) - OAuth2 Standard
+-- RBAC
 -- ========================================
 
--- Roles: WHO the user is (USER, EMPLOYER, ADMIN)
--- Note: Spring Security will add ROLE_ prefix automatically
 CREATE TABLE roles (
     name VARCHAR(50) PRIMARY KEY,
     description VARCHAR(255),
@@ -74,31 +66,24 @@ CREATE TABLE roles (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Permissions: What users can do (OAuth2 scopes format)
--- Format: {action}:{resource} or just {action}
--- Examples: read:jobs, write:jobs, admin:users
 CREATE TABLE permissions (
     name VARCHAR(100) PRIMARY KEY,
     description VARCHAR(255)
 );
 
--- User Roles: Many-to-Many
 CREATE TABLE user_roles (
     user_id UUID NOT NULL,
     role_name VARCHAR(50) NOT NULL,
     assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     PRIMARY KEY (user_id, role_name),
     CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_user_roles_role FOREIGN KEY (role_name) REFERENCES roles(name) ON DELETE CASCADE
 );
 
--- Role Permissions: Which permissions each role has access to
 CREATE TABLE role_permissions (
     role_name VARCHAR(50) NOT NULL,
     permission_name VARCHAR(100) NOT NULL,
     assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     PRIMARY KEY (role_name, permission_name),
     CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_name) REFERENCES roles(name) ON DELETE CASCADE,
     CONSTRAINT fk_role_permissions_permission FOREIGN KEY (permission_name) REFERENCES permissions(name) ON DELETE CASCADE
@@ -109,52 +94,32 @@ CREATE TABLE role_permissions (
 -- ========================================
 
 CREATE TABLE companies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(150) NOT NULL,
     slug VARCHAR(255) UNIQUE,
-    
-    -- Contact info
     email VARCHAR(100),
     phone VARCHAR(15),
     website VARCHAR(255),
-    
-    -- Company details
     company_size VARCHAR(20) CHECK (company_size IN ('1-50', '51-200', '201-500', '501-1000', '1000+')),
     industry VARCHAR(100),
     nationality VARCHAR(100),
     founded_year INTEGER,
-    
-    -- Work preferences
-    work_modes TEXT, -- JSON array: ["on-site", "remote", "hybrid"]
-    employment_types TEXT, -- JSON array: ["full-time", "part-time", "contract", "internship"]
-    
-    -- Media
+    work_modes TEXT,
+    employment_types TEXT,
     avatar VARCHAR(255),
     cover_image VARCHAR(255),
-    
-    -- Description
     description TEXT,
     benefits TEXT,
-    
-    -- Location (simple text address - fetch from external API)
     address TEXT,
-    
-    -- Status
-    status VARCHAR(20) CHECK (status IN ('pending', 'active', 'rejected', 'suspended')) DEFAULT 'pending',
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'rejected', 'suspended')),
     verified_at TIMESTAMP,
-    
-    -- Tracking
     view_count INTEGER DEFAULT 0,
     follower_count INTEGER DEFAULT 0,
-    
-    -- Soft delete
     is_deleted BOOLEAN DEFAULT FALSE,
     deleted_at TIMESTAMP,
-    
     created_by_user_id UUID,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_companies_created_by FOREIGN KEY (created_by_user_id) REFERENCES users(id)
 );
 
@@ -166,10 +131,9 @@ CREATE INDEX idx_companies_industry ON companies(industry);
 CREATE TABLE company_members (
     company_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('pending', 'active', 'rejected')),
+    status VARCHAR(20) DEFAULT 'active' NOT NULL CHECK (status IN ('pending', 'active', 'rejected')),
     joined_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     PRIMARY KEY (company_id, user_id),
     CONSTRAINT fk_company_members_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     CONSTRAINT fk_company_members_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -183,49 +147,31 @@ CREATE INDEX idx_company_members_status ON company_members(status);
 -- ========================================
 
 CREATE TABLE jobs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id UUID NOT NULL,
-    
-    -- Basic info
     title VARCHAR(150) NOT NULL,
     slug VARCHAR(255) UNIQUE,
     description TEXT,
-    
-    -- Job details
     type VARCHAR(20) CHECK (type IN ('full-time', 'part-time', 'contract', 'internship', 'freelance')),
     level VARCHAR(20) CHECK (level IN ('intern', 'fresher', 'junior', 'middle', 'senior', 'leader', 'manager')),
-    experience VARCHAR(50), -- e.g., "1-2 years", "3-5 years", "No experience required"
+    experience VARCHAR(50),
     quantity INTEGER DEFAULT 1,
-    
-    -- Salary
     salary_min DECIMAL(15, 2),
     salary_max DECIMAL(15, 2),
     salary_currency VARCHAR(10) DEFAULT 'VND',
-    salary_type VARCHAR(20) CHECK (salary_type IN ('monthly', 'hourly', 'yearly', 'project')) DEFAULT 'monthly',
+    salary_type VARCHAR(20) DEFAULT 'monthly' CHECK (salary_type IN ('monthly', 'hourly', 'yearly', 'project')),
     is_negotiable BOOLEAN DEFAULT FALSE,
-    
-    -- Location (simple text address - fetch from external API)
-    -- Can be specific address or "Remote" or "Hybrid"
     work_location TEXT,
-    
-    -- Additional info
-    benefits TEXT, -- JSON or text list of benefits
-    requirements TEXT, -- Job requirements
-    
-    -- Tracking
+    benefits TEXT,
+    requirements TEXT,
     view_count INTEGER DEFAULT 0,
     application_count INTEGER DEFAULT 0,
-    
-    -- Status
     deadline DATE,
-    status VARCHAR(20) CHECK (status IN ('draft', 'open', 'closed', 'expired')) DEFAULT 'open',
-    
-    -- Audit
+    status VARCHAR(20) DEFAULT 'open' CHECK (status IN ('draft', 'open', 'closed', 'expired')),
     created_by UUID,
     updated_by UUID,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_jobs_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     CONSTRAINT fk_jobs_created_by FOREIGN KEY (created_by) REFERENCES users(id),
     CONSTRAINT fk_jobs_updated_by FOREIGN KEY (updated_by) REFERENCES users(id)
@@ -243,7 +189,7 @@ CREATE INDEX idx_jobs_deadline ON jobs(deadline);
 -- ========================================
 
 CREATE TABLE skills (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -254,7 +200,6 @@ CREATE TABLE skill_users (
     user_id UUID NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     PRIMARY KEY (skill_id, user_id),
     CONSTRAINT fk_skill_users_skill FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
     CONSTRAINT fk_skill_users_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -265,7 +210,6 @@ CREATE TABLE skill_jobs (
     job_id UUID NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     PRIMARY KEY (skill_id, job_id),
     CONSTRAINT fk_skill_jobs_skill FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE,
     CONSTRAINT fk_skill_jobs_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE
@@ -276,24 +220,16 @@ CREATE TABLE skill_jobs (
 -- ========================================
 
 CREATE TABLE posts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     author_id UUID NOT NULL,
-    
-    -- Content
     content TEXT NOT NULL,
-    
-    -- Nested post (share/repost)
     responding_to_post_id UUID,
-    response_ordinal VARCHAR(4), -- For ordering nested responses
-    
-    -- Tracking
+    response_ordinal VARCHAR(4),
     view_count INTEGER DEFAULT 0,
     comment_count INTEGER DEFAULT 0,
     reaction_count INTEGER DEFAULT 0,
-    
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_posts_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_posts_responding_to FOREIGN KEY (responding_to_post_id) REFERENCES posts(id) ON DELETE CASCADE
 );
@@ -302,40 +238,29 @@ CREATE INDEX idx_posts_author ON posts(author_id);
 CREATE INDEX idx_posts_responding_to ON posts(responding_to_post_id);
 CREATE INDEX idx_posts_created_at ON posts(created_at DESC);
 
--- Reactions (Like, Love, Haha, Wow, Sad, Angry)
 CREATE TABLE reactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID NOT NULL,
     user_id UUID NOT NULL,
     reaction_type VARCHAR(10) NOT NULL CHECK (reaction_type IN ('like', 'love', 'haha', 'wow', 'sad', 'angry')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_reactions_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     CONSTRAINT fk_reactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    CONSTRAINT uk_reactions_post_user UNIQUE (post_id, user_id) -- One reaction per user per post
+    CONSTRAINT uk_reactions_post_user UNIQUE (post_id, user_id)
 );
 
 CREATE INDEX idx_reactions_post ON reactions(post_id);
 CREATE INDEX idx_reactions_user ON reactions(user_id);
 
--- Comments (can be nested - reply to comment)
 CREATE TABLE comments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID NOT NULL,
     author_id UUID NOT NULL,
-    
-    -- Content
     content TEXT NOT NULL,
-    
-    -- Nested comment (reply to another comment)
     responding_to_comment_id UUID,
-    
-    -- Tracking
     reaction_count INTEGER DEFAULT 0,
-    
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_comments_post FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_author FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_comments_responding_to FOREIGN KEY (responding_to_comment_id) REFERENCES comments(id) ON DELETE CASCADE
@@ -346,14 +271,12 @@ CREATE INDEX idx_comments_author ON comments(author_id);
 CREATE INDEX idx_comments_responding_to ON comments(responding_to_comment_id);
 CREATE INDEX idx_comments_created_at ON comments(created_at);
 
--- Comment Reactions
 CREATE TABLE comment_reactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     comment_id UUID NOT NULL,
     user_id UUID NOT NULL,
     reaction_type VARCHAR(10) NOT NULL CHECK (reaction_type IN ('like', 'love', 'haha', 'wow', 'sad', 'angry')),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_comment_reactions_comment FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE,
     CONSTRAINT fk_comment_reactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT uk_comment_reactions_comment_user UNIQUE (comment_id, user_id)
@@ -367,12 +290,11 @@ CREATE INDEX idx_comment_reactions_user ON comment_reactions(user_id);
 -- ========================================
 
 CREATE TABLE attachments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     post_id UUID,
     comment_id UUID,
     file_type VARCHAR(20) CHECK (file_type IN ('image', 'video', 'audio', 'file')),
     file_url VARCHAR(255) NOT NULL,
-    
     CONSTRAINT ck_attachment_target CHECK (
         (post_id IS NOT NULL AND comment_id IS NULL) OR
         (post_id IS NULL AND comment_id IS NOT NULL)
@@ -389,39 +311,27 @@ CREATE INDEX idx_attachments_comment ON attachments(comment_id);
 -- ========================================
 
 CREATE TABLE reviews (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     company_id UUID NOT NULL,
-    
-    -- Ratings (1-5 scale)
-    rating INTEGER CHECK (rating BETWEEN 1 AND 5), -- Overall rating
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
     salary_rating INTEGER CHECK (salary_rating BETWEEN 1 AND 5),
     culture_rating INTEGER CHECK (culture_rating BETWEEN 1 AND 5),
     management_rating INTEGER CHECK (management_rating BETWEEN 1 AND 5),
     work_life_balance_rating INTEGER CHECK (work_life_balance_rating BETWEEN 1 AND 5),
-    
-    -- Review content
     title VARCHAR(255),
-    pros TEXT, -- What's good about the company
-    cons TEXT, -- What's not good
-    advice TEXT, -- Advice to management
-    comment TEXT, -- General comment (kept for backward compatibility)
-    
-    -- Reviewer info
+    pros TEXT,
+    cons TEXT,
+    advice TEXT,
+    comment TEXT,
     is_verified_employee BOOLEAN DEFAULT FALSE,
-    work_position VARCHAR(100), -- Job title when working there
-    work_duration VARCHAR(50), -- e.g., "1-2 years", "Less than 1 year"
-    
-    -- Status
-    status VARCHAR(20) CHECK (status IN ('pending', 'approved', 'rejected')) DEFAULT 'pending',
+    work_position VARCHAR(100),
+    work_duration VARCHAR(50),
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
     is_anonymous BOOLEAN DEFAULT FALSE,
-    
-    -- Engagement
     helpful_count INTEGER DEFAULT 0,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_reviews_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_reviews_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE NO ACTION
 );
@@ -435,35 +345,23 @@ CREATE INDEX idx_reviews_status ON reviews(status);
 -- ========================================
 
 CREATE TABLE applications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     job_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    
-    -- Application materials
     cv_url VARCHAR(255),
     cover_letter TEXT,
-    
-    -- Status tracking
-    status VARCHAR(20) CHECK (status IN ('pending', 'reviewed', 'interview', 'offered', 'accepted', 'rejected', 'withdrawn')) DEFAULT 'pending',
-    
-    -- Timeline
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'interview', 'offered', 'accepted', 'rejected', 'withdrawn')),
     applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reviewed_at TIMESTAMP,
     interview_at TIMESTAMP,
     responded_at TIMESTAMP,
-    
-    -- HR notes
     hr_notes TEXT,
     rejection_reason TEXT,
-    rating INTEGER CHECK (rating BETWEEN 1 AND 5), -- HR rating of candidate
-    
-    -- Tracking
+    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
     viewed_by_employer BOOLEAN DEFAULT FALSE,
     viewed_at TIMESTAMP,
-    
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_applications_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     CONSTRAINT fk_applications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE NO ACTION,
     CONSTRAINT uk_applications_job_user UNIQUE (job_id, user_id)
@@ -483,7 +381,6 @@ CREATE TABLE follows (
     company_id UUID NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     PRIMARY KEY (user_id, company_id),
     CONSTRAINT fk_follows_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_follows_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
@@ -496,14 +393,14 @@ CREATE INDEX idx_follows_company ON follows(company_id);
 -- ========================================
 
 CREATE TABLE blog_categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE blogs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     category_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -513,7 +410,6 @@ CREATE TABLE blogs (
     image VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_blogs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_blogs_category FOREIGN KEY (category_id) REFERENCES blog_categories(id) ON DELETE CASCADE
 );
@@ -525,13 +421,11 @@ CREATE INDEX idx_blogs_category ON blogs(category_id);
 -- SAVED JOBS & VIEWS
 -- ========================================
 
--- Saved jobs (bookmarks)
 CREATE TABLE saved_jobs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     job_id UUID NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_saved_jobs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_saved_jobs_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     CONSTRAINT uk_saved_jobs_user_job UNIQUE (user_id, job_id)
@@ -540,15 +434,13 @@ CREATE TABLE saved_jobs (
 CREATE INDEX idx_saved_jobs_user ON saved_jobs(user_id);
 CREATE INDEX idx_saved_jobs_job ON saved_jobs(job_id);
 
--- Job views tracking
 CREATE TABLE job_views (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     job_id UUID NOT NULL,
-    user_id UUID, -- NULL for anonymous views
-    ip_address VARCHAR(45), -- IPv4 or IPv6
+    user_id UUID,
+    ip_address VARCHAR(45),
     user_agent TEXT,
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_job_views_job FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     CONSTRAINT fk_job_views_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -557,15 +449,13 @@ CREATE INDEX idx_job_views_job ON job_views(job_id);
 CREATE INDEX idx_job_views_user ON job_views(user_id);
 CREATE INDEX idx_job_views_viewed_at ON job_views(viewed_at);
 
--- Company views tracking
 CREATE TABLE company_views (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id UUID NOT NULL,
-    user_id UUID, -- NULL for anonymous views
+    user_id UUID,
     ip_address VARCHAR(45),
     user_agent TEXT,
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_company_views_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     CONSTRAINT fk_company_views_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -579,14 +469,13 @@ CREATE INDEX idx_company_views_viewed_at ON company_views(viewed_at);
 -- ========================================
 
 CREATE TABLE company_images (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     company_id UUID NOT NULL,
     image_url VARCHAR(255) NOT NULL,
-    image_type VARCHAR(20) CHECK (image_type IN ('office', 'team', 'event', 'other')) DEFAULT 'other',
+    image_type VARCHAR(20) DEFAULT 'other' CHECK (image_type IN ('office', 'team', 'event', 'other')),
     caption VARCHAR(255),
     display_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_company_images_company FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE
 );
 
@@ -597,28 +486,18 @@ CREATE INDEX idx_company_images_company ON company_images(company_id);
 -- ========================================
 
 CREATE TABLE notifications (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
-    
-    -- Notification content
-    type VARCHAR(50) NOT NULL, -- e.g., 'application_status', 'new_job', 'company_update', 'review_reply'
+    type VARCHAR(50) NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT,
-    
-    -- Related entities (optional)
     related_job_id UUID,
     related_company_id UUID,
     related_application_id UUID,
-    
-    -- Status
     is_read BOOLEAN DEFAULT FALSE,
     read_at TIMESTAMP,
-    
-    -- Link
-    action_url VARCHAR(255), -- URL to navigate when clicked
-    
+    action_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_notifications_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_job FOREIGN KEY (related_job_id) REFERENCES jobs(id) ON DELETE CASCADE,
     CONSTRAINT fk_notifications_company FOREIGN KEY (related_company_id) REFERENCES companies(id) ON DELETE CASCADE,
@@ -634,14 +513,13 @@ CREATE INDEX idx_notifications_created_at ON notifications(created_at);
 -- ========================================
 
 CREATE TABLE application_status_history (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     application_id UUID NOT NULL,
     old_status VARCHAR(20),
     new_status VARCHAR(20) NOT NULL,
-    changed_by UUID, -- User who made the change (HR/Admin)
+    changed_by UUID,
     notes TEXT,
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_app_status_history_application FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE,
     CONSTRAINT fk_app_status_history_changed_by FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -657,4 +535,3 @@ DO $$
 BEGIN
     RAISE NOTICE 'Database ITJOB created successfully with UUID primary keys!';
 END $$;
-    

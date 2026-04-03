@@ -13,90 +13,59 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class GenericSpecification<T> implements Specification<T>{
+public class GenericSpecification<T> implements Specification<T> {
 
     private SpecSearchCriteria criteria;
 
     @Override
-    public @Nullable Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder criteriaBuilder) {
-
-        if(criteria.getValue()==null){
-            return criteriaBuilder.isNull(root.get(criteria.getKey()));
+    public @Nullable Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+        if (criteria.getValue() == null) {
+            return cb.isNull(root.get(criteria.getKey()));
         }
 
-        return switch (criteria.getOperation()){
+        return switch (criteria.getOperation()) {
+            case EQUALITY -> cb.equal(root.get(criteria.getKey()), criteria.getValue());
 
-            case EQUALITY -> criteriaBuilder.equal(
-                    root.get(criteria.getKey()),
-                    criteria.getValue());
+            case NEGATION -> cb.notEqual(root.get(criteria.getKey()), criteria.getValue());
 
-            case NEGATION -> criteriaBuilder.notEqual(
-                    root.get(criteria.getKey()),
-                    criteria.getValue());
+            case GREATER -> cb.greaterThan(root.get(criteria.getKey()), (Comparable) criteria.getValue());
 
-            case GREATER_THAN -> criteriaBuilder.greaterThan(
-                    root.get(criteria.getKey()),
-                    (Comparable)criteria.getValue());
+            case GREATER_EQUAL -> cb.greaterThanOrEqualTo(root.get(criteria.getKey()), (Comparable) criteria.getValue());
 
-            case GREATER_EQUAL -> criteriaBuilder.greaterThanOrEqualTo(
-                    root.get(criteria.getKey()),
-                    (Comparable)criteria.getValue());
+            case LESS -> cb.lessThan(root.get(criteria.getKey()), (Comparable) criteria.getValue());
 
-            case LESS_THAN -> criteriaBuilder.lessThan(
-                    root.get(criteria.getKey()),
-                    (Comparable)criteria.getValue());
+            case LESS_EQUAL -> cb.lessThanOrEqualTo(root.get(criteria.getKey()), (Comparable) criteria.getValue());
 
-            case LESS_EQUAL -> criteriaBuilder.lessThanOrEqualTo(
-                    root.get(criteria.getKey()),
-                    (Comparable)criteria.getValue());
+            case LIKE -> cb.like(
+                    cb.lower(root.get(criteria.getKey())),
+                    "%" + criteria.getValue().toString().toLowerCase() + "%");
 
-            case LIKE -> {
-                String likeValue = "%" + criteria.getValue().toString().toLowerCase() + "%";
-                System.out.println("DEBUG LIKE - Field: " + criteria.getKey() + ", Value: " + likeValue);
-                yield criteriaBuilder.like(criteriaBuilder.lower(
-                        root.get(criteria.getKey())),
-                        likeValue);
-            }
+            case STARTS_WITH -> cb.like(
+                    cb.lower(root.get(criteria.getKey())),
+                    criteria.getValue().toString().toLowerCase() + "%");
 
-            case STARTS_WITH -> criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get(criteria.getKey())),
-                    criteria.getValue().toString().toLowerCase()+ "%");
-
-            case ENDS_WITH -> criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get(criteria.getKey())),
+            case ENDS_WITH -> cb.like(
+                    cb.lower(root.get(criteria.getKey())),
                     "%" + criteria.getValue().toString().toLowerCase());
 
-            case CONTAINS -> criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get(criteria.getKey())),
+            case CONTAINS -> cb.like(
+                    cb.lower(root.get(criteria.getKey())),
                     "%" + criteria.getValue().toString().toLowerCase() + "%");
 
             case IN -> {
-                if(criteria.getValue() instanceof List){
-                    yield root.get(criteria.getKey()).in((List<?>) criteria.getValue());
-                }else{
-                    yield criteriaBuilder.equal(root.get(criteria.getKey()), criteria.getValue());
+                if (criteria.getValue() instanceof List<?> list) {
+                    yield root.get(criteria.getKey()).in(list);
                 }
+                yield cb.equal(root.get(criteria.getKey()), criteria.getValue());
             }
 
             case BETWEEN -> {
-                if(criteria.getValue() instanceof Object[]){
-                    Object[] values = (Object[]) criteria.getValue();
-                    if(values.length == 2){
-                        yield criteriaBuilder.between(
-                                root.get(criteria.getKey()),
-                                (Comparable) values[0],
-                                (Comparable) values[1]
-                        );
-
-                    }
-
+                if (criteria.getValue() instanceof Object[] values && values.length == 2) {
+                    yield cb.between(root.get(criteria.getKey()),
+                            (Comparable) values[0], (Comparable) values[1]);
                 }
-                yield criteriaBuilder.equal(
-                        root.get(criteria.getKey()),
-                        criteria.getValue()
-                );
+                yield cb.equal(root.get(criteria.getKey()), criteria.getValue());
             }
         };
-
     }
 }

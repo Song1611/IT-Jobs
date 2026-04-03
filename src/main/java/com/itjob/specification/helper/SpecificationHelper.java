@@ -10,8 +10,6 @@ import org.springframework.stereotype.Component;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
-//SpecificationHelper to convert request param into specification
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -20,97 +18,83 @@ public class SpecificationHelper {
     private final FilterValidator filterValidator;
     private final TypeConverter typeConverter;
 
-    private static final String SEARCH_SPEC_OPERATOR =
-            "(\\w+?)(>=|<=|:|!|>|<|~|@|#)(\\*?)([^*]+)(\\*?)$";
+    // Groups: (field)(operator)(*?)(value)(*?)
+    private static final Pattern FILTER_PATTERN =
+            Pattern.compile("(\\w+?)(>=|<=|:|!|>|<|~|@|#)(\\*?)([^*]+)(\\*?)$");
 
     /**
-     * Build Specification from array of filter strings
-     *
-     * @param filters array of filter strings (e.g., ["firstName:John", "age>=25"])
-     * @param <T> Entity type
-     * @return Specification<T> or null if filters are empty
+     * Build Specification from filter[] param array.
+     * Each filter string format: field{op}value
+     * Examples:
+     *   name~john        → LIKE %john%
+     *   status:active    → EQUALITY
+     *   age>18           → GREATER
+     *   age>=18          → GREATER_EQUAL
+     *   age<60           → LESS
+     *   age<=60          → LESS_EQUAL
+     *   age#18,60        → BETWEEN
+     *   status@active,pending → IN
+     *   name:*john       → STARTS_WITH
+     *   name:john*       → ENDS_WITH
+     *   name:*john*      → CONTAINS
+     *   'status:active   → OR predicate
      */
-
     public <T> Specification<T> buildSpecification(String[] filters) {
-        if(filters == null || filters.length == 0) {
-            return null;
-        }
-
-        log.info("Building specification from {} filters", filters.length);
+        if (filters == null || filters.length == 0) return null;
 
         GenericSpecificationBuilder<T> builder = new GenericSpecificationBuilder<>();
-        Pattern pattern = Pattern.compile(SEARCH_SPEC_OPERATOR);
 
-        for(String filter : filters) {
-            log.info("Processing filter: {}", filter);
-            
-            // Check for OR predicate flag (')
+        for (String filter : filters) {
+            if (filter == null || filter.isBlank()) continue;
+
+            // Check OR predicate flag
             String orPredicate = null;
-            if (filter.startsWith(SearchOperation.OR_PREDICATE_FLAG)) {
+            String f = filter;
+            if (f.startsWith(SearchOperation.OR_PREDICATE_FLAG)) {
                 orPredicate = SearchOperation.OR_PREDICATE_FLAG;
-                filter = filter.substring(1); // Remove ' prefix
+                f = f.substring(1);
             }
-            // Validate filter format and security
-            if(!filterValidator.isValidFilter(filter)) {
-                log.warn("Invalid filter: {}", filter);
+
+            if (!filterValidator.isValidFilter(f)) {
+                log.warn("Invalid filter skipped: {}", f);
                 continue;
             }
-            Matcher matcher = pattern.matcher(filter);
 
-            if(matcher.find()){
-                String key = matcher.group(1);        //field name
-                String operation = matcher.group(2);  // operator
-                String prefix = matcher.group(3);     // prefix (*)
-                String value = matcher.group(4);      // value
-                String suffix = matcher.group(5);     // suffix (*)
-
-                log.info("Parsed filter - Key: {}, Operation: {}, Value: {}, Prefix: {}, Suffix: {}", 
-                         key, operation, value, prefix, suffix);
-
-                //Sanitize value
-                value = filterValidator.sanitizeValue(value);
-
-                //Convert value to correct type based on operator
-                Object convertedValue = convertValue(operation, value);
-                
-                log.info("Converted value: {} (type: {})", convertedValue, 
-                         convertedValue != null ? convertedValue.getClass().getSimpleName() : "null");
-
-                // Add to builder
-                builder.with(orPredicate,key, operation, convertedValue, prefix, suffix);
-            }
-            else {
-                log.warn("Cannot parse filter: {}", filter);
+            Matcher matcher = FILTER_PATTERN.matcher(f);
+            if (!matcher.find()) {
+                log.warn("Cannot parse filter: {}", f);
+                continue;
             }
 
+            String key       = matcher.group(1);
+            String operation = matcher.group(2);
+            String prefix    = matcher.group(3);
+            String value     = matcher.group(4);
+            String suffix    = matcher.group(5);
+
+            log.info("Parsed filter - key: {}, operation: {}, prefix: {}, value: {}, suffix: {}", 
+                     key, operation, prefix, value, suffix);
+
+            value = filterValidator.sanitizeValue(value);
+            Object convertedValue = convertValue(operation, value);
+
+            log.info("Converted value: {} (type: {})", convertedValue, 
+                     convertedValue != null ? convertedValue.getClass().getSimpleName() : "null");
+
+            builder.with(orPredicate, key, operation, convertedValue, prefix, suffix);
         }
+
         return builder.build();
     }
-    /**
-     * Convert value to correct type based on operator
-     *
-     * @param operator operator string
-     * @param value string value
-     * @return converted value
-     */
-    private Object convertValue(String operator, String value) {
-        if (value == null || value.isEmpty()) {
-            return value;
-        }
-        return switch (operator){
-            case "@" ->
-                // IN operator: convert to List
-                    typeConverter.convertListAuto(value);
-            case "#" ->
-                // BETWEEN operator: convert to array [min, max]
-                    typeConverter.parseBetweenValueAuto(value);
 
-            case ">", "<", ">=", "<=" ->
-                // Comparison operators: auto-detect numeric type
-                    typeConverter.convertAuto(value);
-            default ->
-                // Other operators: keep as string or auto-convert
-                    typeConverter.convertAuto(value);
+    private Object convertValue(String operator, String value) {
+        if (value == null || value.isEmpty()) return value;
+        return switch (operator) {
+            case "@" -> typeConverter.convertListAuto(value);
+            case "#" -> typeConverter.parseBetweenValueAuto(value);
+            case ">=", "<=", ">", "<" -> typeConverter.convertAuto(value);
+            case "!", ":" -> value; // Keep as string for EQUALITY/NEGATION to preserve leading zeros
+            default  -> value; // ~ keeps as string
         };
     }
 }

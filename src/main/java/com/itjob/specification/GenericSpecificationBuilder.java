@@ -71,7 +71,11 @@ public class GenericSpecificationBuilder<T> {
         SearchOperation searchOperation = OperationResolver.resolveOperation(operation, prefix, suffix);
 
         if (searchOperation != null) {
-            params.add(new SpecSearchCriteria(orPredicate, key, searchOperation, value));
+            SpecSearchCriteria criteria = new SpecSearchCriteria(orPredicate, key, searchOperation, value);
+            params.add(criteria);
+            System.out.println("Added criteria: " + key + " " + searchOperation + " " + value);
+        } else {
+            System.out.println("Skipped criteria (null operation): " + key);
         }
         return this;
     }
@@ -82,9 +86,13 @@ public class GenericSpecificationBuilder<T> {
      * @return Specification<T> or null if don't have any criteria
      */
     public Specification<T> build() {
+        System.out.println("Building specification with " + params.size() + " criteria");
+        
         if (params.isEmpty()) {
+            System.out.println("No criteria to build!");
             return null;
         }
+        
         Specification<T> result = new GenericSpecification<>(params.getFirst());
 
         for (int i = 1; i < params.size(); i++) {
@@ -93,6 +101,7 @@ public class GenericSpecificationBuilder<T> {
                     : Specification.where(result).and(new GenericSpecification<>(params.get(i)));
         }
 
+        System.out.println("Specification built successfully!");
         return result;
     }
 
