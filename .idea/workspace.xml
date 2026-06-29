@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="747bcda6-8c53-4dbe-a744-e55bf154b98b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.mvn/wrapper/maven-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/API_DOCUMENTATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/database_postgresql.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/database_postgresql_seed.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/mvnw.cmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/ItJobApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/controller/UserController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/converter/GenderConverter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/dto/response/ApiResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/dto/response/PageResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/dto/response/PermissionResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/dto/response/RoleResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/dto/response/SkillResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/dto/response/UserResponse.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Application.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/ApplicationStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/ApplicationStatusHistory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Attachment.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/AttachmentType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Blog.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/BlogCategory.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Comment.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CommentReaction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Company.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanyImage.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanyImageType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanyMember.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanyMemberStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanySize.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanyStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/CompanyView.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Follow.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Gender.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Job.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/JobLevel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/JobStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/JobType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/JobView.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Notification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Permission.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Post.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Reaction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/ReactionType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Review.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/ReviewStatus.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/SalaryType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/SavedJob.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/Skill.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/entity/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/exception/AppException.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/exception/ErrorCode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/exception/GlobalExceptionHandler.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/mapper/PermissionMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/mapper/RoleMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/mapper/SkillMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/mapper/UserMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/repository/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/service/UserService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/service/impl/UserServiceImpl.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/GenericSpecification.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/GenericSpecificationBuilder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/SearchOperation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/SpecSearchCriteria.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/helper/FilterValidator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/helper/SpecificationHelper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/specification/helper/TypeConverter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/util/FilterParser.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/itjob/util/OperationResolver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/itjob/ItjobApplicationTests.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="DEPENDENCY_CHECKER_PROBLEMS_TAB" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="38k9LFEQ5JAkRPoxNa39mvExG3q" />
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ItJobApplication.executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;Spring Boot.ItJobApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.ItjobApplication.executor&quot;: &quot;Run&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Springboot/itjob&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Springboot\itjob\src\main\java\com\itjob" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Spring Boot.ItJobApplication">
+    <configuration name="ItJobApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.itjob.itjob.ItJobApplication" />
+      <module name="itjob" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.itjob.itjob.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ItJobApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" activateToolWindowBeforeRun="false" nameIsGenerated="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="21" />
+      <envs>
+        <env name="spring.datasource.password" value="123456" />
+        <env name="spring.datasource.url" value="jdbc:postgresql://localhost:5432/itjob" />
+        <env name="spring.datasource.username" value="admin" />
+        <env name="TimeZone" value="Asia/Ho_Chi_Minh" />
+      </envs>
+      <option name="INCLUDE_PROVIDED_SCOPE" value="false" />
+      <module name="itjob" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.itjob.ItJobApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.ItJobApplication" />
+      <item itemvalue="Spring Boot.ItJobApplication" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.ItJobApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.32098.37" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.32098.37" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="747bcda6-8c53-4dbe-a744-e55bf154b98b" name="Changes" comment="" />
+      <created>1769332644152</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1769332644152</updated>
+      <workItem from="1769332645425" duration="3928000" />
+      <workItem from="1769940928968" duration="6955000" />
+      <workItem from="1770029986264" duration="2560000" />
+      <workItem from="1770099510228" duration="13013000" />
+      <workItem from="1770355160267" duration="1973000" />
+      <workItem from="1770449433515" duration="9011000" />
+      <workItem from="1770535589721" duration="5177000" />
+      <workItem from="1770702092221" duration="7887000" />
+      <workItem from="1770884421259" duration="6279000" />
+      <workItem from="1771694546326" duration="2401000" />
+      <workItem from="1771743852746" duration="10921000" />
+      <workItem from="1771785428693" duration="769000" />
+      <workItem from="1771819353304" duration="3197000" />
+      <workItem from="1771921022407" duration="3537000" />
+      <workItem from="1772006427953" duration="9892000" />
+      <workItem from="1772098301985" duration="8575000" />
+      <workItem from="1772181457143" duration="3761000" />
+      <workItem from="1772267839248" duration="3581000" />
+      <workItem from="1773683077808" duration="3000" />
+      <workItem from="1773897392755" duration="4958000" />
+      <workItem from="1774006894802" duration="326000" />
+      <workItem from="1774175558531" duration="1187000" />
+      <workItem from="1774410013864" duration="880000" />
+      <workItem from="1774433324088" duration="4930000" />
+      <workItem from="1775047517172" duration="4069000" />
+      <workItem from="1775112113762" duration="2120000" />
+      <workItem from="1775208236663" duration="2606000" />
+      <workItem from="1775297002686" duration="1708000" />
+      <workItem from="1775903916675" duration="1183000" />
+      <workItem from="1775990794396" duration="971000" />
+      <workItem from="1776057403776" duration="7439000" />
+      <workItem from="1776156644633" duration="2825000" />
+      <workItem from="1776588063813" duration="30000" />
+      <workItem from="1780731475903" duration="2989000" />
+      <workItem from="1781684360374" duration="690000" />
+      <workItem from="1782205150357" duration="2969000" />
+      <workItem from="1782282401267" duration="4389000" />
+      <workItem from="1782299447022" duration="3275000" />
+      <workItem from="1782377596800" duration="3551000" />
+      <workItem from="1782474085175" duration="7174000" />
+      <workItem from="1782545548879" duration="8004000" />
+      <workItem from="1782630446631" duration="8101000" />
+      <workItem from="1782722510367" duration="870000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
