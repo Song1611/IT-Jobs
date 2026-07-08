@@ -10,7 +10,8 @@ import "swiper/css/pagination";
 import "swiper/css/navigation";
 import { Bookmark, MoveLeft, MoveRight } from "lucide-react";
 import SectionTitle from "@/components/ui/customs/section-title";
-import { companyApi } from "@/apis";
+import { companyApi } from "@/services";
+import { CompanyCardSkeleton } from "@/components/ui/skeletons";
 
 
 function FeaturedCompanies() {
@@ -25,9 +26,9 @@ function FeaturedCompanies() {
         const response = await companyApi.getAll(1, 10);
 
         // Xử lý data có thể là array hoặc object với $values
-        const companiesData = Array.isArray(response.data) ?
-        response.data :
-        response.data;
+        const companiesData = Array.isArray(response) ? response : (response?.items || response?.data || []);
+        
+        console.log("Fetched Featured Companies Data:", response, companiesData);
 
         setCompanies(companiesData);
       } catch (err) {
@@ -44,11 +45,12 @@ function FeaturedCompanies() {
     return (
       <div className="w-full max-w-6xl mx-auto py-10 md:block hidden">
         <SectionTitle title="Công Ty Nổi Bật" />
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Đang tải...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <CompanyCardSkeleton key={i} />
+          ))}
         </div>
       </div>);
-
   }
 
   if (error) {

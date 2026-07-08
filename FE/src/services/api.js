@@ -1,11 +1,6 @@
-
+import axios from 'axios';
 
 const BE_ENDPOINT = process.env.NEXT_PUBLIC_BE_ENDPOINT;
-
-
-
-
-
 
 // Helper function để lấy role từ localStorage
 function getUserRole() {
@@ -20,279 +15,234 @@ function getUserRole() {
   }
 }
 
-// Build URL với query params và tự động thêm role
-function buildURL(
-endpoint,
-params)
-{
-  const url = new URL(endpoint, BE_ENDPOINT);
+let inMemoryToken = null;
 
-  // Thêm role vào params nếu có
-  const role = getUserRole();
-  if (role) {
-    url.searchParams.append('role', role);
-  }
-
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.append(key, String(value));
-    });
-  }
-
-  return url.toString();
+export function setAuthToken(token) {
+  inMemoryToken = token;
 }
 
-// Handle response
-async function handleResponse(response) {
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      message: response.statusText
-    }));
-    throw new Error(error.message || `HTTP Error: ${response.status}`);
-  }
-
-  // Check if response has content (some DELETE requests return empty body)
-  const contentType = response.headers.get("content-type");
-  const contentLength = response.headers.get("content-length");
-
-  // If no content or content-length is 0, return empty object
-  if (contentLength === "0" || !contentType?.includes("application/json")) {
-    return {};
-  }
-
-  // Try to parse JSON, return empty object if fails
-  try {
-    const data = await response.json();
-    // Xử lý .NET JSON format với $values
-    return transformDotNetResponse(data);
-  } catch (error) {
-    // If JSON parsing fails (empty body), return empty object
-    return {};
-  }
+// Helper function để lấy access token từ memory
+function getAuthToken() {
+  return inMemoryToken;
 }
 
-// Transform .NET JSON response (xử lý $values từ ReferenceHandler)
-function transformDotNetResponse(obj) {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
+// Tạo axios instance
+const api = axios.create({
+  baseURL: BE_ENDPOINT,
+  headers: {
+    "Content-Type": "application/json"
+  },
+  withCredentials: true // Support HttpOnly cookie
+});
 
-  // Nếu có $values, lấy array từ đó
-  if (obj.$values && Array.isArray(obj.$values)) {
-    return obj.$values.map((item) => transformDotNetResponse(item));
-  }
+// A separate instance for refreshing token to avoid interceptor loops
+const apiRefresh = axios.create({
+  baseURL: BE_ENDPOINT,
+  headers: {
+    "Content-Type": "application/json"
+  },
+  withCredentials: true
+});
 
-  // Nếu là array, transform từng phần tử
-  if (Array.isArray(obj)) {
-    return obj.map((item) => transformDotNetResponse(item));
-  }
+let isRefreshing = false;
+let refreshSubscribers = [];
 
-  // Nếu là object, transform từng property
-  if (typeof obj === "object") {
-    const transformed = {};
-    for (const key in obj) {
-      // Skip các property $id, $ref của .NET
-      if (key.startsWith("$") && key !== "$values") {
-        continue;
-      }
-      transformed[key] = transformDotNetResponse(obj[key]);
+function subscribeTokenRefresh(cb) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+  refreshSubscribers.forEach(cb => cb(token));
+  refreshSubscribers = [];
+}
+
+// Interceptor request
+api.interceptors.request.use(
+  (config) => {
+    const token = config.token || getAuthToken();
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
-    return transformed;
-  }
 
-  return obj;
-}
+    const role = getUserRole();
+    if (role) {
+      config.params = { ...config.params, role };
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Interceptor response
+api.interceptors.response.use(
+  (response) => {
+    const data = response.data;
+
+    // Handle Backend API custom errors (code !== 1000)
+    if (data && typeof data.code === "number") {
+      if (data.code !== 1000) {
+        throw new Error(data.message || `API Error: ${data.code}`);
+      }
+      return data.result !== undefined ? data.result : data;
+    }
+
+    return data;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Check if error is 401 and we haven't retried yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve) => {
+          subscribeTokenRefresh((token) => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            resolve(api(originalRequest));
+          });
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Backend now reads refresh token from HttpOnly cookie
+        const res = await apiRefresh.post('/api/auth/refresh');
+        
+        // Ensure successful refresh returns data
+        if (res.data?.code === 1000 || res.data?.result) {
+            const resultData = res.data.result || res.data;
+            const newAccessToken = resultData.accessToken;
+            
+            setAuthToken(newAccessToken);
+            
+            isRefreshing = false;
+            onRefreshed(newAccessToken);
+            
+            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
+        } else {
+            throw new Error("Refresh failed");
+        }
+      } catch (refreshError) {
+        isRefreshing = false;
+        refreshSubscribers = [];
+        
+        // Logout logic
+        setAuthToken(null);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("userInfo");
+          localStorage.removeItem("company");
+          window.location.href = "/login";
+        }
+        
+        return Promise.reject(refreshError);
+      }
+    }
+
+    const data = error.response?.data;
+    
+    // Handle Backend API custom errors (code !== 1000) for non-2xx status codes
+    if (data && typeof data.code === "number" && data.code !== 1000) {
+      return Promise.reject(new Error(data.message || `API Error: ${data.code}`));
+    }
+    
+    const message = data?.message || data?.error || error.message || `HTTP Error: ${error.response?.status}`;
+    return Promise.reject(new Error(message));
+  }
+);
 
 // GET request
-export async function apiGet(
-endpoint,
-config)
-{
-  const url = buildURL(endpoint, config?.params);
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...config?.headers
-  };
-
-  if (config?.token) {
-    headers["Authorization"] = `Bearer ${config.token}`;
-  }
-
+export async function apiGet(endpoint, config) {
   try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers,
-      ...config
+    const response = await api.get(endpoint, {
+      ...config,
+      token: config?.token,
+      headers: { ...config?.headers }
     });
-
-    const result = await handleResponse(response);
-    return result;
+    return response;
   } catch (error) {
     console.error("❌ API GET Error:", error);
     throw new Error(
-      `Failed to fetch: ${
-      error instanceof Error ? error.message : "Network error"}`
-
+      `Failed to fetch: ${error instanceof Error ? error.message : "Network error"}`
     );
   }
 }
 
 // POST request
-export async function apiPost(
-endpoint,
-data,
-config)
-{
-  const url = buildURL(endpoint, config?.params);
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...config?.headers
-  };
-
-  if (config?.token) {
-    headers["Authorization"] = `Bearer ${config.token}`;
-  }
-
-  const response = await fetch(url, {
-    method: "POST",
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    ...config
+export async function apiPost(endpoint, data, config) {
+  const response = await api.post(endpoint, data, {
+    ...config,
+    token: config?.token,
+    headers: { ...config?.headers }
   });
-
-  return handleResponse(response);
+  return response;
 }
 
 // POST request with FormData (for file uploads)
-export async function apiUploadFile(
-endpoint,
-file,
-fieldName = 'file',
-config)
-{
-  const url = buildURL(endpoint, config?.params);
-
+export async function apiUploadFile(endpoint, file, fieldName = 'file', config) {
   const formData = new FormData();
   formData.append(fieldName, file);
 
-  const headers = {};
-  if (config?.token) {
-    headers['Authorization'] = `Bearer ${config.token}`;
-  }
-  // Note: Don't set Content-Type for FormData, browser will set it automatically with boundary
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: formData
+  const response = await api.post(endpoint, formData, {
+    ...config,
+    token: config?.token,
+    headers: {
+      ...config?.headers
+    }
   });
-
-  return handleResponse(response);
+  return response;
 }
 
 // PUT request
-export async function apiPut(
-endpoint,
-data,
-config)
-{
-  const url = buildURL(endpoint, config?.params);
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...config?.headers
-  };
-
-  if (config?.token) {
-    headers["Authorization"] = `Bearer ${config.token}`;
-  }
-
-  const response = await fetch(url, {
-    method: "PUT",
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    ...config
+export async function apiPut(endpoint, data, config) {
+  const response = await api.put(endpoint, data, {
+    ...config,
+    token: config?.token,
+    headers: { ...config?.headers }
   });
-
-  return handleResponse(response);
+  return response;
 }
 
 // DELETE request
-export async function apiDelete(
-endpoint,
-config)
-{
-  const url = buildURL(endpoint, config?.params);
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...config?.headers
-  };
-
-  if (config?.token) {
-    headers["Authorization"] = `Bearer ${config.token}`;
-  }
-
-  const response = await fetch(url, {
-    method: "DELETE",
-    headers,
-    ...config
+export async function apiDelete(endpoint, config) {
+  const response = await api.delete(endpoint, {
+    ...config,
+    token: config?.token,
+    headers: { ...config?.headers }
   });
-
-  return handleResponse(response);
+  return response;
 }
 
 // PATCH request
-export async function apiPatch(
-endpoint,
-data,
-config)
-{
-  const url = buildURL(endpoint, config?.params);
-
-  const headers = {
-    "Content-Type": "application/json",
-    ...config?.headers
-  };
-
-  if (config?.token) {
-    headers["Authorization"] = `Bearer ${config.token}`;
-  }
-
-  const response = await fetch(url, {
-    method: "PATCH",
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    ...config
+export async function apiPatch(endpoint, data, config) {
+  const response = await api.patch(endpoint, data, {
+    ...config,
+    token: config?.token,
+    headers: { ...config?.headers }
   });
-
-  return handleResponse(response);
+  return response;
 }
 
 // Helper: GET với phân trang
 export async function apiGetPaginated(
-endpoint,
-pageNumber = 1,
-pageSize = 10,
-config)
-{
+  endpoint,
+  pageNumber = 1,
+  pageSize = 10,
+  config
+) {
   return apiGet(endpoint, {
     ...config,
     params: {
-      PageNumber: pageNumber,
-      PageSize: pageSize,
+      page: Math.max(0, pageNumber - 1),
+      size: pageSize,
       ...config?.params
     }
   });
 }
 
 // Helper: GET by ID
-export async function apiGetById(
-endpoint,
-id,
-config)
-{
+export async function apiGetById(endpoint, id, config) {
   return apiGet(`${endpoint}/${id}`, config);
 }

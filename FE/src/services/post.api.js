@@ -7,27 +7,30 @@ import {
   apiGet } from
 "./api";
 
-
 const ENDPOINT = "/api/Post";
+
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('accessToken');
+}
 
 export const postApi = {
   // Lấy danh sách bài đăng với pagination
   getAll: (
   pageNumber = 1,
   pageSize = 10,
-  currentUserId,
-  token) =>
+  currentUserId) =>
   {
     const params = { pageNumber, pageSize };
     if (currentUserId) params.currentUserId = currentUserId;
-    return apiGet(ENDPOINT, { params, token });
+    return apiGet(ENDPOINT, { params });
   },
 
   // Lấy chi tiết bài đăng
-  getById: (id, currentUserId, token) => {
+  getById: (id, currentUserId) => {
     const params = {};
     if (currentUserId) params.currentUserId = currentUserId;
-    return apiGet(`${ENDPOINT}/${id}`, { params, token });
+    return apiGet(`${ENDPOINT}/${id}`, { params });
   },
 
   // Lấy bài đăng theo user
@@ -35,14 +38,12 @@ export const postApi = {
   userId,
   pageNumber = 1,
   pageSize = 10,
-  currentUserId,
-  token) =>
+  currentUserId) =>
   {
     const params = { pageNumber, pageSize };
     if (currentUserId) params.currentUserId = currentUserId;
     return apiGet(`${ENDPOINT}/user/${userId}`, {
-      params,
-      token
+      params
     });
   },
 
@@ -51,14 +52,13 @@ export const postApi = {
   companyId,
   pageNumber = 1,
   pageSize = 10,
-  currentUserId,
-  token) =>
+  currentUserId) =>
   {
     const params = { pageNumber, pageSize };
     if (currentUserId) params.currentUserId = currentUserId;
     return apiGet(
       `${ENDPOINT}/company/${companyId}`,
-      { params, token }
+      { params }
     );
   },
 
@@ -66,8 +66,7 @@ export const postApi = {
   create: async (
   data,
   images,
-  video,
-  token) =>
+  video) =>
   {
     const formData = new FormData();
     formData.append("Content", data.content);
@@ -83,6 +82,8 @@ export const postApi = {
     if (video) {
       formData.append("Video", video);
     }
+    
+    const token = getToken();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}`,
@@ -104,18 +105,15 @@ export const postApi = {
   },
 
   // Cập nhật bài đăng (chỉ text)
-  update: (id, data, token) => {
-    return apiPut(`${ENDPOINT}/${id}`, data, {
-      token
-    });
+  update: (id, data) => {
+    return apiPut(`${ENDPOINT}/${id}`, data);
   },
 
   // Cập nhật bài đăng với ảnh
   updateWithImages: async (
   id,
   data,
-  images,
-  token) =>
+  images) =>
   {
     const formData = new FormData();
     formData.append("Content", data.content);
@@ -127,6 +125,8 @@ export const postApi = {
         formData.append("Images", image);
       });
     }
+    
+    const token = getToken();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}/${id}`,
@@ -148,31 +148,28 @@ export const postApi = {
   },
 
   // Xóa bài đăng
-  delete: (id, token) => {
-    return apiDelete(`${ENDPOINT}/${id}`, { token });
+  delete: (id) => {
+    return apiDelete(`${ENDPOINT}/${id}`);
   },
 
   // Lấy comments của bài đăng
   getComments: (
   postId,
   pageNumber = 1,
-  pageSize = 10,
-  token) =>
+  pageSize = 10) =>
   {
     return apiGetPaginated(
       `${ENDPOINT}/${postId}/comments`,
       pageNumber,
-      pageSize,
-      { token }
+      pageSize
     );
   },
 
   // Toggle like bài đăng
-  toggleLike: (postId, userId, token) => {
+  toggleLike: (postId, userId) => {
     return apiPost(
       `${ENDPOINT}/${postId}/like`,
-      { userId },
-      { token }
+      { userId }
     );
   },
 
@@ -181,8 +178,7 @@ export const postApi = {
   postId,
   content,
   userId,
-  attachments,
-  token) =>
+  attachments) =>
   {
     const formData = new FormData();
     formData.append("Content", content);
@@ -194,6 +190,8 @@ export const postApi = {
         formData.append("Attachments", file);
       });
     }
+    
+    const token = getToken();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}/${postId}/comment`,
@@ -218,12 +216,10 @@ export const postApi = {
   deleteComment: (
   postId,
   commentId,
-  userId,
-  token) =>
+  userId) =>
   {
     return apiDelete(`${ENDPOINT}/${postId}/comment/${commentId}`, {
-      params: { userId },
-      token
+      params: { userId }
     });
   }
 };

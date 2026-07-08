@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import LogoLoop from "@/components/ui/react.bits/logo.loop";
 import SectionTitle from "@/components/ui/customs/section-title";
-import { companyApi } from "@/apis";
+import { companyApi } from "@/services";
 
 
 
@@ -21,8 +21,13 @@ function FeatureHr() {
         setLoading(true);
         const response = await companyApi.getLogos(1, 20);
 
+        // Xử lý data có thể là array hoặc object với $values
+        const companiesData = Array.isArray(response) ? response : (response?.items || response?.data || []);
+        
+        console.log("Fetched HR Companies (Logos) Data:", response, companiesData);
+
         // Transform API data to LogoLoop format
-        const transformedLogos = response.data.map((company) => ({
+        const transformedLogos = companiesData.map((company) => ({
           src: company.avatar || "/logo-company.jpg",
           alt: company.name,
           href: `/companies/${company.id}`,
@@ -43,11 +48,12 @@ function FeatureHr() {
     return (
       <div>
         <SectionTitle title="Nhà Tuyển Dụng Hàng Đầu" />
-        <div className="mt-10 flex items-center justify-center h-24">
-          <div className="text-muted-foreground">Đang tải...</div>
+        <div className="mt-10 flex items-center justify-center gap-8 h-24 overflow-hidden">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="w-16 h-16 rounded-lg bg-muted animate-pulse flex-shrink-0" />
+          ))}
         </div>
       </div>);
-
   }
 
   if (logos.length === 0) {

@@ -51,8 +51,7 @@ export default function SettingsPage() {
       const response = await userApi.changePassword(
         user.id,
         currentPassword,
-        newPassword,
-        token
+        newPassword
       );
 
       toast.success(response.message || "Đổi mật khẩu thành công");

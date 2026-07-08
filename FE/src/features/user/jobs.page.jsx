@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import JobFilterSidebar from "@/features/user/job/job-filter-sidebar.section";
 import JobListSection from "@/features/user/job/job-list.section";
-import { jobApi, skillApi } from "@/apis";
+import { jobApi, skillApi } from "@/services";
 
 import { HeroSection } from "@/features/user/common/hero.section";
 
@@ -30,7 +30,7 @@ const JobsPage = () => {
   async function fetchSkills() {
     try {
       const response = await skillApi.getAll(1, 20);
-      setSkills(response.data);
+      setSkills(response.items || response.data || response);
     } catch (err) {
       console.error("❌ Error fetching skills:", err);
     }
@@ -48,7 +48,9 @@ const JobsPage = () => {
       }
 
       // Filter by search term if provided (client-side filtering)
-      let filteredJobs = response.data;
+      let filteredJobs = response.items || response.data || response;
+      if (!Array.isArray(filteredJobs)) filteredJobs = [];
+      
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         filteredJobs = filteredJobs.filter(
@@ -67,7 +69,7 @@ const JobsPage = () => {
       }
 
       setJobs(filteredJobs);
-      setTotalPages(response.totalPages);
+      setTotalPages(response.totalPages || 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể tải công việc");
     } finally {

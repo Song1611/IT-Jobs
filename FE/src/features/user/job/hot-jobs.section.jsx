@@ -3,6 +3,13 @@ import { Briefcase, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/shadcn/card";
 
 const HotJob = ({ props }) => {
+  const companyName = props.company?.name || (typeof props.company === 'string' ? props.company : "Tên công ty");
+  const logoSrc = (props.company?.avatar || props.logo) ? (props.company?.avatar || props.logo) : "https://placehold.co/80x80/png";
+  const position = props.title || props.position || "Chưa cập nhật";
+  const skillsList = Array.isArray(props.skills) 
+    ? props.skills.map(s => typeof s === 'object' ? (s.name || s.skillName || '') : s).filter(Boolean)
+    : [];
+
   return (
     <div className="h-full">
       <Card className="border-2 rounded-xl shadow-sm hover:shadow-xl hover:border-blue-200 dark:hover:border-blue-500 transition-all duration-300 p-5 flex flex-col items-center bg-white dark:bg-gray-800 h-full group cursor-pointer">
@@ -15,10 +22,10 @@ const HotJob = ({ props }) => {
         </div>
 
         {/* Company Logo */}
-        <div className="w-24 h-24 relative mb-4 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 p-2 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <div className="w-24 h-24 relative mb-4 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600 p-2 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 overflow-hidden">
           <Image
-            src={props.logo}
-            alt={props.company}
+            src={logoSrc}
+            alt={companyName}
             width={80}
             height={80}
             className="object-contain" />
@@ -27,14 +34,14 @@ const HotJob = ({ props }) => {
 
         {/* Job Position */}
         <h3 className="font-bold text-center text-base mb-2 line-clamp-2 min-h-[3rem] text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {props.position}
+          {position}
         </h3>
 
         {/* Company Name */}
-        <div className="flex items-center gap-1.5 mb-4">
-          <Briefcase className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-            {props.company}
+        <div className="flex items-center justify-center w-full gap-1.5 mb-4">
+          <Briefcase className="w-3.5 h-3.5 flex-shrink-0 text-gray-500 dark:text-gray-400" />
+          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium truncate">
+            {companyName}
           </p>
         </div>
 
@@ -42,7 +49,7 @@ const HotJob = ({ props }) => {
         <div className="w-full pt-4 border-t border-gray-100 dark:border-gray-700">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 text-center font-medium">Kỹ năng yêu cầu:</p>
           <div className="flex gap-1.5 flex-wrap justify-center">
-            {props.skills.slice(0, 3).map((s, i) =>
+            {skillsList.slice(0, 3).map((s, i) =>
             <span
               key={i}
               className="px-3 py-1 text-xs rounded-md bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200 border border-blue-200 dark:border-blue-700 font-medium">
@@ -50,9 +57,9 @@ const HotJob = ({ props }) => {
                 {s}
               </span>
             )}
-            {props.skills.length > 3 &&
+            {skillsList.length > 3 &&
             <span className="px-3 py-1 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-medium">
-                +{props.skills.length - 3}
+                +{skillsList.length - 3}
               </span>
             }
           </div>

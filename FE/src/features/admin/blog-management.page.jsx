@@ -13,7 +13,7 @@ import {
   getBlogTableColumns } from
 
 "@/components/admin";
-import { blogApi } from "@/apis";
+import { blogApi } from "@/services";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -87,7 +87,7 @@ const BlogManagement = () => {
       setLoading(true);
       setError(null);
       const authToken = token || getAuthToken();
-      const response = await blogApi.getAll(currentPage, pageSize, undefined, authToken);
+      const response = await blogApi.getAll(currentPage, pageSize, undefined);
 
       // Handle backend response format with $values
       let blogsData = response.data;
@@ -109,7 +109,7 @@ const BlogManagement = () => {
     const authToken = token || getAuthToken();
     if (!authToken) return;
     try {
-      const response = await blogApi.getCategories(authToken);
+      const response = await blogApi.getCategories();
       setCategories(response || []);
     } catch (error) {
       console.error("Failed to load categories:", error);
@@ -215,7 +215,7 @@ const BlogManagement = () => {
 
     try {
       setDeleting(true);
-      await blogApi.delete(deleteId, authToken);
+      await blogApi.delete(deleteId);
       setBlogs((prev) => prev.filter((blog) => blog.id !== deleteId));
       toast.success("Xóa blog thành công");
       setDeleteId(null);
@@ -259,10 +259,10 @@ const BlogManagement = () => {
       };
 
       if (createMode) {
-        await blogApi.create(blogData, authToken);
+        await blogApi.create(blogData);
         toast.success("Tạo blog thành công");
       } else if (editBlog) {
-        await blogApi.update(editBlog.id, blogData, authToken);
+        await blogApi.update(editBlog.id, blogData);
         toast.success("Cập nhật blog thành công");
       }
 

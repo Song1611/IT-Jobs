@@ -2,69 +2,54 @@ import { apiPost, apiGet, apiGetPaginated, apiPut, apiDelete } from './api';
 
 import { getUserRole } from '@/utils/auth';
 
-const ENDPOINT = '/api/Application';
-
-
-
-
-
-
+const ENDPOINT = '/api/applications';
+const HR_ENDPOINT = '/api/hr';
 
 export const applicationApi = {
   // Tạo đơn ứng tuyển mới
-  create: (data, token) => {
-    return apiPost(ENDPOINT, data, { token });
+  create: (data) => {
+    return apiPost(ENDPOINT, data);
   },
 
   // Lấy danh sách đơn ứng tuyển của user
-  getByUser: (userId, pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(`${ENDPOINT}/user/${userId}`, pageNumber, pageSize, { token });
+  getByUser: (userId, pageNumber = 1, pageSize = 10) => {
+    // API mới dùng /api/v1/applications/me cho user hiện tại
+    return apiGetPaginated(`${ENDPOINT}/me`, pageNumber, pageSize);
   },
 
-  // Lấy danh sách đơn ứng tuyển theo job
-  getByJob: (jobId, pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(`${ENDPOINT}/job/${jobId}`, pageNumber, pageSize, { token });
+  // Lấy danh sách đơn ứng tuyển theo job (HR)
+  getByJob: (jobId, pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(`${HR_ENDPOINT}/jobs/${jobId}/applications`, pageNumber, pageSize);
   },
 
-  // Lấy danh sách đơn ứng tuyển theo company
-  getByCompany: (companyId, pageNumber = 1, pageSize = 10, token) => {
-    const role = getUserRole();
-    return apiGetPaginated(`${ENDPOINT}/company/${companyId}`, pageNumber, pageSize, {
-      token,
-      params: { role }
-    });
+  // Lấy danh sách đơn ứng tuyển theo company (HR)
+  getByCompany: (companyId, pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(`${HR_ENDPOINT}/companies/${companyId}/applications`, pageNumber, pageSize);
   },
 
   // Lấy chi tiết đơn ứng tuyển
-  getById: (id, token) => {
-    return apiGet(`${ENDPOINT}/${id}`, { token });
+  getById: (id) => {
+    return apiGet(`${ENDPOINT}/${id}`);
   },
 
-  // Cập nhật trạng thái đơn ứng tuyển (chấp nhận/từ chối)
-  updateStatus: (jobId, userId, data, token) => {
-    return apiPut(`${ENDPOINT}/${jobId}/${userId}`, data, { token });
+  // Cập nhật trạng thái đơn ứng tuyển (HR)
+  // Lưu ý: API mới dùng id của application thay vì jobId + userId
+  updateStatus: (id, status, notes = "") => {
+    return apiPut(`${HR_ENDPOINT}/applications/${id}/status`, { status, notes });
   },
 
   // Chấp nhận đơn ứng tuyển
-  accept: (jobId, userId, cvUrl, coverLetter, token) => {
-    return apiPut(
-      `${ENDPOINT}/${jobId}/${userId}`,
-      { cvUrl, coverLetter, status: 'accepted' },
-      { token }
-    );
+  accept: (id, notes) => {
+    return applicationApi.updateStatus(id, 'accepted', notes);
   },
 
   // Từ chối đơn ứng tuyển
-  reject: (jobId, userId, cvUrl, coverLetter, token) => {
-    return apiPut(
-      `${ENDPOINT}/${jobId}/${userId}`,
-      { cvUrl, coverLetter, status: 'rejected' },
-      { token }
-    );
+  reject: (id, notes) => {
+    return applicationApi.updateStatus(id, 'rejected', notes);
   },
 
-  // Xóa đơn ứng tuyển
-  delete: (jobId, userId, token) => {
-    return apiDelete(`${ENDPOINT}/${jobId}/${userId}`, { token });
+  // Rút đơn ứng tuyển (User)
+  delete: (id) => {
+    return apiDelete(`${ENDPOINT}/${id}`);
   }
 };

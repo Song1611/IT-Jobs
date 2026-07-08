@@ -7,7 +7,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import HotJob from "@/features/user/job/hot-jobs.section";
 import SectionTitle from "@/components/ui/customs/section-title";
-import { jobApi } from "@/apis";
+import { jobApi } from "@/services";
+import { JobGridSkeleton } from "@/components/ui/skeletons";
 
 import Link from "next/link";
 
@@ -20,9 +21,11 @@ function JobToday() {
     async function fetchTodayJobs() {
       try {
         setLoading(true);
-        const response = await jobApi.getToday();
-        setJobs(response);
-
+        const response = await jobApi.getFeatured();
+        if (response) {
+          // If response is an array, use it directly. If paginated, use response.content.
+          setJobs(Array.isArray(response) ? response : (response.content || []));
+        }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : "Không thể tải công việc");
@@ -33,6 +36,7 @@ function JobToday() {
 
     fetchTodayJobs();
   }, []);
+
   if (loading) {
     return (
       <div className="w-full mt-10">
@@ -40,11 +44,10 @@ function JobToday() {
           title="Công Việc Hôm Nay"
           subtitle="Cập nhật mới nhất các vị trí tuyển dụng hot trong ngày" />
         
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Đang tải...</div>
+        <div className="mt-8">
+          <JobGridSkeleton count={4} />
         </div>
       </div>);
-
   }
 
   if (error) {

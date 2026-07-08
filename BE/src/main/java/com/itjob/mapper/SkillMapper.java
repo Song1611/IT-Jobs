@@ -2,11 +2,11 @@ package com.itjob.mapper;
 
 import com.itjob.dto.response.SkillResponse;
 import com.itjob.entity.Skill;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import com.itjob.mapper.config.CentralMapperConfig;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = CentralMapperConfig.class)
 public interface SkillMapper {
-    @Mapping(target = "id", expression = "java(skill.getId().toString())")
+    
     SkillResponse toSkillResponse(Skill skill);
 }

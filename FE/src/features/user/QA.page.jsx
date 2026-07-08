@@ -68,7 +68,7 @@ export default function QAPage() {
     if (!user || !token) return;
 
     try {
-      const result = await interactionApi.toggleLike(postId, user.id, token);
+      const result = await interactionApi.toggleLike(postId, user.id);
 
       setPosts((prev) =>
       prev.map((post) =>
@@ -109,8 +109,7 @@ export default function QAPage() {
       const newComment = await interactionApi.addComment(
         postId,
         user.id,
-        content,
-        token
+        content
       );
 
       setPosts((prev) =>
@@ -146,8 +145,7 @@ export default function QAPage() {
       const response = await interactionApi.getComments(
         postId,
         currentPage + 1,
-        10,
-        token
+        10
       );
 
       setPosts((prev) =>

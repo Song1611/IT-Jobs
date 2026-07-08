@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/shadcn/button";
 import { Briefcase, Clock, ExternalLink, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { AppliedJobsSkeleton } from "@/components/ui/skeletons";
 
 const statusColors = {
   pending: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
@@ -44,7 +45,7 @@ export default function AppliedJobsPage() {
     async function fetchApplications() {
       try {
         setLoading(true);
-        const response = await applicationApi.getByUser(user.id, 1, 50, token);
+        const response = await applicationApi.getByUser(user.id, 1, 50);
         setApplications(response.data || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Không thể tải danh sách ứng tuyển");
@@ -57,13 +58,7 @@ export default function AppliedJobsPage() {
   }, [user, token, router]);
 
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="text-center py-16">
-          <p className="text-muted-foreground">Đang tải...</p>
-        </div>
-      </div>);
-
+    return <AppliedJobsSkeleton count={5} />;
   }
 
   if (error) {

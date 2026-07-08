@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import SectionTitle from "@/components/ui/customs/section-title";
-import { blogApi } from "@/apis";
+import { blogApi } from "@/services";
 
 
 function QASection() {
@@ -14,10 +14,13 @@ function QASection() {
     async function fetchBlogs() {
       try {
         setLoading(true);
-        const response = await blogApi.getAll(1, 6);
-        setBlogs(response.data);
+        // Backend chưa có BlogController, tạm thời dùng mock data
+        // const response = await blogApi.getAll(1, 6);
+        // setBlogs(response.data || response.items || response);
+        setBlogs(oldBlogs);
       } catch (err) {
-        console.error("❌ Error fetching blogs:", err);
+        // console.error("❌ Error fetching blogs:", err);
+        setBlogs(oldBlogs);
       } finally {
         setLoading(false);
       }
@@ -35,11 +38,26 @@ function QASection() {
           showViewAll
           viewAllLink="/blog" />
         
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Đang tải...</div>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          <div className="md:col-span-7">
+            <div className="w-full h-[350px] rounded-xl bg-muted animate-pulse" />
+            <div className="mt-3 h-6 w-3/4 bg-muted animate-pulse rounded" />
+            <div className="mt-2 h-4 w-full bg-muted animate-pulse rounded" />
+          </div>
+          <div className="md:col-span-5 flex flex-col gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex gap-3 border-b pb-3">
+                <div className="w-[150px] h-[80px] rounded-lg bg-muted animate-pulse flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-3/4 bg-muted animate-pulse rounded" />
+                  <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>);
-
   }
 
   const featured = blogs[0]; // Blog đầu tiên làm featured
@@ -88,10 +106,10 @@ function QASection() {
         }
 
         <div className="md:col-span-5 flex flex-col gap-4 max-h-[450px] overflow-auto">
-          {others.map((blog) =>
+          {others.map((blog, index) =>
           <a
-            key={blog.id}
-            href={`/blog/${blog.id}`}
+            key={blog.id || index}
+            href={`/blog/${blog.id || index}`}
             className="flex gap-3 group border-b pb-3 last:border-none">
             
               <div className="w-[120px] md:w-[150px] h-[80px] relative overflow-hidden flex-shrink-0 rounded-lg">

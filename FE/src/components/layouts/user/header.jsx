@@ -29,7 +29,7 @@ import {
 "lucide-react";
 import Link from "next/link";
 import * as React from "react";
-import { ModeToggle } from "../../components/ui/customs/toggle-them";
+import { ModeToggle } from "@/components/ui/customs/toggle-them";
 import {
   Sheet,
   SheetContent,

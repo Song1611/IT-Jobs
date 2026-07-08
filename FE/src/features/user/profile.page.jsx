@@ -46,6 +46,7 @@ import { interactionApi } from "@/services/interaction.api";
 
 import { useRouter } from "next/navigation";
 import { useInfiniteScroll, useUserMedia, useUserPosts } from "@/hooks/usePost";
+import { ProfileSkeleton } from "@/components/ui/skeletons";
 
 
 
@@ -150,7 +151,7 @@ export default function ProfilePage({ userId }) {
         setProfileError(null);
 
         // Try with token first, if no token, try without (public profile)
-        const response = await userApi.getById(targetId, token || undefined);
+        const response = await userApi.getById(targetId);
         setProfileUser(response);
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Không thể tải thông tin người dùng';
@@ -176,7 +177,7 @@ export default function ProfilePage({ userId }) {
 
     try {
       setSkillsLoading(true);
-      const response = await userApi.getSkills(targetUserId, token);
+      const response = await userApi.getSkills(targetUserId);
       // Handle both array response and object with data property
       const skillsData = Array.isArray(response) ? response : response?.data || [];
       setUserSkills(skillsData);
@@ -194,7 +195,7 @@ export default function ProfilePage({ userId }) {
 
     setIsUploadingAvatar(true);
     try {
-      const response = await userApi.updateAvatar(user.id, file, token);
+      const response = await userApi.updateAvatar(user.id, file);
       // Update user state instead of reloading
       if (response.data?.avatar) {
         // Thêm timestamp để tránh browser cache
@@ -217,7 +218,7 @@ export default function ProfilePage({ userId }) {
 
     setIsUploadingCover(true);
     try {
-      const response = await userApi.updateCoverImage(user.id, file, token);
+      const response = await userApi.updateCoverImage(user.id, file);
       // Update user state instead of reloading
       if (response.data?.coverImage) {
         // Thêm timestamp để tránh browser cache
@@ -270,8 +271,7 @@ export default function ProfilePage({ userId }) {
       const newPostResponse = await postApi.create(
         { content: newPost, userId: user.id },
         selectedImages.length > 0 ? selectedImages : undefined,
-        selectedVideo || undefined,
-        token
+        selectedVideo || undefined
       );
 
       setPosts((prev) => [
@@ -296,7 +296,7 @@ export default function ProfilePage({ userId }) {
     }
 
     try {
-      const result = await interactionApi.toggleLike(postId, user.id, token);
+      const result = await interactionApi.toggleLike(postId, user.id);
 
       setPosts((prev) =>
       prev.map((post) =>
@@ -339,8 +339,7 @@ export default function ProfilePage({ userId }) {
       const newComment = await interactionApi.addComment(
         postId,
         user.id,
-        content,
-        token
+        content
       );
 
       setPosts((prev) =>
@@ -391,7 +390,7 @@ export default function ProfilePage({ userId }) {
         updateData.companyId = post.company.id;
       }
 
-      await postApi.update(postId, updateData, token);
+      await postApi.update(postId, updateData);
       // Update local state
       setPosts((prev) =>
       prev.map((p) =>
@@ -432,14 +431,7 @@ export default function ProfilePage({ userId }) {
   };
 
   if (profileLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Đang tải thông tin...</p>
-        </div>
-      </div>);
-
+    return <ProfileSkeleton />;
   }
 
   if (!displayUser) {
@@ -742,8 +734,10 @@ export default function ProfilePage({ userId }) {
               </CardHeader>
               <CardContent>
                 {skillsLoading ?
-                <div className="flex justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                <div className="flex flex-wrap gap-2 py-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="h-7 w-16 rounded-full bg-muted animate-pulse" />
+                    ))}
                   </div> :
                 userSkills.length === 0 ?
                 <p className="text-center text-muted-foreground py-4">
@@ -783,8 +777,10 @@ export default function ProfilePage({ userId }) {
               </CardHeader>
               <CardContent>
                 {mediaLoading && media.length === 0 ?
-                <div className="flex justify-center py-4">
-                    <Loader2 className="h-6 w-6 animate-spin" />
+                <div className="grid grid-cols-3 gap-2 py-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="aspect-square rounded-lg bg-muted animate-pulse" />
+                    ))}
                   </div> :
                 media.length === 0 ?
                 <p className="text-center text-muted-foreground py-4">

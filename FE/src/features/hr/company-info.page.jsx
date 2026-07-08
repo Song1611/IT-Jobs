@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { companyApi } from "@/services/company.api";
 
 import { toast } from "sonner";
+import { ProfileSkeleton } from "@/components/ui/skeletons";
 
 const HRCompanyInfo = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -62,7 +63,7 @@ const HRCompanyInfo = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("accessToken") || undefined;
-      const company = await companyApi.getMyCompany(token);
+      const company = await companyApi.getMyCompany();
       setCompanyData(company);
       setFormData({
         name: company.name || "",
@@ -101,7 +102,7 @@ const HRCompanyInfo = () => {
         address: formData.address || undefined
       };
 
-      const result = await companyApi.updateMyCompany(updateData, token);
+      const result = await companyApi.updateMyCompany(updateData);
       setCompanyData(result.data);
       setIsEditing(false);
       toast.success("Cập nhật thông tin công ty thành công!");
@@ -145,7 +146,7 @@ const HRCompanyInfo = () => {
     try {
       setUploadingAvatar(true);
       const token = localStorage.getItem("accessToken") || undefined;
-      const result = await companyApi.uploadAvatar(file, token);
+      const result = await companyApi.uploadAvatar(file);
 
       setCompanyData((prev) => prev ? { ...prev, avatar: result.avatarUrl } : prev);
       toast.success("Upload ảnh đại diện thành công!");
@@ -181,7 +182,7 @@ const HRCompanyInfo = () => {
     try {
       setUploadingCover(true);
       const token = localStorage.getItem("accessToken") || undefined;
-      const result = await companyApi.uploadCover(file, token);
+      const result = await companyApi.uploadCover(file);
 
       setCompanyData((prev) => prev ? { ...prev, coverImage: result.coverImageUrl } : prev);
       toast.success("Upload ảnh bìa thành công!");
@@ -214,14 +215,7 @@ const HRCompanyInfo = () => {
 
   // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-          <p className="text-muted-foreground">Đang tải thông tin công ty...</p>
-        </div>
-      </div>);
-
+    return <ProfileSkeleton />;
   }
 
   // No company data

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/shadcn/button";
 import { Input } from "@/components/ui/shadcn/input";
 import { Calendar, User, Search, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { blogApi } from "@/apis";
+import { blogApi } from "@/services";
+import { BlogGridSkeleton } from "@/components/ui/skeletons";
 
 
 
@@ -108,9 +109,7 @@ function BlogListSection() {
 
       {/* Loading State */}
       {loading &&
-      <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Đang tải...</div>
-        </div>
+      <BlogGridSkeleton count={6} />
       }
 
       {/* Blog Posts Grid */}

@@ -10,7 +10,7 @@ import {
   getUserTableColumns } from
 
 "@/components/admin";
-import { userApi } from "@/apis";
+import { userApi } from "@/services";
 
 // Helper to get token from localStorage
 const getAuthToken = () => {
@@ -36,7 +36,7 @@ const UsersManagement = () => {
       setLoading(true);
       setError(null);
       const token = getAuthToken();
-      const response = await userApi.getAll(currentPage, pageSize, token);
+      const response = await userApi.getAll(currentPage, pageSize);
 
       // Handle backend response format with $values
       let usersData = response.data;
@@ -113,7 +113,7 @@ const UsersManagement = () => {
         return;
       }
 
-      await userApi.delete(user.id, token);
+      await userApi.delete(user.id);
       alert("Xóa người dùng thành công");
       fetchUsers(); // Refresh list
     } catch (err) {

@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
         if (typeof window !== "undefined") {
           localStorage.setItem("accessToken", accessToken);
           localStorage.setItem("refreshToken", refreshToken);
-          localStorage.setItem("user", JSON.stringify(userData));
+          localStorage.setItem("userInfo", JSON.stringify(userData));
         }
 
         setUser(userData);
@@ -83,7 +83,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     // Remove from localStorage (only in browser)
     if (typeof window !== "undefined") {
-      localStorage.removeItem("user");
+      localStorage.removeItem("userInfo");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
     }

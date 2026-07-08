@@ -14,10 +14,11 @@ import {
   Filter,
   X } from
 "lucide-react";
-import { companyApi } from "@/apis";
+import { companyApi } from "@/services";
 
 import { CompanyCard } from "@/components/cards/company.card";
 import { HeroSection } from "@/features/user/common/hero.section";
+import { CompanyGridSkeleton } from "@/components/ui/skeletons";
 
 
 
@@ -273,9 +274,7 @@ const CompaniesPage = () => {
 
         {/* Loading State */}
         {loading &&
-        <div className="flex items-center justify-center h-64">
-            <div className="text-muted-foreground">Đang tải...</div>
-          </div>
+        <CompanyGridSkeleton count={6} />
         }
 
         {/* Companies Grid */}

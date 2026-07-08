@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/shadcn/badge";
 import { Button } from "@/components/ui/shadcn/button";
-import { DataTable } from "../../components/cards/data-table.card";
+import { DataTable } from "@/components/cards/data-table.card";
 import { jobApi } from "@/services/job.api";
 import { JobDetailModal } from "@/components/modals/job-detail.modal";
 import { CreateJobForm, CreateJobData } from "@/components/forms/create-job.form";
 import { useAuth } from "@/components/providers/auth.provider";
+import { ManagementTableSkeleton } from "@/components/ui/skeletons";
 
 
 
@@ -73,12 +74,14 @@ const JobsManagement = () => {
         return;
       }
 
-      const response = await jobApi.getByUser(user.id, 1, 50, token || undefined);
+      const response = await jobApi.getByUser(user.id, 1, 50);
 
-
-      if (response && response.data) {
-        setJobs(response.data);
-        setTotalItems(response.totalItems || 0);
+      if (response && response.items) {
+        setJobs(response.items);
+        setTotalItems(response.totalElements || 0);
+      } else if (Array.isArray(response)) {
+        setJobs(response);
+        setTotalItems(response.length);
       }
     } catch (error) {
       console.error("❌ Error fetching jobs:", error);
@@ -254,7 +257,7 @@ const JobsManagement = () => {
     }
 
     try {
-      await jobApi.create(user.id, data, token);
+      await jobApi.create(user.id, data);
       alert("Đăng tin tuyển dụng thành công!");
       fetchJobs();
     } catch (error) {
@@ -267,7 +270,7 @@ const JobsManagement = () => {
     if (!selectedJob || !token) return;
 
     try {
-      await jobApi.update(selectedJob.id, editForm, token);
+      await jobApi.update(selectedJob.id, editForm);
       alert("Cập nhật thành công!");
       setModalOpen(false);
       fetchJobs();
@@ -285,7 +288,7 @@ const JobsManagement = () => {
     }
 
     try {
-      await jobApi.delete(job.id, token);
+      await jobApi.delete(job.id, user.id);
       alert("Đã gỡ bỏ thành công!");
       fetchJobs();
     } catch (error) {
@@ -308,11 +311,7 @@ const JobsManagement = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Đang tải...</div>
-      </div>);
-
+    return <ManagementTableSkeleton />;
   }
 
   return (

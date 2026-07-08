@@ -11,7 +11,8 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRaw from "rehype-raw";
 
-import { blogApi } from "@/apis";
+import { blogApi } from "@/services";
+import { BlogDetailSkeleton } from "@/components/ui/skeletons";
 
 
 // Fallback mock data for demo purposes
@@ -53,13 +54,7 @@ function BlogDetailSection({ id }) {
 
   // Loading state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="text-muted-foreground text-lg">Đang tải bài viết...</div>
-        </div>
-      </div>);
-
+    return <BlogDetailSkeleton />;
   }
 
   // Error state

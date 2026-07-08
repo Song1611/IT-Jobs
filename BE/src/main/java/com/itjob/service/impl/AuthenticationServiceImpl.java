@@ -77,7 +77,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
                 });
 
-        // 3. Revoke old refresh token FIRST (important for rotation)
+        // 3. Revoke old refresh token FIRST
         refreshTokenService.revokeRefreshToken(request.getRefreshToken());
         
         // 4. Generate new access token

@@ -10,7 +10,7 @@ import {
   getJobTableColumns } from
 
 "@/components/admin";
-import { jobApi } from "@/apis";
+import { jobApi } from "@/services";
 
 // Helper to get token from localStorage
 const getAuthToken = () => {
@@ -113,7 +113,7 @@ const JobsManagement = () => {
         return;
       }
 
-      await jobApi.delete(job.id, token);
+      await jobApi.delete(job.id);
       alert("Xóa công việc thành công");
       fetchJobs(); // Refresh list
     } catch (err) {

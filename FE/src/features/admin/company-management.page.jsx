@@ -10,7 +10,7 @@ import {
   getCompanyTableColumns } from
 
 "@/components/admin";
-import { companyApi } from "@/apis";
+import { companyApi } from "@/services";
 
 // Helper to get token from localStorage
 const getAuthToken = () => {
@@ -120,7 +120,7 @@ const CompanyManagement = () => {
         return;
       }
 
-      await companyApi.delete(company.id, token);
+      await companyApi.delete(company.id);
       alert("Xóa công ty thành công");
       fetchCompanies(); // Refresh list
     } catch (err) {
