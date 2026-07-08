@@ -2,67 +2,66 @@ import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated, apiGetById, apiUpl
 
 import { getUserRole } from '@/utils/auth';
 
-const ENDPOINT = '/api/Companies';
+const ENDPOINT = '/api/companies';
+const HR_ENDPOINT = '/api/hr';
 
 export const companyApi = {
   // Lấy danh sách công ty với phân trang
-  getAll: (pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(ENDPOINT, pageNumber, pageSize, { token });
+  getAll: (pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(ENDPOINT, pageNumber, pageSize);
   },
 
   // Lấy chi tiết công ty theo ID
-  getById: (id, token) => {
-    return apiGetById(ENDPOINT, id, { token });
+  getById: (id) => {
+    return apiGetById(ENDPOINT, id);
   },
 
   // Tạo công ty mới
-  create: (data, token) => {
-    return apiPost(ENDPOINT, data, { token });
+  create: (data) => {
+    return apiPost(`${HR_ENDPOINT}/companies`, data);
   },
 
   // Cập nhật công ty
-  update: (id, data, token) => {
-    return apiPut(`${ENDPOINT}/${id}`, data, { token });
+  update: (id, data) => {
+    return apiPut(`${HR_ENDPOINT}/companies/${id}`, data);
   },
 
   // Xóa công ty
-  delete: (id, token) => {
-    return apiDelete(`${ENDPOINT}/${id}`, { token });
+  delete: (id) => {
+    return apiDelete(`${HR_ENDPOINT}/companies/${id}`);
   },
 
   // Tìm kiếm công ty
-  search: (keyword, pageNumber = 1, pageSize = 10, token) => {
+  search: (keyword, pageNumber = 1, pageSize = 10) => {
     return apiGetPaginated(ENDPOINT, pageNumber, pageSize, {
-      params: { keyword },
-      token
+      params: { filter: `name~${keyword}` }
     });
   },
 
-  // Lấy danh sách logo công ty
-  getLogos: (pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(`${ENDPOINT}/logos`, pageNumber, pageSize, { token });
+  // Lấy danh sách logo công ty (tạm dùng top hoặc getAll)
+  getLogos: (pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(`${ENDPOINT}/top`, pageNumber, pageSize);
   },
 
   // ===== HR Company Management =====
 
   // Lấy công ty của HR đang đăng nhập
-  getMyCompany: (token) => {
-    const role = getUserRole();
-    return apiGet(`${ENDPOINT}/my-company`, { token, params: { role } });
+  getMyCompany: () => {
+    return apiGet(`${HR_ENDPOINT}/my-company`);
   },
 
   // Upload ảnh đại diện công ty
-  uploadAvatar: (file, token) => {
-    return apiUploadFile(`${ENDPOINT}/upload-avatar`, file, 'file', { token });
+  uploadAvatar: (file) => {
+    return apiUploadFile(`${HR_ENDPOINT}/my-company/avatar`, file, 'file');
   },
 
   // Upload ảnh bìa công ty
-  uploadCover: (file, token) => {
-    return apiUploadFile(`${ENDPOINT}/upload-cover`, file, 'file', { token });
+  uploadCover: (file) => {
+    return apiUploadFile(`${HR_ENDPOINT}/my-company/cover`, file, 'file');
   },
 
   // Cập nhật thông tin công ty
-  updateMyCompany: (data, token) => {
-    return apiPut(`${ENDPOINT}/my-company`, data, { token });
+  updateMyCompany: (data) => {
+    return apiPut(`${HR_ENDPOINT}/my-company`, data);
   }
 };

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { postApi } from "@/apis";
+import { postApi } from "@/services";
 import { getUserId } from "@/utils/auth";
 import { toast } from "sonner"; // hoặc notification library bạn đang dùng
 

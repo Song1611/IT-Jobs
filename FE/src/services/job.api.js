@@ -2,74 +2,64 @@ import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated, apiGetById } from 
 
 import { getUserRole } from '@/utils/auth';
 
-const ENDPOINT = '/api/Job';
+const ENDPOINT = '/api/jobs';
+const HR_ENDPOINT = '/api/hr';
 
 export const jobApi = {
   // Lấy danh sách công việc
-  getAll: (pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(ENDPOINT, pageNumber, pageSize, { token });
+  getAll: (pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(ENDPOINT, pageNumber, pageSize);
   },
 
   // Lấy chi tiết công việc
-  getById: (id, token) => {
-    return apiGetById(ENDPOINT, id, { token });
+  getById: (id) => {
+    return apiGetById(ENDPOINT, id);
   },
 
   // Lấy công việc theo công ty
-  getByCompany: (companyId, pageNumber = 1, pageSize = 10, token) => {
-    const role = getUserRole();
-    return apiGetPaginated(`${ENDPOINT}/by-company`, pageNumber, pageSize, {
-      params: { companyId, role },
-      token
-    });
+  getByCompany: (companyId, pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(`${HR_ENDPOINT}/companies/${companyId}/jobs`, pageNumber, pageSize);
   },
 
   // Tạo công việc mới
-  create: (companyId, data,
-
-
-
-
-
-
-  token) => {
-    return apiPost(`${ENDPOINT}/${companyId}`, data, { token });
+  create: (companyId, data) => {
+    return apiPost(`${HR_ENDPOINT}/companies/${companyId}/jobs`, data);
   },
 
   // Cập nhật công việc
-  update: (id, data, token) => {
-    return apiPut(`${ENDPOINT}/${id}`, data, { token });
+  update: (id, data) => {
+    // Nếu có companyId trong data, có thể dùng: `${HR_ENDPOINT}/companies/${data.companyId}/jobs/${id}`
+    // Tạm thời gọi theo update job chung nếu có
+    return apiPut(`${HR_ENDPOINT}/companies/${data.companyId || 0}/jobs/${id}`, data);
   },
 
   // Xóa công việc
-  delete: (id, token) => {
-    return apiDelete(`${ENDPOINT}/${id}`, { token });
+  delete: (id, companyId = 0) => {
+    return apiDelete(`${HR_ENDPOINT}/companies/${companyId}/jobs/${id}`);
   },
 
-  // Tìm kiếm công việc
-  search: (keyword, pageNumber = 1, pageSize = 10, token) => {
+  // Tìm kiếm công việc (Dùng Specification Pattern mới)
+  search: (keyword, pageNumber = 1, pageSize = 10) => {
     return apiGetPaginated(ENDPOINT, pageNumber, pageSize, {
-      params: { keyword },
-      token
+      params: { filter: `title~${keyword}` }
     });
   },
 
-  // Lấy công việc hôm nay
-  getToday: (token) => {
-    return apiGet(`${ENDPOINT}/today`, { token });
+  // Lấy công việc nổi bật (thay cho today)
+  getFeatured: (limit = 10) => {
+    return apiGet(`${ENDPOINT}/featured`, { params: { limit } });
   },
 
   // Lấy công việc theo skill
-  getBySkill: (skillId, pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(`${ENDPOINT}/by-skill`, pageNumber, pageSize, {
-      params: { skillId },
-      token
+  getBySkill: (skillId, pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(ENDPOINT, pageNumber, pageSize, {
+      params: { filter: `skills.id:${skillId}` }
     });
   },
 
   // Lấy công việc theo user (HR)
-  getByUser: (userId, pageNumber = 1, pageSize = 10, token) => {
-    const role = getUserRole();
-    return apiGetPaginated(`${ENDPOINT}/by-user/${userId}`, pageNumber, pageSize, { token, params: { role } });
+  getByUser: (userId, pageNumber = 1, pageSize = 10) => {
+    // Giả định userId = companyId cho HR
+    return apiGetPaginated(`${HR_ENDPOINT}/companies/${userId}/jobs`, pageNumber, pageSize);
   }
 };

@@ -1,43 +1,44 @@
 import { apiGet, apiPut, apiPost, apiDelete, apiGetPaginated } from "./api";
 
+const ENDPOINT = "/api/users";
 
-
-
-
-
-const ENDPOINT = "/api/User";
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('accessToken');
+}
 
 export const userApi = {
   // Lấy danh sách tất cả users (admin)
-  getAll: (pageNumber = 1, pageSize = 10, token) => {
-    return apiGetPaginated(ENDPOINT, pageNumber, pageSize, { token });
+  getAll: (pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(ENDPOINT, pageNumber, pageSize);
   },
 
   // Lấy thông tin user theo ID
-  getById: (id, token) => {
-    return apiGet(`${ENDPOINT}/${id}`, { token });
+  getById: (id) => {
+    return apiGet(`${ENDPOINT}/${id}`);
   },
 
   // Cập nhật thông tin user
-  update: (id, data, token) => {
+  update: (id, data) => {
     return apiPut(
       `${ENDPOINT}/${id}`,
-      data,
-      { token }
+      data
     );
   },
 
   // Cập nhật avatar
-  updateAvatar: async (id, file, token) => {
+  updateAvatar: async (id, file) => {
     const formData = new FormData();
     formData.append("avatar", file);
+    
+    const token = getToken();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}/${id}/avatar`,
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: formData
       }
@@ -52,16 +53,18 @@ export const userApi = {
   },
 
   // Cập nhật ảnh bìa
-  updateCoverImage: async (id, file, token) => {
+  updateCoverImage: async (id, file) => {
     const formData = new FormData();
     formData.append("coverImage", file);
+    
+    const token = getToken();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}/${id}/cover-image`,
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: formData
       }
@@ -79,13 +82,11 @@ export const userApi = {
   changePassword: (
   id,
   currentPassword,
-  newPassword,
-  token) =>
+  newPassword) =>
   {
     return apiPost(
       `${ENDPOINT}/${id}/change-password`,
-      { currentPassword, newPassword },
-      { token }
+      { currentPassword, newPassword }
     );
   },
 
@@ -93,14 +94,12 @@ export const userApi = {
   getPosts: (
   id,
   pageNumber = 1,
-  pageSize = 10,
-  token) =>
+  pageSize = 10) =>
   {
     return apiGetPaginated(
       `${ENDPOINT}/${id}/posts`,
       pageNumber,
-      pageSize,
-      { token }
+      pageSize
     );
   },
 
@@ -108,14 +107,12 @@ export const userApi = {
   getMedia: (
   id,
   pageNumber = 1,
-  pageSize = 6,
-  token) =>
+  pageSize = 6) =>
   {
     return apiGetPaginated(
       `${ENDPOINT}/${id}/media`,
       pageNumber,
-      pageSize,
-      { token }
+      pageSize
     );
   },
 
@@ -123,52 +120,51 @@ export const userApi = {
   getApplications: (
   id,
   pageNumber = 1,
-  pageSize = 10,
-  token) =>
+  pageSize = 10) =>
   {
     return apiGetPaginated(
       `${ENDPOINT}/${id}/applications`,
       pageNumber,
-      pageSize,
-      { token }
+      pageSize
     );
   },
 
   // Lấy kỹ năng của user
-  getSkills: (id, token) => {
-    return apiGet(`${ENDPOINT}/${id}/skills`, { token });
+  getSkills: (id) => {
+    return apiGet(`${ENDPOINT}/${id}/skills`);
   },
 
   // Thêm kỹ năng cho user
-  addSkill: (id, skillId, token) => {
+  addSkill: (id, skillId) => {
     return apiPost(
       `${ENDPOINT}/${id}/skills`,
-      { skillId },
-      { token }
+      { skillId }
     );
   },
 
   // Xóa kỹ năng của user
-  removeSkill: (id, skillId, token) => {
-    return apiDelete(`${ENDPOINT}/${id}/skills/${skillId}`, { token });
+  removeSkill: (id, skillId) => {
+    return apiDelete(`${ENDPOINT}/${id}/skills/${skillId}`);
   },
 
   // Xóa user (admin only - cascade delete)
-  delete: (id, token) => {
-    return apiDelete(`${ENDPOINT}/${id}`, { token });
+  delete: (id) => {
+    return apiDelete(`${ENDPOINT}/${id}`);
   },
 
   // Cập nhật CV
-  updateCV: async (id, file, token) => {
+  updateCV: async (id, file) => {
     const formData = new FormData();
     formData.append("cv", file);
+    
+    const token = getToken();
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}/${id}/cv`,
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: formData
       }

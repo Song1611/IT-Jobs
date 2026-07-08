@@ -49,7 +49,7 @@ export default function ResumePage() {
 
     try {
       setLoading(true);
-      const response = await userApi.getSkills(user.id, token);
+      const response = await userApi.getSkills(user.id);
 
       // Handle different response formats
       let skills = [];
@@ -74,7 +74,7 @@ export default function ResumePage() {
     if (!token) return;
 
     try {
-      const response = await skillApi.getAll(1, 100, token);
+      const response = await skillApi.getAll(1, 100);
       setAllSkills(response.data || []);
     } catch (error) {
       console.error("Failed to load all skills:", error);
@@ -87,7 +87,7 @@ export default function ResumePage() {
 
     try {
       setAddingSkill(true);
-      await userApi.addSkill(user.id, skillId, token);
+      await userApi.addSkill(user.id, skillId);
       await loadUserSkills();
       setDialogOpen(false);
       setSearchQuery("");
@@ -103,7 +103,7 @@ export default function ResumePage() {
     if (!user?.id || !token) return;
 
     try {
-      await userApi.removeSkill(user.id, skillId, token);
+      await userApi.removeSkill(user.id, skillId);
       await loadUserSkills();
     } catch (error) {
       alert("Xóa kỹ năng thất bại");
@@ -117,7 +117,7 @@ export default function ResumePage() {
 
     try {
       setUploadingCV(true);
-      const response = await userApi.updateCV(user.id, file, token);
+      const response = await userApi.updateCV(user.id, file);
 
       // Update user with new CV URL
       if (response.data && response.data.cvUrl) {

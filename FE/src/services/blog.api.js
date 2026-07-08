@@ -11,39 +11,45 @@ import { getUserRole } from '@/utils/auth';
 
 const ENDPOINT = "/api/Blog";
 
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('accessToken');
+}
+
 export const blogApi = {
   // Lấy danh sách blog
-  getAll: (pageNumber = 1, pageSize = 10, categoryId, token) => {
+  getAll: (pageNumber = 1, pageSize = 10, categoryId) => {
     return apiGetPaginated(ENDPOINT, pageNumber, pageSize, {
-      params: categoryId ? { categoryId } : undefined,
-      token
+      params: categoryId ? { categoryId } : undefined
     });
   },
 
   // Lấy chi tiết blog
-  getById: (id, token) => {
-    return apiGetById(ENDPOINT, id, { token });
+  getById: (id) => {
+    return apiGetById(ENDPOINT, id);
   },
 
   // Lấy blog theo userId
-  getByUserId: (userId, token) => {
+  getByUserId: (userId) => {
     const role = getUserRole();
-    return apiGet(`${ENDPOINT}/user/${userId}`, { token, params: { role } });
+    return apiGet(`${ENDPOINT}/user/${userId}`, { params: { role } });
   },
 
   // Tạo blog mới với multipart/form-data
-  create: async (formData, token) => {
+  create: async (formData) => {
     const BE_ENDPOINT = process.env.NEXT_PUBLIC_BE_ENDPOINT;
 
     console.log("Creating blog with FormData:");
     for (let pair of formData.entries()) {
       console.log(pair[0], pair[1]);
     }
+    
+    const token = getToken();
 
     const response = await fetch(`${BE_ENDPOINT}${ENDPOINT}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
         // Không set Content-Type, để browser tự động set với boundary
       },
       body: formData
@@ -64,12 +70,15 @@ export const blogApi = {
   },
 
   // Cập nhật blog với multipart/form-data
-  update: async (id, formData, token) => {
+  update: async (id, formData) => {
     const BE_ENDPOINT = process.env.NEXT_PUBLIC_BE_ENDPOINT;
+    
+    const token = getToken();
+    
     const response = await fetch(`${BE_ENDPOINT}${ENDPOINT}/${id}`, {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
       },
       body: formData
     });
@@ -85,27 +94,23 @@ export const blogApi = {
   },
 
   // Xóa blog
-  delete: (id, token) => {
-    return apiDelete(`${ENDPOINT}/${id}`, { token });
+  delete: (id) => {
+    return apiDelete(`${ENDPOINT}/${id}`);
   },
 
   // Tìm kiếm blog
   search: (
   keyword,
   pageNumber = 1,
-  pageSize = 10,
-  token) =>
+  pageSize = 10) =>
   {
     return apiGetPaginated(ENDPOINT, pageNumber, pageSize, {
-      params: { keyword },
-      token
+      params: { keyword }
     });
   },
 
   // Lấy danh sách categories
-  getCategories: (token) => {
-    return apiGet("/api/BlogCategory", {
-      token
-    });
+  getCategories: () => {
+    return apiGet("/api/BlogCategory");
   }
 };

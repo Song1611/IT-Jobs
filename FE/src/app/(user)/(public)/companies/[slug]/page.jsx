@@ -1,5 +1,5 @@
 import CompanyDetailPage from "@/features/company/company-detail.page";
-import { companyApi } from "@/apis";
+import { companyApi } from "@/services";
 import { notFound } from "next/navigation";
 
 

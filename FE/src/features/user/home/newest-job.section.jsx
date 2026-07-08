@@ -5,7 +5,8 @@ import "swiper/css/navigation";
 import { MoveLeft, MoveRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import SectionTitle from "@/components/ui/customs/section-title";
-import { jobApi } from "@/apis";
+import { jobApi } from "@/services";
+import { JobRowSkeleton } from "@/components/ui/skeletons";
 
 
 import Link from "next/link";
@@ -28,8 +29,8 @@ export default function NewestJob() {
     try {
       setLoading(true);
       const response = await jobApi.getAll(page, pageSize);
-      setJobs(response.data);
-      setTotalPages(response.totalPages);
+      setJobs(response.items || response);
+      setTotalPages(response.totalPages || 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể tải công việc");
     } finally {
@@ -47,11 +48,12 @@ export default function NewestJob() {
           showViewAll
           viewAllLink="/jobs" />
         
-        <div className="flex items-center justify-center h-64">
-          <div className="text-muted-foreground">Đang tải...</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <JobRowSkeleton key={i} />
+          ))}
         </div>
       </div>);
-
   }
 
   if (error) {

@@ -1,9 +1,13 @@
 package com.itjob.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class LogoutRequest {
 
     @NotBlank(message = "REFRESH_TOKEN_REQUIRED")

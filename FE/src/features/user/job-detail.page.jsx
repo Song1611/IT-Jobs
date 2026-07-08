@@ -12,7 +12,8 @@ import {
   TabsList,
   TabsTrigger } from
 "@/components/ui/shadcn/tabs";
-import { jobApi } from "@/apis";
+import { jobApi } from "@/services";
+import { JobDetailSkeleton } from "@/components/ui/skeletons";
 
 
 
@@ -43,12 +44,9 @@ export default function JobDetailPage({ jobId }) {
     fetchJobDetail();
   }, [jobId]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Đang tải...</div>
-      </div>);
 
+  if (loading) {
+    return <JobDetailSkeleton />;
   }
 
   if (error || !jobData) {

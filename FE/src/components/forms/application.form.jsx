@@ -81,8 +81,7 @@ export default function ApplicationForm({
           userId: user.id,
           cvUrl: values.cvUrl,
           coverLetter: values.coverLetter
-        },
-        token
+        }
       );
 
       setSuccess(true);

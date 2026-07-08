@@ -96,8 +96,7 @@ function MainContent({
       await postApi.create(
         { content: newPost, userId: user.id },
         selectedImages.length > 0 ? selectedImages : undefined,
-        selectedVideo || undefined,
-        token
+        selectedVideo || undefined
       );
 
       setNewPost("");
@@ -146,9 +145,9 @@ function MainContent({
 
       // Use updateWithImages if there are new images, otherwise use regular update
       if (newImages.length > 0) {
-        await postApi.updateWithImages(postId, updateData, newImages, token);
+        await postApi.updateWithImages(postId, updateData, newImages);
       } else {
-        await postApi.update(postId, updateData, token);
+        await postApi.update(postId, updateData);
       }
 
       // Refresh to show updated post
@@ -326,7 +325,7 @@ function MainContent({
           onDeletePost={async (postId) => {
             if (!token) return;
             try {
-              await postApi.delete(postId, token);
+              await postApi.delete(postId);
               window.location.reload();
             } catch (error) {
               console.error("Error deleting post:", error);

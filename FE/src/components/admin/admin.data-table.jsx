@@ -13,6 +13,7 @@ import {
   Loader2,
   Database } from
 "lucide-react";
+import { Skeleton } from "@/components/ui/shadcn/skeleton";
 
 // Generic column definition
 
@@ -229,9 +230,14 @@ export function AdminDataTable({
 
           {/* Loading State */}
           {loading && !error &&
-          <div className="p-12 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-muted-foreground">Đang tải dữ liệu...</p>
+          <div className="divide-y">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex gap-4 items-center p-4">
+                  {columns.map((col, j) => (
+                    <Skeleton key={j} className="h-4 flex-1" />
+                  ))}
+                </div>
+              ))}
             </div>
           }
 

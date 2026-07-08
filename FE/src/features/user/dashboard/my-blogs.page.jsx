@@ -61,7 +61,7 @@ export default function MyBlogsPage() {
 
     try {
       setLoading(true);
-      const response = await blogApi.getByUserId(user.id, token);
+      const response = await blogApi.getByUserId(user.id);
       setBlogs(response.data || []);
     } catch (error) {
       toast.error("Không thể tải danh sách blog");
@@ -74,7 +74,7 @@ export default function MyBlogsPage() {
   const loadCategories = async () => {
     if (!token) return;
     try {
-      const response = await blogApi.getCategories(token);
+      const response = await blogApi.getCategories();
       setCategories(response || []);
     } catch (error) {
       console.error("Failed to load categories:", error);
@@ -86,7 +86,7 @@ export default function MyBlogsPage() {
 
     try {
       setDeleting(true);
-      await blogApi.delete(deleteId, token);
+      await blogApi.delete(deleteId);
       setBlogs((prev) => prev.filter((blog) => blog.id !== deleteId));
       toast.success("Xóa blog thành công");
       setDeleteId(null);
@@ -165,10 +165,10 @@ export default function MyBlogsPage() {
       }
 
       if (createMode) {
-        await blogApi.create(data, token);
+        await blogApi.create(data);
         toast.success("Tạo blog thành công");
       } else if (editBlog) {
-        await blogApi.update(editBlog.id, data, token);
+        await blogApi.update(editBlog.id, data);
         toast.success("Cập nhật blog thành công");
       }
 

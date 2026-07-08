@@ -61,11 +61,10 @@ export function HRLayout({ children }) {
       if (!token || !company?.id) return;
       try {
         const companyId = company.id;
-
-        const jobsResponse = await jobApi.getByCompany(companyId, 1, 1, token);
+        const jobsResponse = await jobApi.getByCompany(companyId, 1, 1);
         setJobCount(jobsResponse.totalItems || 0);
 
-        const candidatesResponse = await applicationApi.getByCompany(companyId, 1, 1, token);
+        const candidatesResponse = await applicationApi.getByCompany(companyId, 1, 1);
         setCandidateCount(candidatesResponse.totalItems || 0);
       } catch (error) {
         console.error("Error fetching layout data:", error);

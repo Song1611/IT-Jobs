@@ -18,6 +18,7 @@ import { User, ExternalLink } from "lucide-react";
 import { DataTable } from "@/components/cards/data-table.card";
 import { applicationApi } from "@/services/application.api";
 import { useAuth } from "@/components/providers/auth.provider";
+import { ManagementTableSkeleton } from "@/components/ui/skeletons";
 
 
 
@@ -80,7 +81,7 @@ function CandidatesManagement() {
       setLoading(true);
       const companyId = company.id;
 
-      const response = await applicationApi.getByCompany(companyId, 1, 50, token);
+      const response = await applicationApi.getByCompany(companyId, 1, 50);
 
 
       // Response structure: { page, pageSize, totalItems, totalPages, data: Application[] }
@@ -98,7 +99,7 @@ function CandidatesManagement() {
   const handleAccept = async (row) => {
     if (!token) return;
     try {
-      await applicationApi.accept(row.jobId, row.userId, row.cvUrl, row.coverLetter, token);
+      await applicationApi.accept(row.jobId, row.userId, row.cvUrl, row.coverLetter);
       console.log(`✅ Đã chấp nhận ứng viên ${row.userFullName}`);
       alert(`✅ Đã chấp nhận ứng viên ${row.userFullName}`);
       await fetchApplications(); // Refresh data
@@ -111,7 +112,7 @@ function CandidatesManagement() {
   const handleReject = async (row) => {
     try {
       const token = "your-token-here"; // TODO: Get from auth context
-      await applicationApi.reject(row.jobId, row.userId, row.cvUrl, row.coverLetter, token);
+      await applicationApi.reject(row.jobId, row.userId, row.cvUrl, row.coverLetter);
       console.log(`❌ Đã từ chối ứng viên ${row.userFullName}`);
       alert(`❌ Đã từ chối ứng viên ${row.userFullName}`);
       await fetchApplications(); // Refresh data
@@ -125,7 +126,7 @@ function CandidatesManagement() {
     if (confirm(`⚠️ Bạn có chắc muốn xóa đơn ứng tuyển của ${row.userFullName}?`)) {
       try {
         const token = "your-token-here"; // TODO: Get from auth context
-        await applicationApi.delete(row.jobId, row.userId, token);
+        await applicationApi.delete(row.jobId, row.userId);
         console.log(`🗑️ Đã xóa đơn ứng tuyển của ${row.userFullName}`);
         alert(`✅ Đã xóa đơn ứng tuyển của ${row.userFullName} thành công`);
         await fetchApplications(); // Refresh data
@@ -273,11 +274,7 @@ function CandidatesManagement() {
 
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Đang tải...</div>
-      </div>);
-
+    return <ManagementTableSkeleton />;
   }
 
   return (

@@ -1,15 +1,18 @@
 import { apiPost, apiDelete, apiGetPaginated } from "./api";
 
-
 const ENDPOINT = "/api/Post";
+
+function getToken() {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('accessToken');
+}
 
 export const interactionApi = {
   // Toggle like cho bài post
-  toggleLike: (postId, userId, token) => {
+  toggleLike: (postId, userId) => {
     return apiPost(
       `${ENDPOINT}/${postId}/like`,
-      { postId, userId },
-      { token }
+      { postId, userId }
     );
   },
 
@@ -17,14 +20,12 @@ export const interactionApi = {
   getComments: (
   postId,
   pageNumber = 1,
-  pageSize = 10,
-  token) =>
+  pageSize = 10) =>
   {
     return apiGetPaginated(
       `${ENDPOINT}/${postId}/comments`,
       pageNumber,
-      pageSize,
-      { token }
+      pageSize
     );
   },
 
@@ -33,7 +34,6 @@ export const interactionApi = {
   postId,
   userId,
   content,
-  token,
   attachments) =>
   {
     const formData = new FormData();
@@ -47,12 +47,14 @@ export const interactionApi = {
       });
     }
 
+    const token = getToken();
+
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_BE_ENDPOINT}${ENDPOINT}/${postId}/comment`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: formData
       }
@@ -70,11 +72,9 @@ export const interactionApi = {
   deleteComment: (
   postId,
   commentId,
-  userId,
-  token) =>
+  userId) =>
   {
     return apiDelete(`${ENDPOINT}/${postId}/comment/${commentId}`, {
-      token,
       params: { userId }
     });
   }

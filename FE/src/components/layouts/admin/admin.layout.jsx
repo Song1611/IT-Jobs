@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/shadcn/badge";
 import { Sheet, SheetContent } from "@/components/ui/shadcn/sheet";
 import { cn } from "@/lib/utils";
 
-import { ModeToggle } from "../../components/ui/customs/toggle-them";
+import { ModeToggle } from "@/components/ui/customs/toggle-them";
 import {
   Avatar,
   AvatarFallback,

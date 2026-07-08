@@ -4,6 +4,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const nextConfig = {
+  reactStrictMode: false,
   eslint: {
     ignoreDuringBuilds: true,
   },

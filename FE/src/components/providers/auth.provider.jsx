@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { authApi } from "@/services/auth.api";
 import { companyApi } from "@/services/company.api";
+import { setAuthToken } from "@/services/api";
 
 
 
@@ -94,53 +95,77 @@ export function AuthProvider({ children }) {
   const [company, setCompany] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
   const [jwtPayload, setJwtPayload] = useState(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Check localStorage for existing session (only in browser)
-    if (typeof window !== "undefined") {
+    const initializeAuth = async () => {
+      if (typeof window === "undefined") return;
+      
       const storedUser = localStorage.getItem("userInfo");
       const storedCompany = localStorage.getItem("company");
-      const storedToken = localStorage.getItem("accessToken");
 
-      if (storedUser && storedToken) {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setToken(storedToken);
-
-        // Decode JWT token
-        try {
-          const decoded = jwtDecode(storedToken);
-          setJwtPayload(decoded);
-        } catch (error) {
-          console.error("Failed to decode JWT token:", error);
-        }
-
-        // If user is HR/Employer but company is missing, fetch it
-        if ((parsedUser.role === 'employer' || parsedUser.role === 'hr') && !storedCompany) {
-          companyApi.getMyCompany(storedToken).
-          then((companyData) => {
-            if (companyData) {
-              setCompany(companyData);
-              localStorage.setItem("company", JSON.stringify(companyData));
-            }
-          }).
-          catch((err) => console.error("Failed to fetch company info:", err));
-        }
+      // Set initial user info if available
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
       }
       if (storedCompany) {
         setCompany(JSON.parse(storedCompany));
       }
-    }
 
-    setLoading(false);
+      // Try silent refresh to get token
+      try {
+        const response = await authApi.refreshToken();
+        if (response.success && response.data) {
+          const { accessToken, user: userData } = response.data;
+          
+          setAuthToken(accessToken);
+          setToken(accessToken);
+          
+          // Re-sync user info just in case
+          if (userData) {
+            setUser(userData.result || userData);
+            localStorage.setItem("userInfo", JSON.stringify(userData.result || userData));
+          }
+
+          try {
+            const decoded = jwtDecode(accessToken);
+            setJwtPayload(decoded);
+            
+            // If user is HR/Employer but company is missing, fetch it
+            if ((decoded.role === 'employer' || decoded.role === 'hr') && !storedCompany) {
+               const companyData = await companyApi.getMyCompany(accessToken);
+               if (companyData) {
+                 setCompany(companyData);
+                 localStorage.setItem("company", JSON.stringify(companyData));
+               }
+            }
+          } catch (error) {
+            console.error("Failed to decode JWT token:", error);
+          }
+        }
+      } catch (error) {
+        // Silent refresh failed (e.g. no cookie or expired cookie)
+        console.log("Silent refresh failed or no session");
+        // Clear old storage just in case
+        localStorage.removeItem("userInfo");
+        localStorage.removeItem("company");
+        setUser(null);
+        setCompany(null);
+      } finally {
+        setIsInitializing(false);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   // Route protection effect
   useEffect(() => {
-    if (loading || !pathname) return;
+    if (isInitializing || loading || !pathname) return;
 
     // Don't check access-denied page itself
     if (pathname === "/access-denied") return;
@@ -160,7 +185,7 @@ export function AuthProvider({ children }) {
         router.push("/access-denied");
       }
     }
-  }, [pathname, loading, jwtPayload, user, token, router]);
+  }, [pathname, loading, isInitializing, jwtPayload, user, token, router]);
 
   // Check if current user has access to a specific route
   const checkRouteAccess = (routePath) => {
@@ -190,17 +215,16 @@ export function AuthProvider({ children }) {
       const response = await authApi.login({ email, password });
 
       if (response.success && response.data) {
-        const { accessToken, refreshToken, user: userData } = response.data;
+        const { accessToken, user: userData } = response.data;
 
         // Save to localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userInfo", JSON.stringify(userData));
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
         }
 
         setUser(userData);
         setToken(accessToken);
+        setAuthToken(accessToken);
 
         // If user is HR/Employer, fetch company info
         if (userData.role === 'employer' || userData.role === 'hr') {
@@ -248,17 +272,16 @@ export function AuthProvider({ children }) {
       const response = await authApi.registerUser(data);
 
       if (response.success && response.data) {
-        const { accessToken, refreshToken, user: userData } = response.data;
+        const { accessToken, user: userData } = response.data;
 
         // Save to localStorage
         if (typeof window !== "undefined") {
           localStorage.setItem("userInfo", JSON.stringify(userData));
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
         }
 
         setUser(userData);
         setToken(accessToken);
+        setAuthToken(accessToken);
 
         // Redirect to home for regular users
         router.push(Routes.home);
@@ -285,7 +308,6 @@ export function AuthProvider({ children }) {
       if (response.success && response.data) {
         const {
           accessToken,
-          refreshToken,
           user: userData,
           company: companyData
         } = response.data;
@@ -294,13 +316,12 @@ export function AuthProvider({ children }) {
         if (typeof window !== "undefined") {
           localStorage.setItem("userInfo", JSON.stringify(userData));
           localStorage.setItem("company", JSON.stringify(companyData));
-          localStorage.setItem("accessToken", accessToken);
-          localStorage.setItem("refreshToken", refreshToken);
         }
 
         setUser(userData);
         setCompany(companyData);
         setToken(accessToken);
+        setAuthToken(accessToken);
 
         // Redirect to HR dashboard
         router.push("/hr");
@@ -318,17 +339,23 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Call backend to clear the httpOnly cookie
+    try {
+      await authApi.logout();
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    }
+    
     // Remove from localStorage (only in browser)
     if (typeof window !== "undefined") {
       localStorage.removeItem("userInfo");
       localStorage.removeItem("company");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
     }
     setUser(null);
     setCompany(null);
     setToken(null);
+    setAuthToken(null);
     router.push("/");
   };
 
@@ -358,6 +385,7 @@ export function AuthProvider({ children }) {
         logout,
         updateUser,
         loading,
+        isInitializing,
         getRedirectPath,
         checkRouteAccess
       }}>

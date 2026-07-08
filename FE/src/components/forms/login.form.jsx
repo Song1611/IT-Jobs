@@ -46,7 +46,7 @@ export default function FormLogin() {
 
     const result = await login(values.email, values.password);
 
-    if (result.success && result.role) {
+    if (result.success) {
       // Redirect based on role
       const redirectPath = getRedirectPath(result.role);
       router.push(redirectPath);

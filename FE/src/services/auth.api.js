@@ -1,88 +1,72 @@
-import { apiPost } from './api';
+import { apiPost, apiGet } from './api';
 
-
-
-
-
-
-
-
-
-
-const ENDPOINT = '/api/Auth';
+const ENDPOINT = '/api/auth';
 
 export const authApi = {
-  // Đăng ký ứng viên (role = user)
+  // Đăng ký (legacy/user)
   registerUser: async (data) => {
-    const response = await apiPost(`${ENDPOINT}/register-user`, data);
-
-    // Lưu userInfo vào localStorage sau khi đăng ký thành công
-    if (response.data?.user) {
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+    const response = await apiPost(`${ENDPOINT}/register`, data);
+    // Giả sử API trả về luôn token hoặc cần login lại
+    if (response.accessToken) {
+       const userResponse = await apiGet('/api/users/my-info', { token: response.accessToken });
+       return { success: true, data: { accessToken: response.accessToken, refreshToken: response.refreshToken, user: userResponse } };
     }
-
-    return response;
+    return { success: true, data: response };
   },
 
-  // Đăng ký nhà tuyển dụng (role = employer)
+  // Đăng ký nhà tuyển dụng
   registerHR: async (data) => {
     const response = await apiPost(`${ENDPOINT}/register-hr`, data);
-
-    // Lưu userInfo vào localStorage sau khi đăng ký thành công
-    if (response.data?.user) {
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+    if (response.accessToken) {
+       const userResponse = await apiGet('/api/users/my-info', { token: response.accessToken });
+       // Company info is fetched by provider, or we could fetch it here
+       return { success: true, data: { accessToken: response.accessToken, refreshToken: response.refreshToken, user: userResponse } };
     }
-
-    return response;
-  },
-
-  // Đăng ký (legacy)
-  register: async (data) => {
-    const response = await apiPost(`${ENDPOINT}/register`, data);
-
-    // Lưu userInfo vào localStorage
-    if (response.data?.user) {
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user));
-    }
-
-    return response;
+    return { success: true, data: response };
   },
 
   // Đăng nhập
   login: async (data) => {
-    const response = await apiPost(`${ENDPOINT}/login`, data);
-
-    // Lưu userInfo vào localStorage sau khi login thành công
-    if (response.data?.user) {
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+    // data có dạng { email, password }, backend cần { username, password }
+    const payload = {
+      username: data.email || data.username,
+      password: data.password
+    };
+    const response = await apiPost(`${ENDPOINT}/login`, payload);
+    
+    if (response && response.accessToken) {
+      // Explicitly pass token because it's not in localStorage yet
+      const userResponse = await apiGet('/api/users/my-info', { token: response.accessToken });
+      return {
+        success: true,
+        data: {
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: userResponse
+        }
+      };
     }
-
-    return response;
+    return { success: false, message: "No access token received" };
   },
 
   // Làm mới token
   refreshToken: async (refreshToken) => {
-    const response = await apiPost(`${ENDPOINT}/refresh-token`, {
-      refreshToken
-    });
-
-    // Cập nhật userInfo nếu có
-    if (response.data?.user) {
-      localStorage.setItem('userInfo', JSON.stringify(response.data.user));
+    const response = await apiPost(`${ENDPOINT}/refresh`, { refreshToken });
+    
+    if (response && response.accessToken) {
+       const userResponse = await apiGet('/api/users/my-info', { token: response.accessToken });
+       return { success: true, data: { accessToken: response.accessToken, refreshToken: response.refreshToken, user: userResponse } };
     }
-
-    return response;
+    return { success: false };
   },
 
   // Đăng xuất
-  logout: (token) => {
-    // Xóa userInfo khi logout
-    localStorage.removeItem('userInfo');
-    return apiPost(`${ENDPOINT}/logout`, undefined, { token });
+  logout: () => {
+    return apiPost(`${ENDPOINT}/logout`);
   },
 
   // Lấy thông tin user hiện tại
-  getCurrentUser: (token) => {
-    return apiPost(`${ENDPOINT}/me`, undefined, { token });
+  getCurrentUser: () => {
+    return apiGet(`/api/users/my-info`);
   }
 };

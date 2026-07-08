@@ -1,4 +1,4 @@
-import Stack from "../../components/ui/react.bits/stacks";
+import Stack from "@/components/ui/react.bits/stacks";
 import {
   Avatar,
   AvatarFallback,

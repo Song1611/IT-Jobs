@@ -61,7 +61,7 @@ const WelcomePage = () => {
       backSpeed: 30,
       backDelay: 2000,
       loop: true,
-      showCursor: true,
+      showCursor: false,
       cursorChar: "|"
     });
 

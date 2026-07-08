@@ -20,19 +20,13 @@ import Link from "next/link";
 import Routes from "@/constants/routes";
 import { Button } from "@/components/ui/shadcn/button";
 import { useAuth } from "@/components/providers/auth.provider";
+import { DashboardOverviewSkeleton } from "@/components/ui/skeletons";
 
 export default function DashboardOverviewPage() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Đang tải...</p>
-        </div>
-      </div>);
-
+    return <DashboardOverviewSkeleton />;
   }
 
   const stats = [
