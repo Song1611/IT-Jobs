@@ -1,4 +1,4 @@
-package com.itjob.service.impl;
+﻿package com.itjob.service.impl;
 
 import com.itjob.constant.CacheName;
 import com.itjob.dto.response.JobResponse;
@@ -15,10 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-/**
- * Separated cache service to avoid Spring Cache proxy issues.
- * When @Cacheable methods are called from within the same class, Spring's proxy mechanism is bypassed.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,7 +30,6 @@ public class JobCacheServiceImpl implements JobCacheService {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
         
-        // Use mapper to convert Job to JobResponse with Company and Skills
         return jobMapper.toJobResponse(job);
     }
 }

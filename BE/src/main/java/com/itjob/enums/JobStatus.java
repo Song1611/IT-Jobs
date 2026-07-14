@@ -1,5 +1,8 @@
-package com.itjob.constant;
+package com.itjob.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum JobStatus {
     OPEN("open"),
     CLOSED("closed"),
@@ -11,10 +14,6 @@ public enum JobStatus {
 
     JobStatus(String value) {
         this.value = value;
-    }
-
-    public String getValue() {
-        return value;
     }
 
     /**

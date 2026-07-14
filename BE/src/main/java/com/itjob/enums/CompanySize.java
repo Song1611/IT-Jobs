@@ -1,4 +1,4 @@
-package com.itjob.entity;
+package com.itjob.enums;
 
 public enum CompanySize {
     SIZE_1_50("1-50"),

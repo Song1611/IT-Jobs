@@ -1,8 +1,8 @@
 package com.itjob.service.impl;
 
 import com.itjob.constant.CacheName;
-import com.itjob.constant.CompanyStatus;
-import com.itjob.constant.JobStatus;
+import com.itjob.enums.CompanyStatus;
+import com.itjob.enums.JobStatus;
 import com.itjob.dto.request.CompanyRequest;
 import com.itjob.dto.response.CompanyResponse;
 import com.itjob.dto.response.PageResponse;
@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
