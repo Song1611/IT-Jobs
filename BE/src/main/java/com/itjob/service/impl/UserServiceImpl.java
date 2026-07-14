@@ -3,8 +3,6 @@ package com.itjob.service.impl;
 import com.itjob.dto.request.UserUpdateRequest;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.dto.response.UserResponse;
-import com.itjob.entity.Role;
-import com.itjob.entity.Skill;
 import com.itjob.entity.User;
 import com.itjob.exception.AppException;
 import com.itjob.exception.ErrorCode;
@@ -75,6 +73,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     public UserResponse getUserById(String id) {
+        log.info("Getting user by id: {}", id);
         User user = userRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toUserResponse(user);
@@ -83,6 +82,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse getMyInfo() {
         String email = getCurrentUserEmail();
+        
+        log.info("Getting user profile for: {}", email);
         
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -94,6 +95,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @PostAuthorize("returnObject.email == authentication.name or hasRole('ADMIN')")
     public UserResponse updateUser(String id, UserUpdateRequest request) {
+        log.info("Updating user: {}", id);
         User user = userRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
@@ -119,6 +121,8 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateMyProfile(UserUpdateRequest request) {
         String email = getCurrentUserEmail();
         
+        log.info("Updating profile for: {}", email);
+        
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         
@@ -143,6 +147,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String id) {
+        log.info("Deleting user: {}", id);
         User user = userRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         

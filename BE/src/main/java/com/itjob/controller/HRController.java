@@ -148,11 +148,14 @@ public class HRController {
     @DeleteMapping("/jobs/{id}")
     public ApiResponse<Void> deleteJob(
             @PathVariable UUID id,
-            @RequestParam UUID companyId) {
+            @RequestParam UUID companyId,
+            Authentication authentication) {
         
-        log.info("Deleting job {} for company {}", id, companyId);
+        UUID userId = UUID.fromString(authentication.getName());
         
-        jobService.deleteJob(id, companyId);
+        log.info("Deleting job {} for company {} by user {}", id, companyId, userId);
+        
+        jobService.deleteJob(id, companyId, userId);
         
         return ApiResponse.<Void>builder()
                 .message("Job deleted successfully")

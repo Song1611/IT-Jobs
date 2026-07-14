@@ -10,9 +10,20 @@ import org.mapstruct.*;
 @Mapper(config = CentralMapperConfig.class, uses = {CompanyMapper.class, SkillMapper.class})
 public interface JobMapper {
     
+    /**
+     * Map Job entity to JobResponse with Company and Skills
+     */
     @Mapping(target = "company", source = "company")
     @Mapping(target = "skills", source = "skills")
     JobResponse toJobResponse(Job job);
+    
+    /**
+     * Map Job entity to JobResponse with Company only (no Skills)
+     * Used for listings where skills are not needed
+     */
+    @Mapping(target = "company", source = "company")
+    @Mapping(target = "skills", ignore = true)
+    JobResponse toJobResponseWithCompanyOnly(Job job);
     
     @Mapping(target = "company", source = "company")
     JobBriefResponse toJobBriefResponse(Job job);

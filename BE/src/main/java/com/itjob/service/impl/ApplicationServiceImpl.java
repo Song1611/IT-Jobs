@@ -1,5 +1,6 @@
 package com.itjob.service.impl;
 
+import com.itjob.constant.CacheName;
 import com.itjob.dto.request.ApplicationRequest;
 import com.itjob.dto.response.ApplicationResponse;
 import com.itjob.dto.response.PageResponse;
@@ -18,6 +19,7 @@ import com.itjob.repository.UserRepository;
 import com.itjob.service.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,6 +47,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @CacheEvict(value = CacheName.DASHBOARD_HR, allEntries = true)
     public ApplicationResponse applyForJob(ApplicationRequest request, UUID userId) {
         // Check if job exists and is open
         Job job = jobRepository.findById(request.getJobId())

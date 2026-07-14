@@ -1,36 +1,39 @@
 package com.itjob.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.itjob.dto.response.ApiResponse;
 import com.itjob.exception.ErrorCode;
+import com.itjob.util.SecurityResponseUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jspecify.annotations.NonNull;
-import org.springframework.http.MediaType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
+/**
+ * Handles authentication failures in Security Filter Chain
+ * Triggered when:
+ * - No JWT token provided
+ * - Invalid JWT token
+ * - Expired JWT token
+ * Returns 401 UNAUTHORIZED with ApiResponse format
+ */
+@Component
+@Slf4j
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+    
     @Override
     public void commence(
-            @NonNull HttpServletRequest request, HttpServletResponse response, @NonNull AuthenticationException authException)
+            HttpServletRequest request,
+            HttpServletResponse response,
+            AuthenticationException authException)
             throws IOException, ServletException {
-        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        
+        log.warn("Authentication failed for request to: {} - Reason: {}", 
+                request.getRequestURI(), authException.getMessage());
 
-        response.setStatus(errorCode.getStatusCode().value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-
-        ApiResponse<?> apiResponse = ApiResponse.builder()
-                .code(errorCode.getCode())
-                .message(errorCode.getMessage())
-                .build();
-
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
-        response.flushBuffer();
+        SecurityResponseUtil.writeErrorResponse(response, ErrorCode.UNAUTHENTICATED);
     }
 }
