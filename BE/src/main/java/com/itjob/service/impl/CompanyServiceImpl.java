@@ -16,6 +16,7 @@ import com.itjob.repository.JobRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.repository.projection.CompanyJobCountProjection;
 import com.itjob.service.CompanyService;
+import com.itjob.util.PageResponseUtil;
 import com.itjob.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,13 +67,7 @@ public class CompanyServiceImpl implements CompanyService {
         // Optimize N+1 query using batch query
         List<CompanyResponse> items = mapToCompanyResponsesWithJobCount(companyPage.getContent());
         
-        return PageResponse.<CompanyResponse>builder()
-                .items(items)
-                .page(companyPage.getNumber())
-                .size(companyPage.getSize())
-                .totalElements(companyPage.getTotalElements())
-                .totalPages(companyPage.getTotalPages())
-                .build();
+        return PageResponseUtil.build(companyPage, items);
     }
     
     @Override
@@ -244,13 +239,7 @@ public class CompanyServiceImpl implements CompanyService {
         // Optimize N+1 query using batch query
         List<CompanyResponse> items = mapToCompanyResponsesWithJobCount(companyPage.getContent());
         
-        return PageResponse.<CompanyResponse>builder()
-                .items(items)
-                .page(companyPage.getNumber())
-                .size(companyPage.getSize())
-                .totalElements(companyPage.getTotalElements())
-                .totalPages(companyPage.getTotalPages())
-                .build();
+        return PageResponseUtil.build(companyPage, items);
     }
     
     @Override
