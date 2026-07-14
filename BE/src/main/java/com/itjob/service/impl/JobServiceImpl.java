@@ -22,6 +22,7 @@ import com.itjob.repository.projection.JobApplicationCountProjection;
 import com.itjob.service.JobCacheService;
 import com.itjob.service.JobService;
 import com.itjob.specification.helper.SpecificationHelper;
+import com.itjob.util.PageResponseUtil;
 import com.itjob.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -348,13 +349,7 @@ public class JobServiceImpl implements JobService {
      * Build PageResponse for Job listings
      */
     private PageResponse<JobResponse> buildJobPageResponse(Page<Job> jobPage, List<JobResponse> items) {
-        return PageResponse.<JobResponse>builder()
-                .items(items)
-                .page(jobPage.getNumber())
-                .size(jobPage.getSize())
-                .totalElements(jobPage.getTotalElements())
-                .totalPages(jobPage.getTotalPages())
-                .build();
+        return PageResponseUtil.build(jobPage, items);
     }
     
     /**
@@ -395,3 +390,4 @@ public class JobServiceImpl implements JobService {
         }
     }
 }
+

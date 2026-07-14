@@ -29,7 +29,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import com.itjob.util.PageResponseUtil;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -86,7 +90,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         
         List<ApplicationResponse> items = applicationPage.getContent().stream()
                 .map(this::buildApplicationResponseWithJobAndCompany)
-                .collect(Collectors.toList());
+                .toList();
         
         return buildPageResponse(applicationPage, items);
     }
@@ -150,7 +154,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         
         List<ApplicationResponse> items = applicationPage.getContent().stream()
                 .map(this::buildApplicationResponseWithJobAndCandidate)
-                .collect(Collectors.toList());
+                .toList();
         
         return buildPageResponse(applicationPage, items);
     }
@@ -162,7 +166,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         
         List<ApplicationResponse> items = applicationPage.getContent().stream()
                 .map(this::buildApplicationResponseWithJobAndCandidate)
-                .collect(Collectors.toList());
+                .toList();
         
         return buildPageResponse(applicationPage, items);
     }
@@ -245,13 +249,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      * Build PageResponse from Page and items list
      */
     private PageResponse<ApplicationResponse> buildPageResponse(Page<Application> applicationPage, List<ApplicationResponse> items) {
-        return PageResponse.<ApplicationResponse>builder()
-                .items(items)
-                .page(applicationPage.getNumber())
-                .size(applicationPage.getSize())
-                .totalElements(applicationPage.getTotalElements())
-                .totalPages(applicationPage.getTotalPages())
-                .build();
+        return PageResponseUtil.build(applicationPage, items);
     }
     
     /**

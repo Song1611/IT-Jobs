@@ -12,6 +12,7 @@ import com.itjob.repository.SkillRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.UserService;
 import com.itjob.specification.helper.SpecificationHelper;
+import com.itjob.util.PageResponseUtil;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -61,13 +62,7 @@ public class UserServiceImpl implements UserService {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
-        return PageResponse.<UserResponse>builder()
-                .items(usersPage.map(userMapper::toUserResponse).getContent())
-                .page(usersPage.getNumber())
-                .size(usersPage.getSize())
-                .totalElements(usersPage.getTotalElements())
-                .totalPages(usersPage.getTotalPages())
-                .build();
+        return PageResponseUtil.build(usersPage, userMapper::toUserResponse);
     }
 
     @Override

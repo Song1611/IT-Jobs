@@ -17,6 +17,7 @@ import com.itjob.repository.UserRepository;
 import com.itjob.service.BlogCacheService;
 import com.itjob.service.BlogService;
 import com.itjob.specification.helper.SpecificationHelper;
+import com.itjob.util.PageResponseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -110,11 +111,10 @@ public class BlogServiceImpl implements BlogService {
     @Override
     public BlogResponse getBlogById(UUID id) {
         // Get base blog data from cache (using separate service to avoid proxy bypass)
-        BlogResponse response = blogCacheService.getCachedBlogById(id);
-        
+
         // TODO: Implement view count tracking with RedisTemplate + async + scheduled DB sync
         
-        return response;
+        return blogCacheService.getCachedBlogById(id);
     }
     
     @Override
@@ -226,17 +226,6 @@ public class BlogServiceImpl implements BlogService {
     
     // Helper method to build page response
     private PageResponse<BlogBriefResponse> buildBlogPageResponse(Page<Blog> blogPage) {
-        List<BlogBriefResponse> items = blogPage.getContent()
-                .stream()
-                .map(blogMapper::toBlogBriefResponse)
-                .collect(Collectors.toList());
-        
-        return PageResponse.<BlogBriefResponse>builder()
-                .items(items)
-                .page(blogPage.getNumber())
-                .size(blogPage.getSize())
-                .totalElements(blogPage.getTotalElements())
-                .totalPages(blogPage.getTotalPages())
-                .build();
+        return PageResponseUtil.build(blogPage, blogMapper::toBlogBriefResponse);
     }
 }

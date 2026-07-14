@@ -1,4 +1,4 @@
-﻿package com.itjob.service.impl;
+package com.itjob.service.impl;
 
 import com.itjob.constant.CacheName;
 import com.itjob.dto.response.JobResponse;
@@ -33,3 +33,4 @@ public class JobCacheServiceImpl implements JobCacheService {
         return jobMapper.toJobResponse(job);
     }
 }
+
