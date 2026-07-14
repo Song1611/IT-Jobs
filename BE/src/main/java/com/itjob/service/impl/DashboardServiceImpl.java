@@ -1,13 +1,16 @@
 package com.itjob.service.impl;
 
+import com.itjob.constant.CacheName;
 import com.itjob.dto.response.DashboardStatsResponse;
 import com.itjob.repository.ApplicationRepository;
 import com.itjob.repository.CompanyRepository;
 import com.itjob.repository.JobRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.DashboardService;
+import com.itjob.util.CacheKeyGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,7 +27,10 @@ public class DashboardServiceImpl implements DashboardService {
     private final UserRepository userRepository;
     
     @Override
+    @Cacheable(value = CacheName.DASHBOARD_HR, key = "@cacheKeyGenerator.forHRDashboard(#companyId)")
     public DashboardStatsResponse getHRDashboardStats(UUID companyId) {
+        log.info("Fetching HR dashboard stats for company: {} from database", companyId);
+        
         long totalActiveJobs = jobRepository.countByCompanyIdAndStatus(companyId, "open");
         
         // New applications in last 7 days
@@ -48,7 +54,10 @@ public class DashboardServiceImpl implements DashboardService {
     }
     
     @Override
+    @Cacheable(value = CacheName.DASHBOARD_ADMIN, key = "@cacheKeyGenerator.forAdminDashboard()")
     public DashboardStatsResponse getAdminDashboardStats() {
+        log.info("Fetching admin dashboard stats from database");
+        
         long totalUsers = userRepository.count();
         long totalCompanies = companyRepository.count();
         long totalJobs = jobRepository.count();

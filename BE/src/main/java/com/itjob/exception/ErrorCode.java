@@ -17,6 +17,7 @@ public enum ErrorCode {
 
     // 3000-3999: Authorization
     UNAUTHORIZED(3001, "You do not have permission", HttpStatus.FORBIDDEN),
+    ACCESS_DENIED(3002, "You do not have permission to access this resource", HttpStatus.FORBIDDEN),
 
     // 4000-4999: Business
     USER_EXISTED(4001, "User existed", HttpStatus.BAD_REQUEST),
@@ -27,6 +28,14 @@ public enum ErrorCode {
     APPLICATION_NOT_FOUND(4006, "Application not found", HttpStatus.NOT_FOUND),
     ALREADY_APPLIED(4007, "You have already applied for this job", HttpStatus.BAD_REQUEST),
     CANNOT_WITHDRAW_APPLICATION(4008, "Cannot withdraw this application", HttpStatus.BAD_REQUEST),
+    BLOG_NOT_FOUND(4009, "Blog not found", HttpStatus.NOT_FOUND),
+    BLOG_CATEGORY_NOT_FOUND(4010, "Blog category not found", HttpStatus.NOT_FOUND),
+    COMPANY_ALREADY_EXISTS(4011, "You already have a company", HttpStatus.BAD_REQUEST),
+    COMPANY_NOT_ACTIVE(4012, "Company is not active", HttpStatus.BAD_REQUEST),
+    SKILL_NOT_FOUND(4013, "One or more skills not found", HttpStatus.NOT_FOUND),
+    INVALID_LIMIT(4014, "Limit must be greater than 0", HttpStatus.BAD_REQUEST),
+    LIMIT_EXCEEDED(4015, "Limit cannot exceed 100", HttpStatus.BAD_REQUEST),
+    
 
     // 9000-9999: System
     UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR

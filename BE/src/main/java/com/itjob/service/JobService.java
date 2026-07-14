@@ -26,7 +26,7 @@ public interface JobService {
     
     JobResponse updateJob(UUID id, UUID companyId, JobRequest request, UUID userId);
     
-    void deleteJob(UUID id, UUID companyId);
+    void deleteJob(UUID id, UUID companyId, UUID userId);
     
     // Admin APIs
     PageResponse<JobResponse> getAllJobs(String status, Pageable pageable);

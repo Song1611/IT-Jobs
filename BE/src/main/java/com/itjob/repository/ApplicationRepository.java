@@ -1,6 +1,7 @@
 package com.itjob.repository;
 
 import com.itjob.entity.Application;
+import com.itjob.repository.projection.JobApplicationCountProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,4 +46,10 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     
     // Count applications by user
     long countByUserId(UUID userId);
+    
+    // Batch query: Get application counts for multiple jobs (to avoid N+1)
+    @Query("SELECT a.job.id AS jobId, COUNT(a) AS applicationCount FROM Application a " +
+           "WHERE a.job.id IN :jobIds " +
+           "GROUP BY a.job.id")
+    List<JobApplicationCountProjection> countApplicationsByJobIds(@Param("jobIds") List<UUID> jobIds);
 }
