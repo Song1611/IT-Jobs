@@ -1,5 +1,8 @@
-package com.itjob.constant;
+package com.itjob.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum CompanyStatus {
     ACTIVE("active"),
     PENDING("pending"),
@@ -10,10 +13,6 @@ public enum CompanyStatus {
 
     CompanyStatus(String value) {
         this.value = value;
-    }
-
-    public String getValue() {
-        return value;
     }
 
     /**

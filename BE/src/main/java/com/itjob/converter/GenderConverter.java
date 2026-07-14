@@ -1,5 +1,6 @@
 package com.itjob.converter;
-import com.itjob.entity.Gender;
+
+import com.itjob.enums.Gender;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -16,3 +17,4 @@ public class GenderConverter implements AttributeConverter<Gender, String> {
         return dbData == null ? null : Gender.valueOf(dbData.toUpperCase());
     }
 }
+

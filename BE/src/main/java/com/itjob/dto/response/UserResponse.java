@@ -1,8 +1,7 @@
 package com.itjob.dto.response;
 
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.itjob.entity.Gender;
+import com.itjob.enums.Gender;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -31,3 +30,4 @@ public class UserResponse {
     LocalDateTime updatedAt;
 
 }
+

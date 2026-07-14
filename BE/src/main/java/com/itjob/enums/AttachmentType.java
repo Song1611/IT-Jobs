@@ -1,4 +1,4 @@
-package com.itjob.entity;
+package com.itjob.enums;
 
 public enum AttachmentType {
     IMAGE,

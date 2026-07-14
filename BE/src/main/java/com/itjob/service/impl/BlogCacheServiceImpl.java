@@ -1,4 +1,4 @@
-package com.itjob.service.impl;
+﻿package com.itjob.service.impl;
 
 import com.itjob.constant.CacheName;
 import com.itjob.dto.response.BlogResponse;
@@ -15,9 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-/**
- * Separated cache service to avoid Spring Cache proxy issues.
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j

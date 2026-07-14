@@ -1,8 +1,8 @@
 package com.itjob.service.impl;
 
 import com.itjob.constant.CacheName;
-import com.itjob.constant.CompanyStatus;
-import com.itjob.constant.JobStatus;
+import com.itjob.enums.CompanyStatus;
+import com.itjob.enums.JobStatus;
 import com.itjob.dto.request.JobRequest;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.dto.response.PageResponse;

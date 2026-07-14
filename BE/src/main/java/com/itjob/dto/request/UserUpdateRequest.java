@@ -1,6 +1,6 @@
 package com.itjob.dto.request;
 
-import com.itjob.entity.Gender;
+import com.itjob.enums.Gender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -47,3 +47,4 @@ public class UserUpdateRequest {
     // Only ADMIN can update roles
     Set<String> roles;
 }
+
