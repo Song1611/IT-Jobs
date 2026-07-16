@@ -5,14 +5,15 @@ import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.JobService;
+import com.itjob.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class JobController {
     
     private final JobService jobService;
+    private final JwtService jwtService;
     
     /**
      * Guest & Candidate APIs
@@ -42,13 +44,11 @@ public class JobController {
     
     /**
      * Search jobs using Specification pattern with filter array
-     * 
      * Examples:
      * - GET /api/jobs?filter=title~developer
      * - GET /api/jobs?filter=title~developer&filter=workLocation~hanoi
      * - GET /api/jobs?filter=salaryMax>=1000&filter=type:full-time
      * - GET /api/jobs?filter=level:junior&filter=status:open
-     * 
      * Supported operators:
      * - : (EQUALITY)       → filter=type:full-time
      * - ~ (LIKE)           → filter=title~developer
@@ -59,7 +59,6 @@ public class JobController {
      * - <= (LESS_EQUAL)    → filter=quantity<=10
      * - @ (IN)             → filter=type@full-time,part-time
      * - # (BETWEEN)        → filter=salaryMax#1000,3000
-     * 
      * OR Logic: Use ' prefix
      * - GET /api/jobs?filter='title~java&filter='title~python
      */
@@ -83,14 +82,141 @@ public class JobController {
             @PathVariable UUID id,
             Authentication authentication) {
         
-        UUID userId = authentication != null ? 
-                UUID.fromString(authentication.getName()) : null;
+        UUID userId = jwtService.extractUserIdSafely(authentication);
         
         log.info("Getting job by id: {}, userId: {}", id, userId);
         
         return ApiResponse.<JobResponse>builder()
                 .message("Job retrieved successfully")
                 .result(jobService.getJobById(id, userId))
+                .build();
+    }
+
+    /**
+     * HR APIs - Company Management
+     */
+    
+    @GetMapping("/company/{companyId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<PageResponse<JobResponse>> getCompanyJobs(
+            @PathVariable UUID companyId,
+            @RequestParam(required = false) String status,
+            Pageable pageable,
+            Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Getting jobs for company: {}, status: {}, by user: {}", companyId, status, userId);
+        
+        return ApiResponse.<PageResponse<JobResponse>>builder()
+                .message("Company jobs retrieved successfully")
+                .result(jobService.getCompanyJobs(companyId, status, pageable))
+                .build();
+    }
+    
+    @PostMapping("/company/{companyId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<JobResponse> createJob(
+            @PathVariable UUID companyId,
+            @Valid @RequestBody JobRequest request,
+            Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Creating job for company: {} by user: {}", companyId, userId);
+        
+        return ApiResponse.<JobResponse>builder()
+                .message("Job created successfully")
+                .result(jobService.createJob(companyId, request, userId))
+                .build();
+    }
+    
+    @PutMapping("/{id}/company/{companyId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<JobResponse> updateJob(
+            @PathVariable UUID id,
+            @PathVariable UUID companyId,
+            @Valid @RequestBody JobRequest request,
+            Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Updating job: {} for company: {} by user: {}", id, companyId, userId);
+        
+        return ApiResponse.<JobResponse>builder()
+                .message("Job updated successfully")
+                .result(jobService.updateJob(id, companyId, request, userId))
+                .build();
+    }
+    
+    @DeleteMapping("/{id}/company/{companyId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<Void> deleteJob(
+            @PathVariable UUID id,
+            @PathVariable UUID companyId,
+            Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Deleting job: {} from company: {} by user: {}", id, companyId, userId);
+        
+        jobService.deleteJob(id, companyId, userId);
+        
+        return ApiResponse.<Void>builder()
+                .message("Job deleted successfully")
+                .build();
+    }
+
+    /**
+     * Admin APIs
+     */
+    
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<JobResponse>> getAllJobs(
+            @RequestParam(required = false) String status,
+            Pageable pageable) {
+        
+        log.info("Admin getting all jobs with status: {}", status);
+        
+        return ApiResponse.<PageResponse<JobResponse>>builder()
+                .message("All jobs retrieved successfully")
+                .result(jobService.getAllJobs(status, pageable))
+                .build();
+    }
+    
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> approveJob(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        
+        UUID adminId = jwtService.extractUserId(authentication);
+        
+        log.info("Admin {} approving job: {}", adminId, id);
+        
+        jobService.approveJob(id, adminId);
+        
+        return ApiResponse.<Void>builder()
+                .message("Job approved successfully")
+                .build();
+    }
+    
+    @PutMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> rejectJob(
+            @PathVariable UUID id,
+            @RequestParam String reason,
+            Authentication authentication) {
+        
+        UUID adminId = jwtService.extractUserId(authentication);
+        
+        log.info("Admin {} rejecting job: {} with reason: {}", adminId, id, reason);
+        
+        jobService.rejectJob(id, adminId, reason);
+        
+        return ApiResponse.<Void>builder()
+                .message("Job rejected successfully")
                 .build();
     }
 }

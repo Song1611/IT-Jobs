@@ -2,7 +2,6 @@ package com.itjob.configuration;
 
 import com.itjob.exception.ErrorCode;
 import com.itjob.util.SecurityResponseUtil;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,6 @@ import java.io.IOException;
  * - User authenticated but lacks required role
  * - @PreAuthorize or @PostAuthorize fails
  * - Insufficient permissions for resource
- * 
  * Returns 403 FORBIDDEN with ApiResponse format
  */
 @Component
@@ -30,7 +28,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull AccessDeniedException accessDeniedException) throws IOException, ServletException {
+            @NonNull AccessDeniedException accessDeniedException) throws IOException {
         
         log.warn("Access denied for user at path: {} - Reason: {}", 
                 request.getRequestURI(), accessDeniedException.getMessage());

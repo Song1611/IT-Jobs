@@ -5,6 +5,7 @@ import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.ApplicationResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.ApplicationService;
+import com.itjob.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.util.UUID;
 public class ApplicationController {
     
     private final ApplicationService applicationService;
+    private final JwtService jwtService;
     
     /**
      * Candidate APIs
@@ -31,7 +33,7 @@ public class ApplicationController {
             @Valid @RequestBody ApplicationRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("User {} applying for job {}", userId, request.getJobId());
         
@@ -46,7 +48,7 @@ public class ApplicationController {
             Authentication authentication,
             Pageable pageable) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Getting applications for user {}", userId);
         
@@ -61,7 +63,7 @@ public class ApplicationController {
             @PathVariable UUID id,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Getting application {} for user {}", id, userId);
         
@@ -76,7 +78,7 @@ public class ApplicationController {
             @PathVariable UUID id,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("User {} withdrawing application {}", userId, id);
         

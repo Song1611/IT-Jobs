@@ -1,12 +1,17 @@
 package com.itjob.controller;
 
+import com.itjob.dto.request.CompanyRequest;
 import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.CompanyResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.CompanyService;
+import com.itjob.service.JwtService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +24,7 @@ import java.util.UUID;
 public class CompanyController {
     
     private final CompanyService companyService;
+    private final JwtService jwtService;
     
     /**
      * Guest & Candidate APIs
@@ -67,6 +73,128 @@ public class CompanyController {
         return ApiResponse.<CompanyResponse>builder()
                 .message("Company retrieved successfully")
                 .result(companyService.getCompanyBySlug(slug))
+                .build();
+    }
+
+    /**
+     * HR APIs
+     */
+    
+    @PostMapping
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<CompanyResponse> createCompany(
+            @Valid @RequestBody CompanyRequest request,
+            Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Creating company by user: {}", userId);
+        
+        return ApiResponse.<CompanyResponse>builder()
+                .message("Company created successfully")
+                .result(companyService.createCompany(request, userId))
+                .build();
+    }
+    
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<CompanyResponse> updateCompany(
+            @PathVariable UUID id,
+            @Valid @RequestBody CompanyRequest request,
+            Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Updating company: {} by user: {}", id, userId);
+        
+        return ApiResponse.<CompanyResponse>builder()
+                .message("Company updated successfully")
+                .result(companyService.updateCompany(id, request, userId))
+                .build();
+    }
+    
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    public ApiResponse<CompanyResponse> getMyCompany(Authentication authentication) {
+        
+        UUID userId = jwtService.extractUserId(authentication);
+        
+        log.info("Getting company for user: {}", userId);
+        
+        return ApiResponse.<CompanyResponse>builder()
+                .message("Your company retrieved successfully")
+                .result(companyService.getMyCompany(userId))
+                .build();
+    }
+
+    /**
+     * Admin APIs
+     */
+    
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<PageResponse<CompanyResponse>> getAllCompanies(
+            @RequestParam(required = false) String status,
+            Pageable pageable) {
+        
+        log.info("Admin getting all companies with status: {}", status);
+        
+        return ApiResponse.<PageResponse<CompanyResponse>>builder()
+                .message("All companies retrieved successfully")
+                .result(companyService.getAllCompanies(status, pageable))
+                .build();
+    }
+    
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> approveCompany(
+            @PathVariable UUID id,
+            Authentication authentication) {
+        
+        UUID adminId = jwtService.extractUserId(authentication);
+        
+        log.info("Admin {} approving company: {}", adminId, id);
+        
+        companyService.approveCompany(id, adminId);
+        
+        return ApiResponse.<Void>builder()
+                .message("Company approved successfully")
+                .build();
+    }
+    
+    @PutMapping("/{id}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> rejectCompany(
+            @PathVariable UUID id,
+            @RequestParam String reason,
+            Authentication authentication) {
+        
+        UUID adminId = jwtService.extractUserId(authentication);
+        
+        log.info("Admin {} rejecting company: {} with reason: {}", adminId, id, reason);
+        
+        companyService.rejectCompany(id, adminId, reason);
+        
+        return ApiResponse.<Void>builder()
+                .message("Company rejected successfully")
+                .build();
+    }
+    
+    @PutMapping("/{id}/suspend")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<Void> suspendCompany(
+            @PathVariable UUID id,
+            @RequestParam String reason,
+            Authentication authentication) {
+        
+        UUID adminId = jwtService.extractUserId(authentication);
+        
+        log.info("Admin {} suspending company: {} with reason: {}", adminId, id, reason);
+        
+        companyService.suspendCompany(id, adminId, reason);
+        
+        return ApiResponse.<Void>builder()
+                .message("Company suspended successfully")
                 .build();
     }
 }

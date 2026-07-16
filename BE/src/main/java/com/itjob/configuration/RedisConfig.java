@@ -1,6 +1,10 @@
 package com.itjob.configuration;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.itjob.constant.CacheTTL;
 import com.itjob.exception.RedisCacheErrorHandler;
 import org.springframework.cache.CacheManager;
@@ -25,10 +29,20 @@ import java.util.stream.Collectors;
 public class RedisConfig {
 
     @Bean
-    public GenericJackson2JsonRedisSerializer redisSerializer(
-            ObjectMapper redisObjectMapper) {
+    public GenericJackson2JsonRedisSerializer redisSerializer() {
 
-        return new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+        ObjectMapper mapper = new ObjectMapper();
+
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        mapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+
+        return new GenericJackson2JsonRedisSerializer(mapper);
     }
 
     @Bean
@@ -86,4 +100,6 @@ public class RedisConfig {
     public CacheErrorHandler cacheErrorHandler() {
         return new RedisCacheErrorHandler();
     }
+
+
 }

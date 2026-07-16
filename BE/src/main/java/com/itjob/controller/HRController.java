@@ -8,6 +8,7 @@ import com.itjob.service.ApplicationService;
 import com.itjob.service.CompanyService;
 import com.itjob.service.DashboardService;
 import com.itjob.service.JobService;
+import com.itjob.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,13 +23,14 @@ import java.util.UUID;
 @RequestMapping("/api/hr")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("hasRole('HR')")
+@PreAuthorize("hasRole('EMPLOYER')")
 public class HRController {
     
     private final JobService jobService;
     private final CompanyService companyService;
     private final ApplicationService applicationService;
     private final DashboardService dashboardService;
+    private final JwtService jwtService;
     
     /**
      * Dashboard
@@ -53,7 +55,7 @@ public class HRController {
     
     @GetMapping("/company")
     public ApiResponse<CompanyResponse> getMyCompany(Authentication authentication) {
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Getting company for user {}", userId);
         
@@ -68,7 +70,7 @@ public class HRController {
             @Valid @RequestBody CompanyRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Creating company for user {}", userId);
         
@@ -84,7 +86,7 @@ public class HRController {
             @Valid @RequestBody CompanyRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Updating company {} by user {}", id, userId);
         
@@ -118,7 +120,7 @@ public class HRController {
             @Valid @RequestBody JobRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Creating job for company {} by user {}", companyId, userId);
         
@@ -135,7 +137,7 @@ public class HRController {
             @Valid @RequestBody JobRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Updating job {} by user {}", id, userId);
         
@@ -151,7 +153,7 @@ public class HRController {
             @RequestParam UUID companyId,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Deleting job {} for company {} by user {}", id, companyId, userId);
         
