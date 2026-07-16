@@ -6,6 +6,7 @@ import com.itjob.dto.response.BlogBriefResponse;
 import com.itjob.dto.response.BlogResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.BlogService;
+import com.itjob.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ import java.util.UUID;
 public class BlogController {
     
     private final BlogService blogService;
+    private final JwtService jwtService;
     
     /**
      * Public APIs
@@ -42,17 +44,14 @@ public class BlogController {
     
     /**
      * Search blogs using Specification pattern with filter array
-     * 
      * Examples:
      * - GET /api/blogs?filter=title~programming
      * - GET /api/blogs?filter=title~java&filter=categoryId:uuid
-     * 
      * Supported operators:
      * - : (EQUALITY)       → filter=categoryId:uuid
      * - ~ (LIKE)           → filter=title~java
      * - ! (NOT_EQUAL)      → filter=id!uuid
      * - > (GREATER)        → filter=createdAt>2024-01-01
-     * 
      * OR Logic: Use ' prefix
      * - GET /api/blogs?filter='title~java&filter='title~python
      */
@@ -102,7 +101,7 @@ public class BlogController {
             Authentication authentication,
             Pageable pageable) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Getting blogs for user: {}", userId);
         
@@ -117,7 +116,7 @@ public class BlogController {
             @Valid @RequestBody BlogRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Creating blog for user: {}", userId);
         
@@ -133,7 +132,7 @@ public class BlogController {
             @Valid @RequestBody BlogRequest request,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Updating blog {} by user {}", id, userId);
         
@@ -148,7 +147,7 @@ public class BlogController {
             @PathVariable UUID id,
             Authentication authentication) {
         
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = jwtService.extractUserId(authentication);
         
         log.info("Deleting blog {} by user {}", id, userId);
         

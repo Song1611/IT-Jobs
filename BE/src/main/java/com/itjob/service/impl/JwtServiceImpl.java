@@ -12,6 +12,8 @@ import com.nimbusds.jwt.SignedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -65,50 +67,42 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public boolean validateToken(String token) {
-        log.debug("Validating JWT token");
+    public UUID extractUserId(Authentication authentication) {
+        log.debug("Extracting user ID from JWT authentication");
+        
+        if (authentication == null) {
+            throw new IllegalArgumentException("Authentication cannot be null");
+        }
+        
+        if (!(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new IllegalArgumentException("Authentication principal must be a JWT");
+        }
+        
+        String userIdClaim = jwt.getClaimAsString("userId");
+        if (userIdClaim == null || userIdClaim.trim().isEmpty()) {
+            throw new IllegalStateException("JWT must contain a valid 'userId' claim");
+        }
         
         try {
-            SignedJWT signedJWT = SignedJWT.parse(token);
-            JWSVerifier verifier = new MACVerifier(signerKey.getBytes(StandardCharsets.UTF_8));
-            
-            boolean verified = signedJWT.verify(verifier);
-            if (!verified) {
-                log.warn("JWT signature verification failed");
-                return false;
-            }
-            
-            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
-            if (expirationTime == null || expirationTime.before(new Date())) {
-                log.warn("JWT token has expired");
-                return false;
-            }
-            
-            log.debug("JWT token validated successfully");
-            return true;
-        } catch (ParseException e) {
-            log.error("Cannot parse JWT token", e);
-            return false;
-        } catch (JOSEException e) {
-            log.error("JWT verification failed", e);
-            return false;
+            UUID userId = UUID.fromString(userIdClaim);
+            log.debug("User ID extracted successfully: {}", userId);
+            return userId;
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid UUID format in 'userId' claim: {}", userIdClaim, e);
+            throw new IllegalStateException("Invalid UUID format in 'userId' claim: " + userIdClaim, e);
         }
     }
-
+    
     @Override
-    public String extractUsername(String token) {
-        log.debug("Extracting username from JWT token");
+    public UUID extractUserIdSafely(Authentication authentication) {
+        log.debug("Safely extracting user ID from JWT authentication");
         
-        try {
-            JWTClaimsSet claims = extractAllClaims(token);
-            String username = claims.getSubject();
-            
-            log.debug("Username extracted successfully: {}", username);
-            return username;
-        } catch (Exception e) {
-            log.error("Cannot extract username from token", e);
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        if (authentication == null) {
+            log.debug("Authentication is null, returning null");
+            return null;
         }
+        
+        return extractUserId(authentication);
     }
 
     private JWTClaimsSet extractAllClaims(String token) {

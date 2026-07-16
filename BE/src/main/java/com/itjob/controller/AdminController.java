@@ -5,6 +5,7 @@ import com.itjob.dto.response.*;
 import com.itjob.service.CompanyService;
 import com.itjob.service.DashboardService;
 import com.itjob.service.JobService;
+import com.itjob.service.JwtService;
 import com.itjob.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class AdminController {
     private final CompanyService companyService;
     private final JobService jobService;
     private final DashboardService dashboardService;
+    private final JwtService jwtService;
     
     /**
      * Dashboard
@@ -97,7 +99,7 @@ public class AdminController {
             @Valid @RequestBody UpdateStatusRequest request,
             Authentication authentication) {
         
-        UUID adminId = UUID.fromString(authentication.getName());
+        UUID adminId = jwtService.extractUserId(authentication);
         
         log.info("Admin {} updating company {} approval to {}", adminId, id, request.getStatus());
         
@@ -138,7 +140,7 @@ public class AdminController {
             @Valid @RequestBody UpdateStatusRequest request,
             Authentication authentication) {
         
-        UUID adminId = UUID.fromString(authentication.getName());
+        UUID adminId = jwtService.extractUserId(authentication);
         
         log.info("Admin {} updating job {} approval to {}", adminId, id, request.getStatus());
         
