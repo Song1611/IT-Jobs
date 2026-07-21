@@ -1,7 +1,9 @@
 package com.itjob.service.impl;
 
-import com.itjob.constant.CacheName;
+import com.itjob.redis.CacheName;
 import com.itjob.dto.request.ApplicationRequest;
+import com.itjob.enums.ApplicationStatus;
+import com.itjob.enums.JobStatus;
 import com.itjob.dto.response.ApplicationResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.entity.Application;
@@ -51,13 +53,14 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @CacheEvict(value = CacheName.DASHBOARD_HR, allEntries = true)
+    @CacheEvict(value = CacheName.DASHBOARD_HR,
+                key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#result.job.company.id)")
     public ApplicationResponse applyForJob(ApplicationRequest request, UUID userId) {
         // Check if job exists and is open
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
         
-        if (!"open".equals(job.getStatus())) {
+        if (!JobStatus.OPEN.getValue().equals(job.getStatus())) {
             throw new AppException(ErrorCode.JOB_NOT_OPEN);
         }
         
@@ -66,13 +69,12 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new AppException(ErrorCode.ALREADY_APPLIED);
         }
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.getReferenceById(userId);
         
         Application application = applicationMapper.toApplication(request);
         application.setJob(job);
         application.setUser(user);
-        application.setStatus("pending");
+        application.setStatus(ApplicationStatus.PENDING.getValue());
         
         application = applicationRepository.save(application);
         
@@ -103,7 +105,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         
         // Check if user has permission to view this application
         if (!application.getUser().getId().equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
         return buildFullApplicationResponse(application);
@@ -117,14 +119,14 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
         
         if (!application.getUser().getId().equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
-        if (!"pending".equals(application.getStatus())) {
+        if (!ApplicationStatus.PENDING.getValue().equals(application.getStatus())) {
             throw new AppException(ErrorCode.CANNOT_WITHDRAW_APPLICATION);
         }
-        
-        application.setStatus("withdrawn");
+
+        application.setStatus(ApplicationStatus.WITHDRAWN.getValue());
         applicationRepository.save(application);
         
         // Update job application count
@@ -141,7 +143,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
         
         if (!job.getCompany().getId().equals(companyId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
         Page<Application> applicationPage;
@@ -181,15 +183,14 @@ public class ApplicationServiceImpl implements ApplicationService {
         // Verify application belongs to company
         verifyApplicationBelongsToCompany(application, companyId);
         
+        ApplicationStatus.fromValue(status);
         application.setStatus(status);
         application.setHrNotes(notes);
         application.setRespondedAt(LocalDateTime.now());
-        
-        if ("reviewing".equals(status)) {
+
+        if (ApplicationStatus.REVIEWING.getValue().equals(status)) {
             application.setReviewedAt(LocalDateTime.now());
-        } else if ("interview".equals(status)) {
-            application.setInterviewAt(LocalDateTime.now());
-        } else if ("rejected".equals(status)) {
+        } else if (ApplicationStatus.REJECTED.getValue().equals(status)) {
             application.setRejectionReason(notes);
         }
         
@@ -257,7 +258,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      */
     private void verifyApplicationBelongsToCompany(Application application, UUID companyId) {
         if (!application.getJob().getCompany().getId().equals(companyId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
     }
 }

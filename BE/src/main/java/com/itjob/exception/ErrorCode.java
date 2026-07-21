@@ -14,9 +14,10 @@ public enum ErrorCode {
 
     // 2000-2999: Authentication
     UNAUTHENTICATED(2001, "Unauthenticated", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_INVALID(2002, "Refresh token is missing or invalid", HttpStatus.UNAUTHORIZED),
 
     // 3000-3999: Authorization
-    UNAUTHORIZED(3001, "You do not have permission", HttpStatus.FORBIDDEN),
+    FORBIDDEN(3001, "You do not have permission", HttpStatus.FORBIDDEN),
     ACCESS_DENIED(3002, "You do not have permission to access this resource", HttpStatus.FORBIDDEN),
 
     // 4000-4999: Business
@@ -35,6 +36,8 @@ public enum ErrorCode {
     SKILL_NOT_FOUND(4013, "One or more skills not found", HttpStatus.NOT_FOUND),
     INVALID_LIMIT(4014, "Limit must be greater than 0", HttpStatus.BAD_REQUEST),
     LIMIT_EXCEEDED(4015, "Limit cannot exceed 100", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_FOUND(4016, "Review not found", HttpStatus.NOT_FOUND),
+    ALREADY_REVIEWED(4017, "You have already reviewed this company", HttpStatus.BAD_REQUEST),
     
 
     // 9000-9999: System

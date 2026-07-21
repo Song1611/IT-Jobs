@@ -2,10 +2,16 @@ package com.itjob.controller;
 
 import com.itjob.dto.request.UpdateStatusRequest;
 import com.itjob.dto.response.*;
+import com.itjob.dto.response.ReviewResponse;
+import com.itjob.enums.ApplicationStatus;
+import com.itjob.enums.CompanyStatus;
+import com.itjob.enums.JobStatus;
+import com.itjob.enums.ReviewStatus;
 import com.itjob.service.CompanyService;
 import com.itjob.service.DashboardService;
 import com.itjob.service.JobService;
 import com.itjob.service.JwtService;
+import com.itjob.service.ReviewService;
 import com.itjob.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +34,7 @@ public class AdminController {
     private final CompanyService companyService;
     private final JobService jobService;
     private final DashboardService dashboardService;
+    private final ReviewService reviewService;
     private final JwtService jwtService;
     
     /**
@@ -103,12 +110,11 @@ public class AdminController {
         
         log.info("Admin {} updating company {} approval to {}", adminId, id, request.getStatus());
         
-        if ("approved".equalsIgnoreCase(request.getStatus()) || 
-            "active".equalsIgnoreCase(request.getStatus())) {
+        if (CompanyStatus.ACTIVE.getValue().equalsIgnoreCase(request.getStatus())) {
             companyService.approveCompany(id, adminId);
-        } else if ("rejected".equalsIgnoreCase(request.getStatus())) {
+        } else if (CompanyStatus.REJECTED.getValue().equalsIgnoreCase(request.getStatus())) {
             companyService.rejectCompany(id, adminId, request.getReason());
-        } else if ("suspended".equalsIgnoreCase(request.getStatus())) {
+        } else if (CompanyStatus.SUSPENDED.getValue().equalsIgnoreCase(request.getStatus())) {
             companyService.suspendCompany(id, adminId, request.getReason());
         }
         
@@ -144,15 +150,58 @@ public class AdminController {
         
         log.info("Admin {} updating job {} approval to {}", adminId, id, request.getStatus());
         
-        if ("approved".equalsIgnoreCase(request.getStatus()) || 
-            "open".equalsIgnoreCase(request.getStatus())) {
+        if (JobStatus.OPEN.getValue().equalsIgnoreCase(request.getStatus())) {
             jobService.approveJob(id, adminId);
-        } else if ("rejected".equalsIgnoreCase(request.getStatus())) {
+        } else if (JobStatus.REJECTED.getValue().equalsIgnoreCase(request.getStatus())) {
             jobService.rejectJob(id, adminId, request.getReason());
         }
         
         return ApiResponse.<Void>builder()
                 .message("Job approval updated successfully")
+                .build();
+    }
+    
+    /**
+     * Review Management
+     */
+    
+    @GetMapping("/reviews")
+    public ApiResponse<PageResponse<ReviewResponse>> getAllReviews(
+            @RequestParam(required = false) String status,
+            Pageable pageable) {
+        
+        log.info("Getting all reviews, status: {}", status);
+        
+        return ApiResponse.<PageResponse<ReviewResponse>>builder()
+                .message("Reviews retrieved successfully")
+                .result(reviewService.getAllReviews(status, pageable))
+                .build();
+    }
+    
+    @PatchMapping("/reviews/{id}/approval")
+    public ApiResponse<ReviewResponse> updateReviewApproval(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateStatusRequest request,
+            Authentication authentication) {
+        
+        UUID adminId = jwtService.extractUserId(authentication);
+        
+        log.info("Admin {} updating review {} approval to {}", adminId, id, request.getStatus());
+        
+        ReviewResponse result;
+        if (ReviewStatus.APPROVED.getValue().equalsIgnoreCase(request.getStatus())) {
+            result = reviewService.approveReview(id, adminId);
+        } else if (ReviewStatus.REJECTED.getValue().equalsIgnoreCase(request.getStatus())) {
+            result = reviewService.rejectReview(id, adminId, request.getReason());
+        } else {
+            return ApiResponse.<ReviewResponse>builder()
+                    .message("Invalid review status")
+                    .build();
+        }
+        
+        return ApiResponse.<ReviewResponse>builder()
+                .message("Review approval updated successfully")
+                .result(result)
                 .build();
     }
 }

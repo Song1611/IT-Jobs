@@ -5,11 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.itjob.constant.CacheTTL;
+import com.itjob.redis.CacheTTL;
 import com.itjob.exception.RedisCacheErrorHandler;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -20,12 +21,14 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Configuration
 @EnableCaching
+@EnableScheduling
 public class RedisConfig {
 
     @Bean
@@ -72,8 +75,10 @@ public class RedisConfig {
             RedisConnectionFactory connectionFactory,
             GenericJackson2JsonRedisSerializer serializer) {
 
+        Duration defaultTtl = Duration.ofMinutes(30);
         RedisCacheConfiguration defaultConfig =
                 RedisCacheConfiguration.defaultCacheConfig()
+                        .entryTtl(defaultTtl)
                         .disableCachingNullValues()
                         .serializeKeysWith(
                                 RedisSerializationContext.SerializationPair
@@ -84,6 +89,7 @@ public class RedisConfig {
 
         Map<String, RedisCacheConfiguration> cacheConfigurations =
                 Arrays.stream(CacheTTL.values())
+                        .filter(CacheTTL::isSpringCache)
                         .collect(Collectors.toMap(
                                 CacheTTL::getCacheName,
                                 cache -> defaultConfig.entryTtl(cache.getTtl())
@@ -101,5 +107,21 @@ public class RedisConfig {
         return new RedisCacheErrorHandler();
     }
 
+    @Bean
+    public RedisTemplate<String, Long> longRedisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Long> template = new RedisTemplate<>();
+
+        StringRedisSerializer keySerializer = new StringRedisSerializer();
+
+        template.setConnectionFactory(connectionFactory);
+        template.setKeySerializer(keySerializer);
+        template.setHashKeySerializer(keySerializer);
+        template.setValueSerializer(new org.springframework.data.redis.serializer.GenericToStringSerializer<>(Long.class));
+        template.setHashValueSerializer(new org.springframework.data.redis.serializer.GenericToStringSerializer<>(Long.class));
+
+        template.afterPropertiesSet();
+
+        return template;
+    }
 
 }

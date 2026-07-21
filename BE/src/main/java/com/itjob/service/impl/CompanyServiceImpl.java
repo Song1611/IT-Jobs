@@ -1,6 +1,6 @@
 package com.itjob.service.impl;
 
-import com.itjob.constant.CacheName;
+import com.itjob.redis.CacheName;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.enums.JobStatus;
 import com.itjob.dto.request.CompanyRequest;
@@ -15,12 +15,16 @@ import com.itjob.repository.CompanyRepository;
 import com.itjob.repository.JobRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.repository.projection.CompanyJobCountProjection;
+import com.itjob.enums.ViewEntity;
+import com.itjob.service.CompanyCacheService;
 import com.itjob.service.CompanyService;
+import com.itjob.service.ViewCountService;
 import com.itjob.util.PageResponseUtil;
 import com.itjob.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -40,18 +45,28 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CompanyServiceImpl implements CompanyService {
     
+    private static final int MAX_TOP_COMPANIES = 100;
+
     private final CompanyRepository companyRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
     private final CompanyMapper companyMapper;
+    private final ViewCountService viewCountService;
+    private final CompanyCacheService companyCacheService;
     
     @Override
     @Cacheable(value = CacheName.COMPANY_FEATURED,
                key = "T(com.itjob.util.CacheKeyGenerator).forLimit(#limit)")
     public List<CompanyResponse> getTopCompanies(int limit) {
+        if (limit <= 0) {
+            throw new AppException(ErrorCode.INVALID_LIMIT);
+        }
+        if (limit > MAX_TOP_COMPANIES) {
+            throw new AppException(ErrorCode.LIMIT_EXCEEDED);
+        }
         log.debug("Fetching {} top companies from database", limit);
         Pageable pageable = PageRequest.of(0, limit);
-        List<Company> companies = companyRepository.findTopCompanies(pageable);
+        List<Company> companies = companyRepository.findTopCompanies(CompanyStatus.ACTIVE.getValue(), pageable);
         
         // Optimize N+1 query using batch query
         return mapToCompanyResponsesWithJobCount(companies);
@@ -61,41 +76,49 @@ public class CompanyServiceImpl implements CompanyService {
     @Cacheable(value = CacheName.COMPANY_SEARCH,
                key = "T(com.itjob.util.CacheKeyGenerator).forPageable(#pageable)")
     public PageResponse<CompanyResponse> getActiveCompanies(Pageable pageable) {
+        long start = System.currentTimeMillis();
         log.debug("Fetching active companies from database");
-        Page<Company> companyPage = companyRepository.findActiveCompanies(pageable);
+        Page<Company> companyPage = companyRepository.findActiveCompanies(CompanyStatus.ACTIVE.getValue(), pageable);
         
-        // Optimize N+1 query using batch query
         List<CompanyResponse> items = mapToCompanyResponsesWithJobCount(companyPage.getContent());
         
-        return PageResponseUtil.build(companyPage, items);
+        PageResponse<CompanyResponse> result = PageResponseUtil.build(companyPage, items);
+        log.debug("getActiveCompanies completed in {} ms", System.currentTimeMillis() - start);
+        return result;
     }
     
     @Override
-    @Cacheable(value = CacheName.COMPANY_BY_ID, 
-               key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)")
     public CompanyResponse getCompanyById(UUID id) {
-        log.debug("Fetching company {} from database", id);
-        Company company = companyRepository.findByIdAndIsDeleted(id, false)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
-        
-        // TODO: Implement view count tracking with RedisTemplate + async + scheduled DB sync
-        // Current: View count increment is disabled when cache is hit (cache bypass issue)
-        
-        return mapToCompanyResponse(company);
+        CompanyResponse response = companyCacheService.getCachedCompanyById(id);
+
+        long jobCount = jobRepository.countByCompanyIdAndStatus(id, JobStatus.OPEN.getValue());
+        response.setJobCount((int) jobCount);
+
+        viewCountService.incrementView(ViewEntity.COMPANY, id);
+
+        long pendingViews = viewCountService.getPendingViewDelta(ViewEntity.COMPANY, id);
+        if (pendingViews > 0) {
+            Integer current = response.getViewCount();
+            response.setViewCount((current == null ? 0 : current) + (int) pendingViews);
+        }
+        return response;
     }
     
     @Override
-    @Cacheable(value = CacheName.COMPANY_BY_SLUG,
-               key = "T(com.itjob.util.CacheKeyGenerator).forSlug(#slug)")
     public CompanyResponse getCompanyBySlug(String slug) {
-        log.debug("Fetching company by slug {} from database", slug);
-        Company company = companyRepository.findBySlugAndIsDeleted(slug, false)
-                .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
-        
-        // TODO: Implement view count tracking with RedisTemplate + async + scheduled DB sync
-        // Current: View count increment is disabled when cache is hit (cache bypass issue)
-        
-        return mapToCompanyResponse(company);
+        CompanyResponse response = companyCacheService.getCachedCompanyBySlug(slug);
+
+        long jobCount = jobRepository.countByCompanyIdAndStatus(response.getId(), JobStatus.OPEN.getValue());
+        response.setJobCount((int) jobCount);
+
+        viewCountService.incrementView(ViewEntity.COMPANY, response.getId());
+
+        long pendingViews = viewCountService.getPendingViewDelta(ViewEntity.COMPANY, response.getId());
+        if (pendingViews > 0) {
+            Integer current = response.getViewCount();
+            response.setViewCount((current == null ? 0 : current) + (int) pendingViews);
+        }
+        return response;
     }
     
     @Override
@@ -103,12 +126,12 @@ public class CompanyServiceImpl implements CompanyService {
     @Caching(evict = {
             @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
             @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true)
+            @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
     })
     public CompanyResponse createCompany(CompanyRequest request, UUID userId) {
         log.info("Creating company for user {}", userId);
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.getReferenceById(userId);
         
         // Check if user already has a company (1 HR = 1 Company rule)
         if (companyRepository.existsByCreatedByIdAndIsDeleted(userId, false)) {
@@ -117,7 +140,7 @@ public class CompanyServiceImpl implements CompanyService {
         
         Company company = companyMapper.toCompany(request);
         company.setCreatedBy(user);
-        company.setSlug(SlugUtil.generateSlug(request.getName()));
+        company.setSlug(generateUniqueSlug(request.getName()));
         company.setStatus(CompanyStatus.PENDING.getValue()); // Require admin approval
         
         company = companyRepository.save(company);
@@ -130,14 +153,22 @@ public class CompanyServiceImpl implements CompanyService {
     
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
-            @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
-            @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true)
-    })
+    @Caching(
+            put = {
+                    @CachePut(value = CacheName.COMPANY_BY_ID,
+                              key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)")
+            },
+            evict = {
+                    @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
+                    @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
+                    @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                    @CacheEvict(value = CacheName.DASHBOARD_HR,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
+            })
     public CompanyResponse updateCompany(UUID id, CompanyRequest request, UUID userId) {
         log.info("Updating company {}", id);
         Company company = companyRepository.findByIdAndIsDeleted(id, false)
@@ -145,7 +176,7 @@ public class CompanyServiceImpl implements CompanyService {
         
         // Check if user has permission to update this company
         if (!company.getCreatedBy().getId().equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
         // Save old name to check if slug needs update
@@ -155,18 +186,16 @@ public class CompanyServiceImpl implements CompanyService {
         
         // Update slug if name changed
         if (request.getName() != null && !request.getName().equals(oldName)) {
-            company.setSlug(SlugUtil.generateSlug(request.getName()));
+            company.setSlug(generateUniqueSlug(request.getName(), id));
         }
-        
-        company = companyRepository.save(company);
         
         return mapToCompanyResponse(company);
     }
     
     @Override
+    @Cacheable(value = CacheName.COMPANY_MY, key = "#userId")
     public CompanyResponse getMyCompany(UUID userId) {
-        // Use dedicated repository method instead of findAll().stream()
-        // Exclude deleted companies
+        log.debug("Fetching my company for user {} from database", userId);
         Company company = companyRepository.findByCreatedByIdAndIsDeleted(userId, false)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         
@@ -184,6 +213,25 @@ public class CompanyServiceImpl implements CompanyService {
         return response;
     }
     
+    /**
+     * Generate a unique slug by appending a counter if the base slug already exists
+     */
+    private String generateUniqueSlug(String name) {
+        return generateUniqueSlug(name, null);
+    }
+
+    private String generateUniqueSlug(String name, UUID excludeId) {
+        String baseSlug = SlugUtil.generateSlug(name);
+        String slug = baseSlug;
+        int counter = 1;
+        Optional<Company> existing = companyRepository.findBySlug(slug);
+        while (existing.isPresent() && (excludeId == null || !existing.get().getId().equals(excludeId))) {
+            slug = baseSlug + "-" + counter++;
+            existing = companyRepository.findBySlug(slug);
+        }
+        return slug;
+    }
+
     /**
      * Helper method to map multiple companies with optimized batch query for jobCount
      * Solves N+1 query problem using type-safe projection
@@ -225,78 +273,104 @@ public class CompanyServiceImpl implements CompanyService {
     
     @Override
     public PageResponse<CompanyResponse> getAllCompanies(String status, Pageable pageable) {
+        long start = System.currentTimeMillis();
         Page<Company> companyPage;
         
         if (status != null && !status.isEmpty()) {
-            // Validate and convert status string to enum
             CompanyStatus companyStatus = CompanyStatus.fromValue(status);
             companyPage = companyRepository.findByStatusAndIsDeleted(companyStatus.getValue(), false, pageable);
         } else {
-            // Get all non-deleted companies
             companyPage = companyRepository.findByIsDeleted(false, pageable);
         }
         
-        // Optimize N+1 query using batch query
         List<CompanyResponse> items = mapToCompanyResponsesWithJobCount(companyPage.getContent());
         
-        return PageResponseUtil.build(companyPage, items);
+        PageResponse<CompanyResponse> result = PageResponseUtil.build(companyPage, items);
+        log.debug("getAllCompanies completed in {} ms", System.currentTimeMillis() - start);
+        return result;
     }
     
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
-            @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true)
-    })
-    public void approveCompany(UUID id, UUID adminId) {
+    @Caching(
+            put = {
+                    @CachePut(value = CacheName.COMPANY_BY_ID,
+                              key = "T(com.itjob.util.CacheKeyGenerator).forId(#result.id)")
+            },
+            evict = {
+                    @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
+                    @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                    @CacheEvict(value = CacheName.DASHBOARD_HR,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
+            })
+    public CompanyResponse approveCompany(UUID id, UUID adminId) {
         Company company = companyRepository.findByIdAndIsDeleted(id, false)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         
         company.setStatus(CompanyStatus.ACTIVE.getValue());
         company.setVerifiedAt(LocalDateTime.now());
-        companyRepository.save(company);
         
         log.info("Company {} approved by admin {}", id, adminId);
+        return mapToCompanyResponse(company);
     }
     
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
-            @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true)
-    })
-    public void rejectCompany(UUID id, UUID adminId, String reason) {
+    @Caching(
+            put = {
+                    @CachePut(value = CacheName.COMPANY_BY_ID,
+                              key = "T(com.itjob.util.CacheKeyGenerator).forId(#result.id)")
+            },
+            evict = {
+                    @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
+                    @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                    @CacheEvict(value = CacheName.DASHBOARD_HR,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
+            })
+    public CompanyResponse rejectCompany(UUID id, UUID adminId, String reason) {
         Company company = companyRepository.findByIdAndIsDeleted(id, false)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         
         company.setStatus(CompanyStatus.REJECTED.getValue());
-        companyRepository.save(company);
+        company.setRejectReason(reason);
         
         log.info("Company {} rejected by admin {}: {}", id, adminId, reason);
+        return mapToCompanyResponse(company);
     }
     
     @Override
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
-            @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true)
-    })
-    public void suspendCompany(UUID id, UUID adminId, String reason) {
+    @Caching(
+            put = {
+                    @CachePut(value = CacheName.COMPANY_BY_ID,
+                              key = "T(com.itjob.util.CacheKeyGenerator).forId(#result.id)")
+            },
+            evict = {
+                    @CacheEvict(value = CacheName.COMPANY_BY_SLUG, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
+                    @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                    @CacheEvict(value = CacheName.DASHBOARD_HR,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
+            })
+    public CompanyResponse suspendCompany(UUID id, UUID adminId, String reason) {
         Company company = companyRepository.findByIdAndIsDeleted(id, false)
                 .orElseThrow(() -> new AppException(ErrorCode.COMPANY_NOT_FOUND));
         
         company.setStatus(CompanyStatus.SUSPENDED.getValue());
-        companyRepository.save(company);
+        company.setRejectReason(reason);
         
         log.info("Company {} suspended by admin {}: {}", id, adminId, reason);
+        return mapToCompanyResponse(company);
     }
 }

@@ -1,6 +1,6 @@
 package com.itjob.service.impl;
 
-import com.itjob.constant.CacheName;
+import com.itjob.redis.CacheName;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.enums.JobStatus;
 import com.itjob.dto.request.JobRequest;
@@ -20,13 +20,16 @@ import com.itjob.repository.SkillRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.repository.projection.JobApplicationCountProjection;
 import com.itjob.service.JobCacheService;
+import com.itjob.enums.ViewEntity;
 import com.itjob.service.JobService;
+import com.itjob.service.ViewCountService;
 import com.itjob.specification.helper.SpecificationHelper;
 import com.itjob.util.PageResponseUtil;
 import com.itjob.util.SlugUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -39,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -58,56 +62,59 @@ public class JobServiceImpl implements JobService {
     private final JobMapper jobMapper;
     private final SpecificationHelper specificationHelper;
     private final JobCacheService jobCacheService;
+    private final ViewCountService viewCountService;
     
     @Override
     @Cacheable(value = CacheName.JOB_FEATURED,
                key = "T(com.itjob.util.CacheKeyGenerator).forLimit(#limit)")
     public List<JobResponse> getFeaturedJobs(int limit) {
+        long start = System.currentTimeMillis();
         if (limit <= 0) {
             throw new AppException(ErrorCode.INVALID_LIMIT);
         }
         
-        // Reject if limit exceeds maximum instead of silently capping
         if (limit > MAX_FEATURED_LIMIT) {
             throw new AppException(ErrorCode.LIMIT_EXCEEDED);
         }
         
         log.debug("Fetching {} featured jobs from database", limit);
         Pageable pageable = PageRequest.of(0, limit);
-        List<Job> jobs = jobRepository.findFeaturedJobs(pageable);
+        List<Job> jobs = jobRepository.findFeaturedJobs(JobStatus.OPEN.getValue(), pageable);
         
-        // Use mapper - @EntityGraph already fetches company and skills
-        return jobs.stream()
+        List<JobResponse> result = jobs.stream()
                 .map(jobMapper::toJobResponse)
                 .collect(Collectors.toList());
+        log.debug("getFeaturedJobs({}) completed in {} ms", limit, System.currentTimeMillis() - start);
+        return result;
     }
     
     @Override
     @Cacheable(value = CacheName.JOB_SEARCH,
                key = "T(com.itjob.util.CacheKeyGenerator).forComposite(" +
                      "T(java.util.Map).of(" +
-                     "'filters', #filters != null ? T(java.util.Arrays).toString(#filters) : 'none', " +
+                     "'filters', T(com.itjob.util.CacheKeyGenerator).forFilters(#filters), " +
                      "'page', #pageable.pageNumber, " +
-                     "'size', #pageable.pageSize))")
+                     "'size', #pageable.pageSize, " +
+                     "'sort', #pageable.sort.isSorted() ? #pageable.sort.toString() : ''))")
     public PageResponse<JobResponse> searchJobs(String[] filters, Pageable pageable) {
+        long start = System.currentTimeMillis();
         log.debug("Fetching jobs with filters from database");
         
-        // Build specification from filters
         Specification<Job> spec = specificationHelper.buildSpecification(filters);
         
-        // If no filters provided, default to showing only open jobs
         if (spec == null) {
             spec = (root, query, cb) -> cb.equal(root.get("status"), JobStatus.OPEN.getValue());
         }
         
         Page<Job> jobPage = jobRepository.findAll(spec, pageable);
         
-        // Use mapper
         List<JobResponse> items = jobPage.getContent().stream()
                 .map(jobMapper::toJobResponse)
                 .collect(Collectors.toList());
         
-        return buildJobPageResponse(jobPage, items);
+        PageResponse<JobResponse> result = buildJobPageResponse(jobPage, items);
+        log.debug("searchJobs completed in {} ms", System.currentTimeMillis() - start);
+        return result;
     }
     
     @Override
@@ -120,9 +127,15 @@ public class JobServiceImpl implements JobService {
             boolean isApplied = applicationRepository.existsByJobIdAndUserId(id, currentUserId);
             response.setIsApplied(isApplied);
         }
-        
-        // TODO: Implement view count tracking with RedisTemplate + async + scheduled DB sync
-        
+
+        viewCountService.incrementView(ViewEntity.JOB, id, currentUserId != null ? currentUserId.toString() : null);
+
+        long pendingViews = viewCountService.getPendingViewDelta(ViewEntity.JOB, id);
+        if (pendingViews > 0) {
+            Integer current = response.getViewCount();
+            response.setViewCount((current == null ? 0 : current) + (int) pendingViews);
+        }
+
         return response;
     }
     
@@ -134,18 +147,21 @@ public class JobServiceImpl implements JobService {
                      "'companyId', #companyId, " +
                      "'status', #status != null ? #status : 'all', " +
                      "'page', #pageable.pageNumber, " +
-                     "'size', #pageable.pageSize))")
+                     "'size', #pageable.pageSize, " +
+                     "'sort', #pageable.sort.isSorted() ? #pageable.sort.toString() : ''))")
     public PageResponse<JobResponse> getCompanyJobs(UUID companyId, String status, Pageable pageable) {
+        long start = System.currentTimeMillis();
         log.debug("Fetching jobs for company {} from database", companyId);
         Page<Job> jobPage = findJobsByCompanyAndStatus(companyId, status, pageable);
         
         List<Job> jobs = jobPage.getContent();
         
         if (jobs.isEmpty()) {
-            return buildJobPageResponse(jobPage, List.of());
+            PageResponse<JobResponse> result = buildJobPageResponse(jobPage, List.of());
+            log.debug("getCompanyJobs({}) completed in {} ms", companyId, System.currentTimeMillis() - start);
+            return result;
         }
         
-        // Batch query application counts to avoid N+1
         List<UUID> jobIds = jobs.stream()
                 .map(Job::getId)
                 .collect(Collectors.toList());
@@ -157,7 +173,6 @@ public class JobServiceImpl implements JobService {
                         JobApplicationCountProjection::getApplicationCount
                 ));
         
-        // Map jobs to responses with application counts
         List<JobResponse> items = jobs.stream()
                 .map(job -> {
                     JobResponse response = jobMapper.toJobResponseWithCompanyOnly(job);
@@ -167,7 +182,9 @@ public class JobServiceImpl implements JobService {
                 })
                 .collect(Collectors.toList());
         
-        return buildJobPageResponse(jobPage, items);
+        PageResponse<JobResponse> result = buildJobPageResponse(jobPage, items);
+        log.debug("getCompanyJobs({}) completed in {} ms", companyId, System.currentTimeMillis() - start);
+        return result;
     }
     
     @Override
@@ -178,8 +195,10 @@ public class JobServiceImpl implements JobService {
             @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
             @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
             @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#companyId)"),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_HR, allEntries = true)
+            @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+            @CacheEvict(value = CacheName.DASHBOARD_HR,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#companyId)")
     })
     public JobResponse createJob(UUID companyId, JobRequest request, UUID userId) {
         log.info("Creating job for company {}", companyId);
@@ -193,19 +212,17 @@ public class JobServiceImpl implements JobService {
         
         // Check if company belongs to user (authorization)
         if (!company.getCreatedBy().getId().equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.getReferenceById(userId);
         
         Job job = jobMapper.toJob(request);
         job.setCompany(company);
         job.setCreatedBy(user);
         job.setUpdatedBy(user);
         
-        // Generate slug from title
-        job.setSlug(SlugUtil.generateSlug(request.getTitle()));
+        job.setSlug(generateUniqueJobSlug(request.getTitle()));
         
         // Set skills
         setJobSkills(job, request.getSkillIds());
@@ -219,15 +236,21 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('EMPLOYER', 'ADMIN')")
-    @Caching(evict = {
-            @CacheEvict(value = CacheName.JOB_DETAIL, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
-            @CacheEvict(value = CacheName.JOB_FEATURED, allEntries = true),
-            @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
-            @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
-            @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#companyId)"),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_HR, allEntries = true)
-    })
+    @Caching(
+            put = {
+                    @CachePut(value = CacheName.JOB_DETAIL,
+                              key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)")
+            },
+            evict = {
+                    @CacheEvict(value = CacheName.JOB_FEATURED, allEntries = true),
+                    @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
+                    @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
+                    @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#companyId)"),
+                    @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                    @CacheEvict(value = CacheName.DASHBOARD_HR,
+                                key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#companyId)")
+            })
     public JobResponse updateJob(UUID id, UUID companyId, JobRequest request, UUID userId) {
         log.info("Updating job {}", id);
         Job job = jobRepository.findById(id)
@@ -245,21 +268,18 @@ public class JobServiceImpl implements JobService {
         
         // Verify company belongs to user (authorization)
         if (!company.getCreatedBy().getId().equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = userRepository.getReferenceById(userId);
         
-        // Save old title to check if slug needs update (use Objects.equals to handle null)
         String oldTitle = job.getTitle();
         
         jobMapper.updateJob(job, request);
         job.setUpdatedBy(user);
         
-        // Update slug if title changed
         if (request.getTitle() != null && !request.getTitle().equals(oldTitle)) {
-            job.setSlug(SlugUtil.generateSlug(request.getTitle()));
+            job.setSlug(generateUniqueJobSlug(request.getTitle(), id));
         }
         
         // Update skills
@@ -281,8 +301,10 @@ public class JobServiceImpl implements JobService {
             @CacheEvict(value = CacheName.JOB_FEATURED, allEntries = true),
             @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
             @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_ADMIN, allEntries = true),
-            @CacheEvict(value = CacheName.DASHBOARD_HR, allEntries = true)
+            @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+            @CacheEvict(value = CacheName.DASHBOARD_HR,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#companyId)")
     })
     public void deleteJob(UUID id, UUID companyId, UUID userId) {
         log.info("Deleting job {}", id);
@@ -294,7 +316,7 @@ public class JobServiceImpl implements JobService {
         // Get company from job (already loaded) and verify ownership
         Company company = job.getCompany();
         if (!company.getCreatedBy().getId().equals(userId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
         
         // Soft delete by setting status to closed (Hibernate dirty checking will auto-save)
@@ -386,8 +408,27 @@ public class JobServiceImpl implements JobService {
      */
     private void verifyJobBelongsToCompany(Job job, UUID companyId) {
         if (!job.getCompany().getId().equals(companyId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppException(ErrorCode.FORBIDDEN);
         }
+    }
+
+    private String generateUniqueJobSlug(String title) {
+        return generateUniqueJobSlug(title, null);
+    }
+
+    private String generateUniqueJobSlug(String title, UUID excludeId) {
+        String baseSlug = SlugUtil.generateSlug(title);
+        String slug = baseSlug;
+        int counter = 1;
+        Optional<Job> existing = jobRepository.findBySlug(slug);
+        while (existing.isPresent()) {
+            if (excludeId != null && existing.get().getId().equals(excludeId)) {
+                break;
+            }
+            slug = baseSlug + "-" + counter++;
+            existing = jobRepository.findBySlug(slug);
+        }
+        return slug;
     }
 }
 
