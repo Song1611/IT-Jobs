@@ -42,8 +42,10 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     
     // Count new applications for a company
     @Query("SELECT COUNT(a) FROM Application a WHERE a.job.company.id = :companyId " +
-           "AND a.status = 'pending' AND a.appliedAt > :since")
-    long countNewApplicationsByCompanyId(@Param("companyId") UUID companyId, @Param("since") LocalDateTime since);
+           "AND a.status = :status AND a.appliedAt > :since")
+    long countNewApplicationsByCompanyId(@Param("companyId") UUID companyId,
+                                         @Param("status") String status,
+                                         @Param("since") LocalDateTime since);
     
     // Count applications by job
     long countByJobId(UUID jobId);

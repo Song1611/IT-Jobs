@@ -33,6 +33,6 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         log.warn("Access denied for user at path: {} - Reason: {}", 
                 request.getRequestURI(), accessDeniedException.getMessage());
         
-        SecurityResponseUtil.writeErrorResponse(response, ErrorCode.UNAUTHORIZED);
+        SecurityResponseUtil.writeErrorResponse(response, ErrorCode.FORBIDDEN);
     }
 }

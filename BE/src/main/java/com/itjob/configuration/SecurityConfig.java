@@ -1,5 +1,6 @@
 package com.itjob.configuration;
 
+import com.itjob.constant.SecurityConstant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +16,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
 
+import java.util.List;
+
 
 @Configuration
 @EnableWebSecurity
@@ -26,6 +29,9 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
+    @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+    private List<String> allowedOrigins;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -34,13 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         (authorize) -> authorize
                                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers(
-                                        "/api/auth/login",
-                                        "/api/auth/refresh",
-                                        "/api/auth/register",
-                                        "/api/companies/**",
-                                        "/api/jobs/**",
-                                        "/api/blogs/**").permitAll()
+                                .requestMatchers(SecurityConstant.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(
@@ -77,10 +77,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.addAllowedOriginPattern("*"); // Must use pattern with allowCredentials
-        corsConfiguration.addAllowedMethod("*");
-        corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.setAllowedOrigins(allowedOrigins);
+        corsConfiguration.setAllowedMethods(SecurityConstant.ALLOWED_CORS_METHODS);
+        corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);

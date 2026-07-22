@@ -20,6 +20,8 @@ public class BlogResponse {
     String content;
     String readTime;
     String image;
+    String slug;
+    Integer viewCount;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

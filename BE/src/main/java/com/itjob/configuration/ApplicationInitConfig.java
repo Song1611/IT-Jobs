@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -27,10 +28,12 @@ public class ApplicationInitConfig {
     PasswordEncoder passwordEncoder;
 
     @NonFinal
-    static final String ADMIN_USER_NAME = "admin123";
+    @Value("${app.admin.username:admin123}")
+    String adminUserName;
 
     @NonFinal
-    static final String ADMIN_PASSWORD = "admin123";
+    @Value("${app.admin.password:admin123}")
+    String adminPassword;
 
     @Bean
     @ConditionalOnProperty(
@@ -61,19 +64,24 @@ public class ApplicationInitConfig {
                     });
 
             // Initialize admin user if it doesn't exist
-            if (userRepository.findByEmail(ADMIN_USER_NAME).isEmpty()) {
+            if (userRepository.findByEmail(adminUserName).isEmpty()) {
                 var roles = new HashSet<Role>();
                 roles.add(adminRole);
 
                 User user = User.builder()
-                        .email(ADMIN_USER_NAME)
+                        .email(adminUserName)
                         .fullName("Administrator")
-                        .password(passwordEncoder.encode(ADMIN_PASSWORD))
+                        .password(passwordEncoder.encode(adminPassword))
                         .roles(roles)
                         .build();
 
                 userRepository.save(user);
-                log.warn("admin user has been created with default password: admin, please change it");
+                if ("admin123".equals(adminPassword)) {
+                    log.warn("admin user created with DEFAULT password 'admin123' from env/config. "
+                            + "Set app.admin.password to a strong value and change it after first login!");
+                } else {
+                    log.info("admin user has been created");
+                }
             }
             log.info("Application initialization completed .....");
         };

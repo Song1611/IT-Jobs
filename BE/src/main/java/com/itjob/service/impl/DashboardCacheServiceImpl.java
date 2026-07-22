@@ -1,7 +1,8 @@
 package com.itjob.service.impl;
 
-import com.itjob.constant.CacheName;
+import com.itjob.redis.CacheName;
 import com.itjob.dto.response.DashboardStatsResponse;
+import com.itjob.enums.ApplicationStatus;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.enums.JobStatus;
 import com.itjob.repository.ApplicationRepository;
@@ -43,7 +44,8 @@ public class DashboardCacheServiceImpl implements DashboardCacheService {
         // New applications in last 7 days
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
         long totalNewApplications = applicationRepository.countNewApplicationsByCompanyId(
-            companyId, 
+            companyId,
+            ApplicationStatus.PENDING.getValue(),
             sevenDaysAgo
         );
         

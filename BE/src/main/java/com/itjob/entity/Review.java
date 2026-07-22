@@ -1,5 +1,6 @@
 package com.itjob.entity;
 
+import com.itjob.enums.ReviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -66,7 +67,7 @@ public class Review {
     String workDuration;
     
     @Column(length = 20)
-    String status = "pending"; // 'pending', 'approved', 'rejected'
+    String status = ReviewStatus.PENDING.getValue(); // 'pending', 'approved', 'rejected'
     
     @Column(name = "is_anonymous")
     Boolean isAnonymous = false;
@@ -84,7 +85,7 @@ public class Review {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) status = "pending";
+        if (status == null) status = ReviewStatus.PENDING.getValue();
         if (isVerifiedEmployee == null) isVerifiedEmployee = false;
         if (isAnonymous == null) isAnonymous = false;
         if (helpfulCount == null) helpfulCount = 0;

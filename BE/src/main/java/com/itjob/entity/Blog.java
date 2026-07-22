@@ -41,17 +41,31 @@ public class Blog {
     String readTime;
     
     String image;
-    
+
+    @Column(unique = true)
+    String slug;
+
+    @Column(name = "view_count")
+    Long viewCount = 0L;
+
+    @Column(name = "is_deleted")
+    Boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
+
     @Column(name = "created_at")
     LocalDateTime createdAt;
-    
+
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
-    
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (viewCount == null) viewCount = 0L;
+        if (isDeleted == null) isDeleted = false;
     }
     
     @PreUpdate

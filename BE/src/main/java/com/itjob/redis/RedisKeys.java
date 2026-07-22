@@ -21,6 +21,13 @@ public final class RedisKeys {
     // ========== LOCK ==========
     public static final String LOCK_PREFIX = "lock";
 
+    // ========== RATE LIMIT ==========
+    public static final String RATE_LIMIT_PREFIX = "ratelimit";
+
+    public static String rateLimitKey(String name, String identifier) {
+        return RATE_LIMIT_PREFIX + ":" + name + ":" + identifier;
+    }
+
     /**
      * Build a view counter key: {@code views:{entity}:{id}}
      */
