@@ -1,5 +1,6 @@
 package com.itjob.entity;
 
+import com.itjob.enums.CompanyStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -72,8 +73,11 @@ public class Company {
     @Column(name = "verified_at")
     LocalDateTime verifiedAt;
 
+    @Column(name = "reject_reason", columnDefinition = "TEXT")
+    String rejectReason;
+
     @Column(name = "view_count")
-    Integer viewCount = 0;
+    Long viewCount = 0L;
 
     @Column(name = "follower_count")
     Integer followerCount = 0;
@@ -98,8 +102,8 @@ public class Company {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (status == null) status = "pending";
-        if (viewCount == null) viewCount = 0;
+        if (status == null) status = CompanyStatus.PENDING.getValue();
+        if (viewCount == null) viewCount = 0L;
         if (followerCount == null) followerCount = 0;
         if (isDeleted == null) isDeleted = false;
     }

@@ -4,6 +4,7 @@ import com.itjob.dto.request.ApplicationRequest;
 import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.ApplicationResponse;
 import com.itjob.dto.response.PageResponse;
+import com.itjob.annotation.RateLimit;
 import com.itjob.service.ApplicationService;
 import com.itjob.service.JwtService;
 import jakarta.validation.Valid;
@@ -29,6 +30,7 @@ public class ApplicationController {
      */
     
     @PostMapping
+    @RateLimit(key = "apply-job", limit = 10, duration = 60)
     public ApiResponse<ApplicationResponse> applyForJob(
             @Valid @RequestBody ApplicationRequest request,
             Authentication authentication) {

@@ -29,9 +29,9 @@ public interface CompanyService {
     // Admin APIs
     PageResponse<CompanyResponse> getAllCompanies(String status, Pageable pageable);
     
-    void approveCompany(UUID id, UUID adminId);
-    
-    void rejectCompany(UUID id, UUID adminId, String reason);
-    
-    void suspendCompany(UUID id, UUID adminId, String reason);
+    CompanyResponse approveCompany(UUID id, UUID adminId);
+
+    CompanyResponse rejectCompany(UUID id, UUID adminId, String reason);
+
+    CompanyResponse suspendCompany(UUID id, UUID adminId, String reason);
 }

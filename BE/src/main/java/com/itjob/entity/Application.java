@@ -1,5 +1,6 @@
 package com.itjob.entity;
 
+import com.itjob.enums.ApplicationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -35,7 +36,7 @@ public class Application {
     String coverLetter;
     
     @Column(length = 20)
-    String status = "pending";
+    String status = ApplicationStatus.PENDING.getValue();
     
     @Column(name = "applied_at")
     LocalDateTime appliedAt;
@@ -74,7 +75,7 @@ public class Application {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         appliedAt = LocalDateTime.now();
-        if (status == null) status = "pending";
+        if (status == null) status = ApplicationStatus.PENDING.getValue();
         if (viewedByEmployer == null) viewedByEmployer = false;
     }
     

@@ -38,6 +38,7 @@ public enum ErrorCode {
     LIMIT_EXCEEDED(4015, "Limit cannot exceed 100", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(4016, "Review not found", HttpStatus.NOT_FOUND),
     ALREADY_REVIEWED(4017, "You have already reviewed this company", HttpStatus.BAD_REQUEST),
+    TOO_MANY_REQUESTS(4290, "Too many requests. Please try again later", HttpStatus.TOO_MANY_REQUESTS),
     
 
     // 9000-9999: System

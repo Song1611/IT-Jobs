@@ -630,7 +630,7 @@ SELECT
     u.id,
     'https://drive.google.com/file/d/cv_application_2.pdf',
     'Với 3 năm kinh nghiệm Java Spring Boot, tôi tự tin có thể đóng góp tích cực cho team.',
-    'reviewed',
+    'reviewing',
     CURRENT_TIMESTAMP - INTERVAL '5 days',
     CURRENT_TIMESTAMP - INTERVAL '3 days',
     TRUE,
@@ -647,7 +647,7 @@ SELECT
     u.id,
     'https://drive.google.com/file/d/cv_application_3.pdf',
     'Tôi có kinh nghiệm triển khai CI/CD với Jenkins và quản lý infrastructure trên AWS.',
-    'interview',
+    'approved',
     CURRENT_TIMESTAMP - INTERVAL '10 days',
     CURRENT_TIMESTAMP - INTERVAL '7 days',
     CURRENT_TIMESTAMP + INTERVAL '2 days',
@@ -677,22 +677,22 @@ INSERT INTO application_status_history (application_id, old_status, new_status, 
 SELECT 
     a.id,
     'pending',
-    'reviewed',
+    'reviewing',
     (SELECT id FROM users WHERE email = 'hr.vng@demo.com'),
     'HR đã xem xét hồ sơ'
 FROM applications a
-WHERE a.status = 'reviewed'
+WHERE a.status = 'reviewing'
 LIMIT 1;
 
 INSERT INTO application_status_history (application_id, old_status, new_status, changed_by, notes)
 SELECT 
     a.id,
-    'reviewed',
-    'interview',
+    'reviewing',
+    'approved',
     (SELECT id FROM users WHERE email = 'hr.tiki@demo.com'),
     'Mời ứng viên phỏng vấn'
 FROM applications a
-WHERE a.status = 'interview'
+WHERE a.status = 'approved'
 LIMIT 1;
 
 -- ========================================

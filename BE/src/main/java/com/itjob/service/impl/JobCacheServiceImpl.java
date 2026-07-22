@@ -1,6 +1,6 @@
 package com.itjob.service.impl;
 
-import com.itjob.constant.CacheName;
+import com.itjob.redis.CacheName;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.entity.Job;
 import com.itjob.exception.AppException;

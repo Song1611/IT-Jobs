@@ -113,6 +113,22 @@ public class CacheKeyGenerator {
     }
     
     /**
+     * Normalize filter array by sorting, then produce a deterministic string for cache key.
+     * Ensures cache key is order-independent (e.g. ["status=open","level=senior"] vs ["level=senior","status=open"])
+     *
+     * @param filters Array of filter strings
+     * @return Sorted string representation, or "none" if null/empty
+     */
+    public static String forFilters(String[] filters) {
+        if (filters == null || filters.length == 0) {
+            return "none";
+        }
+        String[] sorted = filters.clone();
+        java.util.Arrays.sort(sorted);
+        return java.util.Arrays.toString(sorted);
+    }
+
+    /**
      * Generate cache key for search/filter operations.
      * <p>Format: "q:keyword:loc:location:salary:1000-3000:page:0:size:10"
      * <p>Usage: Search APIs with multiple filter criteria

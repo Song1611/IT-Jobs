@@ -7,7 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,11 +25,14 @@ public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificatio
     
     // Find featured/latest jobs with Company and Skills eagerly loaded
     @EntityGraph(attributePaths = {"company", "skills"})
-    @Query("SELECT j FROM Job j WHERE j.status = 'open' ORDER BY j.createdAt DESC")
-    List<Job> findFeaturedJobs(Pageable pageable);
+    @Query("SELECT j FROM Job j WHERE j.status = :status ORDER BY j.createdAt DESC")
+    List<Job> findFeaturedJobs(@Param("status") String status, Pageable pageable);
     
     // Find jobs by company
     Page<Job> findByCompanyId(UUID companyId, Pageable pageable);
+
+    // Check if slug already exists
+    Optional<Job> findBySlug(String slug);
     
     // Find jobs by company and status
     Page<Job> findByCompanyIdAndStatus(UUID companyId, String status, Pageable pageable);
@@ -47,4 +52,9 @@ public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificatio
            "WHERE j.company.id IN :companyIds AND j.status = :status " +
            "GROUP BY j.company.id")
     List<CompanyJobCountProjection> countJobsByCompanyIdsAndStatus(List<UUID> companyIds, String status);
+
+    // Batch increment view count (used by ViewCountService sync)
+    @Modifying
+    @Query("UPDATE Job j SET j.viewCount = COALESCE(j.viewCount, 0) + :count WHERE j.id = :id")
+    int incrementViewCount(@Param("id") UUID id, @Param("count") long count);
 }

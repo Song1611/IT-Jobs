@@ -1,5 +1,6 @@
 package com.itjob.entity;
 
+import com.itjob.enums.JobStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -72,7 +73,7 @@ public class Job {
     String requirements;
     
     @Column(name = "view_count")
-    Integer viewCount = 0;
+    Long viewCount = 0L;
     
     @Column(name = "application_count")
     Integer applicationCount = 0;
@@ -80,7 +81,7 @@ public class Job {
     LocalDate deadline;
     
     @Column(length = 20)
-    String status = "open";
+    String status = JobStatus.OPEN.getValue();
     
     @ManyToOne
     @JoinColumn(name = "created_by")
@@ -112,9 +113,9 @@ public class Job {
         if (salaryCurrency == null) salaryCurrency = "VND";
         if (salaryType == null) salaryType = "monthly";
         if (isNegotiable == null) isNegotiable = false;
-        if (viewCount == null) viewCount = 0;
+        if (viewCount == null) viewCount = 0L;
         if (applicationCount == null) applicationCount = 0;
-        if (status == null) status = "open";
+        if (status == null) status = JobStatus.OPEN.getValue();
     }
     
     @PreUpdate

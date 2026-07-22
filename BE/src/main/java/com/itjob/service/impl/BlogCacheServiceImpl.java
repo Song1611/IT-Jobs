@@ -1,6 +1,6 @@
 package com.itjob.service.impl;
 
-import com.itjob.constant.CacheName;
+import com.itjob.redis.CacheName;
 import com.itjob.dto.response.BlogResponse;
 import com.itjob.entity.Blog;
 import com.itjob.exception.AppException;
@@ -27,9 +27,9 @@ public class BlogCacheServiceImpl implements BlogCacheService {
     @Cacheable(value = CacheName.BLOG_DETAIL, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)")
     public BlogResponse getCachedBlogById(UUID id) {
         log.debug("Fetching blog {} from database", id);
-        Blog blog = blogRepository.findById(id)
+        Blog blog = blogRepository.findActiveById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BLOG_NOT_FOUND));
-        
+
         return blogMapper.toBlogResponse(blog);
     }
 }
