@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 
     // Batch increment view count (used by ViewCountService sync)
     @Modifying
+    @Transactional
     @Query("UPDATE Company c SET c.viewCount = COALESCE(c.viewCount, 0) + :count WHERE c.id = :id")
     int incrementViewCount(@Param("id") UUID id, @Param("count") long count);
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -42,6 +43,7 @@ public interface BlogRepository extends JpaRepository<Blog, UUID>, JpaSpecificat
 
     // Batch increment view count (used by ViewCountService sync)
     @Modifying
+    @Transactional
     @Query("UPDATE Blog b SET b.viewCount = COALESCE(b.viewCount, 0) + :count WHERE b.id = :id")
     int incrementViewCount(@Param("id") UUID id, @Param("count") long count);
 }

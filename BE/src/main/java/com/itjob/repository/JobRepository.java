@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -55,6 +56,7 @@ public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificatio
 
     // Batch increment view count (used by ViewCountService sync)
     @Modifying
+    @Transactional
     @Query("UPDATE Job j SET j.viewCount = COALESCE(j.viewCount, 0) + :count WHERE j.id = :id")
     int incrementViewCount(@Param("id") UUID id, @Param("count") long count);
 }

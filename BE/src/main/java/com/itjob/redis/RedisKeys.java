@@ -28,6 +28,14 @@ public final class RedisKeys {
         return RATE_LIMIT_PREFIX + ":" + name + ":" + identifier;
     }
 
+    public static String lockKey(String name, Object... parts) {
+        StringBuilder key = new StringBuilder(LOCK_PREFIX).append(":").append(name);
+        for (Object part : parts) {
+            key.append(":").append(part);
+        }
+        return key.toString();
+    }
+
     /**
      * Build a view counter key: {@code views:{entity}:{id}}
      */

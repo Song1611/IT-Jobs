@@ -1,5 +1,6 @@
 package com.itjob.service.impl;
 
+import com.itjob.annotation.DistributedLock;
 import com.itjob.redis.CacheName;
 import com.itjob.dto.request.ReviewRequest;
 import com.itjob.dto.response.ReviewResponse;
@@ -168,6 +169,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @DistributedLock(key = "'review:approve:' + #id", waitTime = 0, leaseTime = 10)
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     @Caching(
@@ -193,6 +195,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @DistributedLock(key = "'review:reject:' + #id", waitTime = 0, leaseTime = 10)
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     @Caching(
