@@ -1,5 +1,6 @@
 package com.itjob.service.impl;
 
+import com.itjob.annotation.DistributedLock;
 import com.itjob.redis.CacheName;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.enums.JobStatus;
@@ -346,24 +347,52 @@ public class JobServiceImpl implements JobService {
     }
     
     @Override
+    @DistributedLock(key = "'job:state:' + #id", leaseTime = 30)
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
+    @Caching(evict = {
+            @CacheEvict(value = CacheName.JOB_DETAIL, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
+            @CacheEvict(value = CacheName.JOB_FEATURED, allEntries = true),
+            @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
+            @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
+            @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+    })
     public void approveJob(UUID id, UUID adminId) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-        
+
+        if (!JobStatus.DRAFT.getValue().equals(job.getStatus())) {
+            throw new AppException(ErrorCode.JOB_ALREADY_PROCESSED);
+        }
+
         job.setStatus(JobStatus.OPEN.getValue());
+
+        log.info("Job {} approved by admin {}", id, adminId);
     }
-    
+
     @Override
+    @DistributedLock(key = "'job:state:' + #id", leaseTime = 30)
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
+    @Caching(evict = {
+            @CacheEvict(value = CacheName.JOB_DETAIL, key = "T(com.itjob.util.CacheKeyGenerator).forId(#id)"),
+            @CacheEvict(value = CacheName.JOB_FEATURED, allEntries = true),
+            @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
+            @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
+            @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
+                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+    })
     public void rejectJob(UUID id, UUID adminId, String reason) {
         Job job = jobRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.JOB_NOT_FOUND));
-        
+
+        if (!JobStatus.DRAFT.getValue().equals(job.getStatus())) {
+            throw new AppException(ErrorCode.JOB_ALREADY_PROCESSED);
+        }
+
         job.setStatus(JobStatus.REJECTED.getValue());
-        
+
         log.info("Job {} rejected by admin {}: {}", id, adminId, reason);
     }
     

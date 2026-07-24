@@ -1,5 +1,6 @@
 package com.itjob.service.impl;
 
+import com.itjob.annotation.DistributedLock;
 import com.itjob.redis.CacheName;
 import com.itjob.dto.request.BlogRequest;
 import com.itjob.dto.response.BlogBriefResponse;
@@ -149,6 +150,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @DistributedLock(key = "'blog:create:' + T(com.itjob.util.SlugUtil).generateSlug(#request.title)", leaseTime = 15)
     @Transactional
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Caching(evict = {
@@ -177,6 +179,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     @Override
+    @DistributedLock(key = "'blog:' + #id", leaseTime = 15)
     @Transactional
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Caching(evict = {

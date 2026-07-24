@@ -1,5 +1,6 @@
 package com.itjob.service.impl;
 
+import com.itjob.annotation.DistributedLock;
 import com.itjob.redis.CacheName;
 import com.itjob.dto.request.ApplicationRequest;
 import com.itjob.enums.ApplicationStatus;
@@ -53,6 +54,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @DistributedLock(key = "'apply:' + #request.jobId + ':' + #userId", waitTime = 0, leaseTime = 5)
     @CacheEvict(value = CacheName.DASHBOARD_HR,
                 key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#result.job.company.id)")
     public ApplicationResponse applyForJob(ApplicationRequest request, UUID userId) {

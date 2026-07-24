@@ -39,7 +39,10 @@ public enum ErrorCode {
     REVIEW_NOT_FOUND(4016, "Review not found", HttpStatus.NOT_FOUND),
     ALREADY_REVIEWED(4017, "You have already reviewed this company", HttpStatus.BAD_REQUEST),
     TOO_MANY_REQUESTS(4290, "Too many requests. Please try again later", HttpStatus.TOO_MANY_REQUESTS),
-    
+    RESOURCE_BUSY(4019, "Resource is currently being processed. Please try again", HttpStatus.LOCKED),
+    COMPANY_ALREADY_PROCESSED(4020, "Company has already been processed", HttpStatus.BAD_REQUEST),
+    JOB_ALREADY_PROCESSED(4021, "Job has already been processed", HttpStatus.BAD_REQUEST),
+    INVALID_KEY(4018, "Invalid lock key expression", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 9000-9999: System
     UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR
