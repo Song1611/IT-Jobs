@@ -5,6 +5,7 @@ import com.itjob.entity.User;
 import com.itjob.exception.AppException;
 import com.itjob.exception.ErrorCode;
 import com.itjob.repository.RefreshTokenRepository;
+import com.itjob.service.RefreshTokenBlacklistService;
 import com.itjob.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import java.util.UUID;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenBlacklistService blacklistService;
 
     @Value("${jwt.refresh-token-duration}")
     private long refreshTokenDuration;
@@ -49,7 +51,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public RefreshToken verifyRefreshToken(String token) {
 
         log.debug("Verifying refresh token");
@@ -57,8 +59,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         RefreshToken refreshToken = getRefreshToken(token);
 
         if (refreshToken.isRevoked()) {
-            log.warn("Refresh token has been revoked");
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            log.warn("Refresh token reuse detected: {}", token);
+            revokeAllTokensForUser(refreshToken.getUsername());
+            throw new AppException(ErrorCode.REFRESH_TOKEN_REVOKED);
         }
 
         if (refreshToken.getExpiryTime().isBefore(Instant.now())) {
@@ -69,35 +72,35 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return refreshToken;
     }
 
+    private void revokeAllTokensForUser(String username) {
+        var tokens = refreshTokenRepository.findAllByUsernameAndRevokedFalse(username);
+        for (RefreshToken t : tokens) {
+            t.setRevoked(true);
+            blacklistService.blacklist(t.getToken().toString(), t.getExpiryTime());
+        }
+        refreshTokenRepository.saveAll(tokens);
+        log.warn("All refresh tokens revoked and blacklisted for user: {} due to reuse attack", username);
+    }
+
     @Override
     @Transactional
-    public void revokeRefreshToken(String token) {
+    public RefreshToken revokeRefreshToken(String token) {
 
         log.debug("Revoking refresh token");
 
         RefreshToken refreshToken = getRefreshToken(token);
 
+        if (refreshToken.isRevoked()) {
+            log.debug("Refresh token already revoked");
+            return refreshToken;
+        }
+
         refreshToken.setRevoked(true);
 
         log.debug("Refresh token revoked successfully");
+
+        return refreshToken;
     }
-
-    @Override
-    @Transactional
-    public void revokeAllUserTokens(User user) {
-
-        log.debug("Revoking all refresh tokens for user: {}",
-                user.getEmail());
-
-        var tokens = refreshTokenRepository
-                .findAllByUsernameAndRevokedFalse(user.getEmail());
-
-        tokens.forEach(token -> token.setRevoked(true));
-        refreshTokenRepository.saveAll(tokens);
-
-        log.debug("All refresh tokens revoked successfully");
-    }
-
 
     private RefreshToken getRefreshToken(String token) {
 

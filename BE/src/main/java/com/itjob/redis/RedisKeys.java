@@ -15,6 +15,10 @@ public final class RedisKeys {
     // ========== BLACKLIST ==========
     public static final String BLACKLIST_PREFIX = "blacklist";
 
+    public static String refreshBlacklist(String token) {
+        return BLACKLIST_PREFIX + ":refresh:" + token;
+    }
+
     // ========== OTP ==========
     public static final String OTP_PREFIX = "otp";
 
