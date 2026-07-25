@@ -1,5 +1,6 @@
 package com.itjob.service.impl;
 
+import com.itjob.annotation.DistributedLock;
 import com.itjob.dto.request.AuthenticationRequest;
 import com.itjob.dto.request.LogoutRequest;
 import com.itjob.dto.request.RefreshRequest;
@@ -11,6 +12,7 @@ import com.itjob.exception.ErrorCode;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.AuthenticationService;
 import com.itjob.service.JwtService;
+import com.itjob.service.RefreshTokenBlacklistService;
 import com.itjob.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenBlacklistService blacklistService;
 
     @Override
     @Transactional
@@ -62,14 +65,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
+    @DistributedLock(key = "'refresh:' + #request.refreshToken", leaseTime = 10)
     @Transactional
     public AuthenticationResponse refreshToken(RefreshRequest request) {
         log.debug("Refreshing access token");
-        
-        // 1. Verify refresh token
+
+        // 1. Check blacklist FIRST (fast path, no DB)
+        if (blacklistService.isBlacklisted(request.getRefreshToken())) {
+            log.warn("Refresh token is blacklisted");
+            throw new AppException(ErrorCode.REFRESH_TOKEN_REVOKED);
+        }
+
+        // 2. Verify refresh token in DB
         RefreshToken refreshToken = refreshTokenService.verifyRefreshToken(request.getRefreshToken());
-        
-        // 2. Get user by username from refresh token
+
+        // 3. Get user by username from refresh token
         User user = userRepository.findByEmail(refreshToken.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Authentication failed for user: {}", refreshToken.getUsername());
@@ -77,13 +87,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
                 });
 
-        // 3. Revoke old refresh token FIRST
-        refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+        if (!user.isEnabled()) {
+            log.warn("Disabled user {} attempted to refresh token", user.getEmail());
+            throw new AppException(ErrorCode.USER_DISABLED);
+        }
+
+        // 5. Revoke old refresh token in DB + blacklist in Redis
+        RefreshToken revokedToken = refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+        blacklistService.blacklist(request.getRefreshToken(), revokedToken.getExpiryTime());
         
-        // 4. Generate new access token
+        // 6. Generate new access token
         String accessToken = jwtService.generateAccessToken(user);
         
-        // 5. Create new refresh token
+        // 7. Create new refresh token
         String newRefreshToken = refreshTokenService.createRefreshToken(user);
         
         log.debug("Access token refreshed successfully for user: {}", user.getEmail());
@@ -99,10 +115,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Transactional
     public void logout(LogoutRequest request) {
         log.debug("Logging out user");
-        
-        // Revoke the refresh token
-        refreshTokenService.revokeRefreshToken(request.getRefreshToken());
-        
+
+        if (blacklistService.isBlacklisted(request.getRefreshToken())) {
+            log.debug("Refresh token already blacklisted");
+            return;
+        }
+
+        // 1. Revoke in DB
+        RefreshToken token = refreshTokenService.revokeRefreshToken(request.getRefreshToken());
+
+        // 2. Blacklist in Redis with TTL = remaining expiry time
+        blacklistService.blacklist(request.getRefreshToken(), token.getExpiryTime());
+
         log.debug("User logged out successfully");
     }
 

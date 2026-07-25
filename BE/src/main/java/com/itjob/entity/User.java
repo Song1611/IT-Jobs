@@ -58,6 +58,10 @@ public class User {
     
     @Column(name = "updated_at", nullable = false)
     LocalDateTime updatedAt;
+
+    @Builder.Default
+    @Column(nullable = false)
+    boolean enabled = true;
     
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

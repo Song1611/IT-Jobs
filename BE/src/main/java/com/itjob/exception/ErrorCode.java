@@ -42,6 +42,8 @@ public enum ErrorCode {
     RESOURCE_BUSY(4019, "Resource is currently being processed. Please try again", HttpStatus.LOCKED),
     COMPANY_ALREADY_PROCESSED(4020, "Company has already been processed", HttpStatus.BAD_REQUEST),
     JOB_ALREADY_PROCESSED(4021, "Job has already been processed", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_REVOKED(4022, "Refresh token has been revoked", HttpStatus.UNAUTHORIZED),
+    USER_DISABLED(4023, "Account has been disabled", HttpStatus.FORBIDDEN),
     INVALID_KEY(4018, "Invalid lock key expression", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // 9000-9999: System
