@@ -21,6 +21,26 @@ public final class RedisKeys {
 
     // ========== OTP ==========
     public static final String OTP_PREFIX = "otp";
+    public static final String OTP_ATTEMPT_PREFIX = "otp_attempt";
+
+    public static String otp(String email) {
+        return OTP_PREFIX + ":" + email;
+    }
+
+    public static String otpAttempt(String email) {
+        return OTP_ATTEMPT_PREFIX + ":" + email;
+    }
+
+    public static final String OTP_COOLDOWN_PREFIX = "otp_cooldown";
+    public static final String OTP_SEND_LIMIT_PREFIX = "otp_send";
+
+    public static String otpCooldown(String email) {
+        return OTP_COOLDOWN_PREFIX + ":" + email;
+    }
+
+    public static String otpSendLimit(String email) {
+        return OTP_SEND_LIMIT_PREFIX + ":" + email;
+    }
 
     // ========== LOCK ==========
     public static final String LOCK_PREFIX = "lock";

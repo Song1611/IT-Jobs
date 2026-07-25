@@ -2,13 +2,12 @@ package com.itjob.service.impl;
 
 import com.itjob.redis.RedisKeys;
 import com.itjob.service.RefreshTokenBlacklistService;
+import com.itjob.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -16,8 +15,6 @@ import java.time.Instant;
 @RequiredArgsConstructor
 @Slf4j
 public class RefreshTokenBlacklistServiceImpl implements RefreshTokenBlacklistService {
-
-    private static final java.util.HexFormat HEX = java.util.HexFormat.of();
 
     private final StringRedisTemplate redisTemplate;
 
@@ -32,7 +29,7 @@ public class RefreshTokenBlacklistServiceImpl implements RefreshTokenBlacklistSe
         }
 
         redisTemplate.opsForValue().set(
-                RedisKeys.refreshBlacklist(hashToken(token)),
+                RedisKeys.refreshBlacklist(HashUtil.sha256(token)),
                 "1",
                 ttl
         );
@@ -43,16 +40,6 @@ public class RefreshTokenBlacklistServiceImpl implements RefreshTokenBlacklistSe
     @Override
     public boolean isBlacklisted(String token) {
 
-        return redisTemplate.hasKey(RedisKeys.refreshBlacklist(hashToken(token)));
-    }
-
-    private String hashToken(String token) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(token.getBytes());
-            return HEX.formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 not available", e);
-        }
+        return redisTemplate.hasKey(RedisKeys.refreshBlacklist(HashUtil.sha256(token)));
     }
 }

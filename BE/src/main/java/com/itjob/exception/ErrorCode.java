@@ -45,6 +45,8 @@ public enum ErrorCode {
     REFRESH_TOKEN_REVOKED(4022, "Refresh token has been revoked", HttpStatus.UNAUTHORIZED),
     USER_DISABLED(4023, "Account has been disabled", HttpStatus.FORBIDDEN),
     INVALID_KEY(4018, "Invalid lock key expression", HttpStatus.INTERNAL_SERVER_ERROR),
+    OTP_INVALID(4024, "Invalid or expired OTP", HttpStatus.BAD_REQUEST),
+    OTP_TOO_MANY_ATTEMPTS(4025, "Too many OTP attempts. Please request a new OTP", HttpStatus.TOO_MANY_REQUESTS),
 
     // 9000-9999: System
     UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR
