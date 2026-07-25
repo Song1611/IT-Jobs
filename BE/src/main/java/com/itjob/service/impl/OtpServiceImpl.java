@@ -43,9 +43,9 @@ public class OtpServiceImpl implements OtpService {
             throw new AppException(ErrorCode.TOO_MANY_REQUESTS);
         }
 
-        int min = (int) Math.pow(10, OtpConstant.OTP_LENGTH - 1);
-        int max = (int) Math.pow(10, OtpConstant.OTP_LENGTH) - 1;
-        int otp = RANDOM.nextInt(max - min + 1) + min;
+        redisTemplate.delete(RedisKeys.otpAttempt(email));
+
+        int otp = RANDOM.nextInt(OtpConstant.OTP_MAX - OtpConstant.OTP_MIN + 1) + OtpConstant.OTP_MIN;
         String otpStr = String.valueOf(otp);
         String hashed = HashUtil.sha256(otpStr);
 
@@ -63,6 +63,10 @@ public class OtpServiceImpl implements OtpService {
 
     @Override
     public boolean verify(String email, String otp) {
+        if (otp == null || otp.length() != OtpConstant.OTP_LENGTH || !otp.chars().allMatch(Character::isDigit)) {
+            return false;
+        }
+
         String attemptKey = RedisKeys.otpAttempt(email);
 
         Long attempts = redisTemplate.opsForValue().increment(attemptKey);
@@ -104,6 +108,7 @@ public class OtpServiceImpl implements OtpService {
     @Override
     public void delete(String email) {
         redisTemplate.delete(RedisKeys.otp(email));
+        redisTemplate.delete(RedisKeys.otpAttempt(email));
         log.debug("OTP deleted for email: {}", email);
     }
 
