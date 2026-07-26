@@ -1,8 +1,6 @@
 package com.itjob.controller;
 
-import com.itjob.dto.request.AuthenticationRequest;
-import com.itjob.dto.request.LogoutRequest;
-import com.itjob.dto.request.RefreshRequest;
+import com.itjob.dto.request.*;
 import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.AuthenticationResponse;
 import com.itjob.exception.AppException;
@@ -16,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -45,7 +42,6 @@ public class AuthenticationController {
         AuthenticationResponse response =
                 authenticationService.authenticate(request);
 
-        // Set refresh token as HttpOnly Cookie
         ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
                 .httpOnly(true)
                 .secure(cookieSecure)
@@ -76,7 +72,6 @@ public class AuthenticationController {
         AuthenticationResponse response =
                 authenticationService.refreshToken(request);
 
-        // Update the refresh token cookie
         ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
                 .httpOnly(true)
                 .secure(cookieSecure)
@@ -94,19 +89,51 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     @RateLimit(key = "register", limit = 3, duration = 60)
-    public ApiResponse<Void> register(@Valid @RequestBody AuthenticationRequest request) {
-        log.info("Register request for user: {}", request.getUsername());
+    public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request) {
+        log.info("Register request for user: {}", request.getEmail());
+        authenticationService.register(request);
         return ApiResponse.<Void>builder()
-                .message("Register endpoint not yet implemented")
+                .message("Registration successful. Please check your email for verification code.")
+                .build();
+    }
+
+    @PostMapping("/verify-email")
+    @RateLimit(key = "verify-email", limit = 5, duration = 60)
+    public ApiResponse<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        log.info("Verify email request for: {}", request.getEmail());
+        authenticationService.verifyEmail(request);
+        return ApiResponse.<Void>builder()
+                .message("Email verified successfully")
+                .build();
+    }
+
+    @PostMapping("/resend-otp")
+    @RateLimit(key = "resend-otp", limit = 3, duration = 60)
+    public ApiResponse<Void> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        log.info("Resend OTP request for: {}", request.getEmail());
+        authenticationService.resendOtp(request);
+        return ApiResponse.<Void>builder()
+                .message("OTP resent successfully")
                 .build();
     }
 
     @PostMapping("/forgot-password")
     @RateLimit(key = "forgot-password", limit = 3, duration = 300)
-    public ApiResponse<Void> forgotPassword(@RequestParam String email) {
-        log.info("Forgot password request for email: {}", email);
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        log.info("Forgot password request for email: {}", request.getEmail());
+        authenticationService.forgotPassword(request);
         return ApiResponse.<Void>builder()
-                .message("Forgot password endpoint not yet implemented")
+                .message("If the email exists, a password reset code has been sent")
+                .build();
+    }
+
+    @PostMapping("/reset-password")
+    @RateLimit(key = "reset-password", limit = 5, duration = 60)
+    public ApiResponse<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        log.info("Reset password request for email: {}", request.getEmail());
+        authenticationService.resetPassword(request);
+        return ApiResponse.<Void>builder()
+                .message("Password reset successfully")
                 .build();
     }
 
@@ -122,12 +149,11 @@ public class AuthenticationController {
             authenticationService.logout(request);
         }
 
-        // Clear the refresh token cookie
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
-                .maxAge(0) // Expire immediately
+                .maxAge(0)
                 .sameSite("Lax")
                 .build();
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());

@@ -52,6 +52,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
+    public void revokeAllUserTokens(User user) {
+        revokeAllTokensForUser(user.getEmail());
+    }
+
+    @Override
+    @Transactional
     public RefreshToken verifyRefreshToken(String token) {
 
         log.debug("Verifying refresh token");
