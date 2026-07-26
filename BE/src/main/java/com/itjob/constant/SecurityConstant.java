@@ -14,6 +14,10 @@ public final class SecurityConstant {
             "/api/auth/login",
             "/api/auth/refresh",
             "/api/auth/register",
+            "/api/auth/verify-email",
+            "/api/auth/resend-otp",
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
             "/api/companies/**",
             "/api/jobs/**",
             "/api/blogs/**"

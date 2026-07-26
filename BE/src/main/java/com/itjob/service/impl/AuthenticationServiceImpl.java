@@ -1,19 +1,14 @@
 package com.itjob.service.impl;
 
 import com.itjob.annotation.DistributedLock;
-import com.itjob.dto.request.AuthenticationRequest;
-import com.itjob.dto.request.LogoutRequest;
-import com.itjob.dto.request.RefreshRequest;
+import com.itjob.dto.request.*;
 import com.itjob.dto.response.AuthenticationResponse;
 import com.itjob.entity.RefreshToken;
 import com.itjob.entity.User;
 import com.itjob.exception.AppException;
 import com.itjob.exception.ErrorCode;
 import com.itjob.repository.UserRepository;
-import com.itjob.service.AuthenticationService;
-import com.itjob.service.JwtService;
-import com.itjob.service.RefreshTokenBlacklistService;
-import com.itjob.service.RefreshTokenService;
+import com.itjob.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,17 +25,24 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
     private final RefreshTokenBlacklistService blacklistService;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
     @Override
     @Transactional
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         log.debug("Authenticating user: {}", request.getUsername());
-        
+
         User user = userRepository.findByEmail(request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Authentication not successful: {}", request.getUsername());
                     return new AppException(ErrorCode.UNAUTHENTICATED);
                 });
+
+        if (!user.isEnabled()) {
+            log.warn("Unverified user {} attempted to login", user.getEmail());
+            throw new AppException(ErrorCode.USER_NOT_VERIFIED);
+        }
 
         boolean matched = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!matched) {
@@ -48,15 +50,11 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        // Note: NOT revoking old tokens here to support multiple device login
-        // If you want single device login only, uncomment this:
-        // refreshTokenService.revokeAllUserTokens(user);
-        
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = refreshTokenService.createRefreshToken(user);
 
         log.debug("User authenticated successfully: {}", request.getUsername());
-        
+
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
@@ -65,21 +63,18 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    @DistributedLock(key = "'refresh:' + #request.refreshToken", leaseTime = 10)
+    @DistributedLock(key = "'refresh:' + #request.refreshToken")
     @Transactional
     public AuthenticationResponse refreshToken(RefreshRequest request) {
         log.debug("Refreshing access token");
 
-        // 1. Check blacklist FIRST (fast path, no DB)
         if (blacklistService.isBlacklisted(request.getRefreshToken())) {
             log.warn("Refresh token is blacklisted");
             throw new AppException(ErrorCode.REFRESH_TOKEN_REVOKED);
         }
 
-        // 2. Verify refresh token in DB
         RefreshToken refreshToken = refreshTokenService.verifyRefreshToken(request.getRefreshToken());
 
-        // 3. Get user by username from refresh token
         User user = userRepository.findByEmail(refreshToken.getUsername())
                 .orElseThrow(() -> {
                     log.warn("Authentication failed for user: {}", refreshToken.getUsername());
@@ -92,18 +87,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.USER_DISABLED);
         }
 
-        // 5. Revoke old refresh token in DB + blacklist in Redis
         RefreshToken revokedToken = refreshTokenService.revokeRefreshToken(request.getRefreshToken());
         blacklistService.blacklist(request.getRefreshToken(), revokedToken.getExpiryTime());
-        
-        // 6. Generate new access token
+
         String accessToken = jwtService.generateAccessToken(user);
-        
-        // 7. Create new refresh token
         String newRefreshToken = refreshTokenService.createRefreshToken(user);
-        
+
         log.debug("Access token refreshed successfully for user: {}", user.getEmail());
-        
+
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(newRefreshToken)
@@ -121,14 +112,122 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return;
         }
 
-        // 1. Revoke in DB
         RefreshToken token = refreshTokenService.revokeRefreshToken(request.getRefreshToken());
-
-        // 2. Blacklist in Redis with TTL = remaining expiry time
         blacklistService.blacklist(request.getRefreshToken(), token.getExpiryTime());
 
         log.debug("User logged out successfully");
     }
 
+    @Override
+    @Transactional
+    public void register(RegisterRequest request) {
+        log.debug("Registering user: {}", request.getEmail());
 
+        User existing = userRepository.findByEmail(request.getEmail()).orElse(null);
+
+        if (existing != null) {
+            if (existing.isEnabled()) {
+                throw new AppException(ErrorCode.USER_EXISTED);
+            }
+
+            existing.setFullName(request.getFullName());
+            existing.setPassword(passwordEncoder.encode(request.getPassword()));
+            userRepository.save(existing);
+
+            String otp = otpService.generateAndStore(existing.getEmail());
+            emailService.sendVerifyEmail(existing.getEmail(), otp);
+
+            log.debug("User re-registered successfully: {}", request.getEmail());
+            return;
+        }
+
+        User user = User.builder()
+                .fullName(request.getFullName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .enabled(false)
+                .build();
+
+        userRepository.save(user);
+
+        String otp = otpService.generateAndStore(request.getEmail());
+        emailService.sendVerifyEmail(request.getEmail(), otp);
+
+        log.debug("User registered successfully: {}", request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void verifyEmail(VerifyEmailRequest request) {
+        log.debug("Verifying email: {}", request.getEmail());
+
+        boolean verified = otpService.verify(request.getEmail(), request.getOtp());
+        if (!verified) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isEnabled()) {
+            throw new AppException(ErrorCode.USER_ALREADY_VERIFIED);
+        }
+
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        log.debug("Email verified successfully: {}", request.getEmail());
+    }
+
+    @Override
+    public void resendOtp(ResendOtpRequest request) {
+        log.debug("Resending OTP for email: {}", request.getEmail());
+
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user == null || user.isEnabled()) {
+            return;
+        }
+
+        String otp = otpService.generateAndStore(request.getEmail());
+        emailService.sendVerifyEmail(request.getEmail(), otp);
+
+        log.debug("OTP resent for email: {}", request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        log.debug("Forgot password request for email: {}", request.getEmail());
+
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user == null || !user.isEnabled()) {
+            return;
+        }
+
+        String otp = otpService.generateAndStore(request.getEmail());
+        emailService.sendForgotPasswordOtp(request.getEmail(), otp);
+
+        log.debug("Forgot password OTP sent for email: {}", request.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        log.debug("Resetting password for email: {}", request.getEmail());
+
+        boolean verified = otpService.verify(request.getEmail(), request.getOtp());
+        if (!verified) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        refreshTokenService.revokeAllUserTokens(user);
+
+        log.debug("Password reset successfully for email: {}", request.getEmail());
+    }
 }

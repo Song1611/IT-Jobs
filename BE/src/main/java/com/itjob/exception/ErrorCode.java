@@ -47,6 +47,8 @@ public enum ErrorCode {
     INVALID_KEY(4018, "Invalid lock key expression", HttpStatus.INTERNAL_SERVER_ERROR),
     OTP_INVALID(4024, "Invalid or expired OTP", HttpStatus.BAD_REQUEST),
     OTP_TOO_MANY_ATTEMPTS(4025, "Too many OTP attempts. Please request a new OTP", HttpStatus.TOO_MANY_REQUESTS),
+    USER_NOT_VERIFIED(4026, "Email not verified. Please verify your email", HttpStatus.FORBIDDEN),
+    USER_ALREADY_VERIFIED(4027, "Email already verified", HttpStatus.BAD_REQUEST),
 
     // 9000-9999: System
     UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR
