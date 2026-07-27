@@ -28,9 +28,9 @@ public final class CacheName {
     public static final String SKILL_LIST = "skill_list";
     public static final String SKILL_DETAIL = "skill_detail";
 
-    // ========== LOCATION CACHES (Reference Data) ==========
-    public static final String LOCATION_LIST = "location_list";
-    public static final String LOCATION_DETAIL = "location_detail";
+    // ========== PROVINCE CACHES (Reference Data) ==========
+    public static final String PROVINCE_LIST = "province_list";
+    public static final String PROVINCE_DETAIL = "province_detail";
 
     // ========== BLOG CATEGORY CACHES (Reference Data) ==========
     public static final String BLOG_CATEGORY_LIST = "blog_category_list";
