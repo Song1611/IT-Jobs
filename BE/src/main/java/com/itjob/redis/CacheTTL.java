@@ -32,8 +32,8 @@ public enum CacheTTL {
     SKILL_LIST(CacheName.SKILL_LIST, Duration.ofHours(12)),
     SKILL_DETAIL(CacheName.SKILL_DETAIL, Duration.ofHours(12)),
 
-    LOCATION_LIST(CacheName.LOCATION_LIST, Duration.ofDays(1)),
-    LOCATION_DETAIL(CacheName.LOCATION_DETAIL, Duration.ofDays(1)),
+    PROVINCE_LIST(CacheName.PROVINCE_LIST, Duration.ofDays(1)),
+    PROVINCE_DETAIL(CacheName.PROVINCE_DETAIL, Duration.ofDays(1)),
 
     BLOG_CATEGORY_LIST(CacheName.BLOG_CATEGORY_LIST, Duration.ofHours(6)),
     BLOG_CATEGORY_DETAIL(CacheName.BLOG_CATEGORY_DETAIL, Duration.ofHours(6)),

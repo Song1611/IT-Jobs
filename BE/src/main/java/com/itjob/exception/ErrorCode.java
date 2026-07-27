@@ -34,6 +34,8 @@ public enum ErrorCode {
     COMPANY_ALREADY_EXISTS(4011, "You already have a company", HttpStatus.BAD_REQUEST),
     COMPANY_NOT_ACTIVE(4012, "Company is not active", HttpStatus.BAD_REQUEST),
     SKILL_NOT_FOUND(4013, "One or more skills not found", HttpStatus.NOT_FOUND),
+    SKILL_ALREADY_EXISTS(4028, "Skill already exists", HttpStatus.BAD_REQUEST),
+    PROVINCE_NOT_FOUND(4029, "Province not found", HttpStatus.NOT_FOUND),
     INVALID_LIMIT(4014, "Limit must be greater than 0", HttpStatus.BAD_REQUEST),
     LIMIT_EXCEEDED(4015, "Limit cannot exceed 100", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(4016, "Review not found", HttpStatus.NOT_FOUND),
