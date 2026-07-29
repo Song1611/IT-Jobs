@@ -48,13 +48,16 @@ public enum CacheTTL {
 
     // ========== VIEW COUNTER TTL (raw Redis keys, not Spring Cache) ==========
     VIEW_KEY("view_key", Duration.ofDays(7)),
-    VIEW_DEBOUNCE("view_debounce", Duration.ofMinutes(5));
+    VIEW_DEBOUNCE("view_debounce", Duration.ofMinutes(5)),
+
+    // ========== REACTION COUNTER TTL (raw Redis keys, not Spring Cache) ==========
+    REACTION_KEY("reaction_key", Duration.ofDays(7));
 
     private final String cacheName;
     private final Duration ttl;
 
     public boolean isSpringCache() {
-        return !cacheName.startsWith("view_");
+        return !cacheName.startsWith("view_") && !cacheName.startsWith("reaction_");
     }
 
 

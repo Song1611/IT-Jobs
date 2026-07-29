@@ -36,6 +36,8 @@ public enum ErrorCode {
     SKILL_NOT_FOUND(4013, "One or more skills not found", HttpStatus.NOT_FOUND),
     SKILL_ALREADY_EXISTS(4028, "Skill already exists", HttpStatus.BAD_REQUEST),
     PROVINCE_NOT_FOUND(4029, "Province not found", HttpStatus.NOT_FOUND),
+    POST_NOT_FOUND(4030, "Post not found", HttpStatus.NOT_FOUND),
+    COMMENT_NOT_FOUND(4031, "Comment not found", HttpStatus.NOT_FOUND),
     INVALID_LIMIT(4014, "Limit must be greater than 0", HttpStatus.BAD_REQUEST),
     LIMIT_EXCEEDED(4015, "Limit cannot exceed 100", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(4016, "Review not found", HttpStatus.NOT_FOUND),
