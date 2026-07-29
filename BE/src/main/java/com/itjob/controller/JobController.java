@@ -41,6 +41,18 @@ public class JobController {
                 .result(jobService.getFeaturedJobs(limit))
                 .build();
     }
+
+    @GetMapping("/trending")
+    public ApiResponse<List<JobResponse>> getTrendingJobs(
+            @RequestParam(defaultValue = "20") int limit) {
+
+        log.info("Getting trending jobs, limit: {}", limit);
+
+        return ApiResponse.<List<JobResponse>>builder()
+                .message("Trending jobs retrieved successfully")
+                .result(jobService.getTrendingJobs(limit))
+                .build();
+    }
     
     /**
      * Search jobs using Specification pattern with filter array

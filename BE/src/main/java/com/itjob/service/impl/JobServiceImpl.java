@@ -23,10 +23,13 @@ import com.itjob.repository.projection.JobApplicationCountProjection;
 import com.itjob.service.JobCacheService;
 import com.itjob.enums.ViewEntity;
 import com.itjob.service.JobService;
+import com.itjob.service.TrendingJobService;
 import com.itjob.service.ViewCountService;
 import com.itjob.specification.helper.SpecificationHelper;
 import com.itjob.util.PageResponseUtil;
 import com.itjob.util.SlugUtil;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -64,6 +67,7 @@ public class JobServiceImpl implements JobService {
     private final SpecificationHelper specificationHelper;
     private final JobCacheService jobCacheService;
     private final ViewCountService viewCountService;
+    private final TrendingJobService trendingJobService;
     
     @Override
     @Cacheable(value = CacheName.JOB_FEATURED,
@@ -86,6 +90,32 @@ public class JobServiceImpl implements JobService {
                 .map(jobMapper::toJobResponse)
                 .collect(Collectors.toList());
         log.debug("getFeaturedJobs({}) completed in {} ms", limit, System.currentTimeMillis() - start);
+        return result;
+    }
+
+    @Override
+    public List<JobResponse> getTrendingJobs(int limit) {
+        log.debug("Fetching {} trending jobs from Redis", limit);
+        List<UUID> topIds = trendingJobService.getTopJobIds(limit);
+
+        if (topIds.isEmpty()) {
+            log.debug("No trending jobs in Redis, falling back to featured jobs");
+            return getFeaturedJobs(limit);
+        }
+
+        List<Job> jobs = jobRepository.findAllById(topIds);
+        Map<UUID, Job> jobMap = new HashMap<>();
+        for (Job job : jobs) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<JobResponse> result = topIds.stream()
+                .map(jobMap::get)
+                .filter(java.util.Objects::nonNull)
+                .map(jobMapper::toJobResponse)
+                .toList();
+
+        log.debug("getTrendingJobs({}) returned {} jobs", limit, result.size());
         return result;
     }
     

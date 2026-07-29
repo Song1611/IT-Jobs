@@ -1,11 +1,13 @@
 package com.itjob.service.impl;
 
+import com.itjob.constant.TrendingScore;
 import com.itjob.redis.CacheTTL;
 import com.itjob.redis.RedisKeys;
 import com.itjob.enums.ViewEntity;
 import com.itjob.repository.BlogRepository;
 import com.itjob.repository.CompanyRepository;
 import com.itjob.repository.JobRepository;
+import com.itjob.service.TrendingJobService;
 import com.itjob.service.ViewCountService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class ViewCountServiceImpl implements ViewCountService {
     private final JobRepository jobRepository;
     private final CompanyRepository companyRepository;
     private final BlogRepository blogRepository;
+    private final TrendingJobService trendingJobService;
 
     private Map<ViewEntity, BiFunction<UUID, Long, Integer>> dbUpdaters;
 
@@ -65,6 +68,10 @@ public class ViewCountServiceImpl implements ViewCountService {
             longRedisTemplate.opsForValue().increment(redisKey);
             if (Boolean.TRUE.equals(first)) {
                 stringRedisTemplate.opsForSet().add(RedisKeys.DIRTY_VIEW_SET, redisKey);
+            }
+
+            if (entity == ViewEntity.JOB) {
+                trendingJobService.recordScore(id, TrendingScore.VIEW);
             }
         } catch (Exception e) {
             log.warn("Failed to increment view for {}/{}: {}", entity.getKey(), id, e.getMessage());
