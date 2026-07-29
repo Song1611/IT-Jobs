@@ -12,6 +12,14 @@ public final class RedisKeys {
     public static final String DIRTY_VIEW_SET = "dirty:views";
     public static final String VIEWED_PREFIX = "viewed";
 
+    // ========== REACTION COUNTER ==========
+    public static final String REACTION_PREFIX = "reactions";
+    public static final String DIRTY_REACTION_SET = "dirty:reactions";
+
+    public static String reactionKey(String entity, Object id) {
+        return REACTION_PREFIX + ":" + entity + ":" + id;
+    }
+
     // ========== BLACKLIST ==========
     public static final String BLACKLIST_PREFIX = "blacklist";
 
