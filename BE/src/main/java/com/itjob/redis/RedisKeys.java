@@ -1,8 +1,12 @@
 package com.itjob.redis;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public final class RedisKeys {
+
+    public static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private RedisKeys() {
     }
@@ -11,6 +15,17 @@ public final class RedisKeys {
     public static final String VIEW_PREFIX = "views";
     public static final String DIRTY_VIEW_SET = "dirty:views";
     public static final String VIEWED_PREFIX = "viewed";
+
+    // ========== TRENDING JOBS ==========
+    private static final String TRENDING_PREFIX = "trending";
+
+    public static String trendingDailyKey() {
+        return TRENDING_PREFIX + ":" + LocalDate.now().format(DATE_FMT);
+    }
+
+    public static String trendingDailyKey(LocalDate date) {
+        return TRENDING_PREFIX + ":" + date.format(DATE_FMT);
+    }
 
     // ========== REACTION COUNTER ==========
     public static final String REACTION_PREFIX = "reactions";

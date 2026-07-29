@@ -16,10 +16,12 @@ import com.itjob.mapper.ApplicationMapper;
 import com.itjob.mapper.CompanyMapper;
 import com.itjob.mapper.JobMapper;
 import com.itjob.mapper.UserMapper;
+import com.itjob.constant.TrendingScore;
 import com.itjob.repository.ApplicationRepository;
 import com.itjob.repository.JobRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.ApplicationService;
+import com.itjob.service.TrendingJobService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -50,6 +52,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final JobMapper jobMapper;
     private final UserMapper userMapper;
     private final CompanyMapper companyMapper;
+    private final TrendingJobService trendingJobService;
     
     @Override
     @Transactional
@@ -83,7 +86,9 @@ public class ApplicationServiceImpl implements ApplicationService {
         // Update job application count
         job.setApplicationCount(job.getApplicationCount() + 1);
         jobRepository.save(job);
-        
+
+        trendingJobService.recordScore(job.getId(), TrendingScore.APPLY);
+
         return buildFullApplicationResponse(application);
     }
     
@@ -135,6 +140,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         Job job = application.getJob();
         job.setApplicationCount(Math.max(0, job.getApplicationCount() - 1));
         jobRepository.save(job);
+
+        trendingJobService.recordScore(job.getId(), -TrendingScore.APPLY);
     }
     
     @Override
