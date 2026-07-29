@@ -53,6 +53,21 @@ public class JobController {
                 .result(jobService.getTrendingJobs(limit))
                 .build();
     }
+
+    @GetMapping("/recently-viewed")
+    public ApiResponse<List<JobResponse>> getRecentlyViewedJobs(
+            @RequestParam(defaultValue = "10") int limit,
+            Authentication authentication) {
+
+        UUID userId = jwtService.extractUserId(authentication);
+
+        log.info("Getting recently viewed jobs for user {}, limit: {}", userId, limit);
+
+        return ApiResponse.<List<JobResponse>>builder()
+                .message("Recently viewed jobs retrieved successfully")
+                .result(jobService.getRecentlyViewedJobs(userId, limit))
+                .build();
+    }
     
     /**
      * Search jobs using Specification pattern with filter array

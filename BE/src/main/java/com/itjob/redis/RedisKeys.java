@@ -3,6 +3,7 @@ package com.itjob.redis;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 public final class RedisKeys {
 
@@ -63,6 +64,13 @@ public final class RedisKeys {
 
     public static String otpSendLimit(String email) {
         return OTP_SEND_LIMIT_PREFIX + ":" + email;
+    }
+
+    // ========== RECENTLY VIEWED ==========
+    private static final String RECENT_VIEW_PREFIX = "recent";
+
+    public static String recentViewKey(UUID userId) {
+        return RECENT_VIEW_PREFIX + ":user:" + userId;
     }
 
     // ========== LOCK ==========
