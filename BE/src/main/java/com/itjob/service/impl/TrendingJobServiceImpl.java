@@ -4,17 +4,15 @@ import com.itjob.annotation.DistributedLock;
 import com.itjob.constant.TrendingConstant;
 import com.itjob.redis.RedisKeys;
 import com.itjob.service.TrendingJobService;
+import com.itjob.util.RedisOperation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,47 +27,34 @@ public class TrendingJobServiceImpl implements TrendingJobService {
 
     @Override
     public void recordScore(UUID jobId, double score) {
-        try {
+        RedisOperation.run(() -> {
             String key = RedisKeys.trendingDailyKey();
-            stringRedisTemplate.opsForZSet().incrementScore(key, jobId.toString(), score);
-            stringRedisTemplate.expire(key, TrendingConstant.TTL_HOURS, TimeUnit.HOURS);
-        } catch (RedisConnectionFailureException e) {
-            log.warn("Redis unavailable, skipping trending score for job {}: {}", jobId, e.getMessage());
-        } catch (DataAccessException e) {
-            log.warn("Failed to record trending score for job {}: {}", jobId, e.getMessage());
-        }
+            String member = jobId.toString();
+            Boolean exists = stringRedisTemplate.hasKey(key);
+            stringRedisTemplate.opsForZSet().incrementScore(key, member, score);
+            if (!exists) {
+                stringRedisTemplate.expire(key, TrendingConstant.TTL_HOURS, TimeUnit.HOURS);
+            }
+        }, "Failed to record trending score for job {}", jobId);
     }
 
     @Override
     public List<UUID> getTopJobIds(int limit) {
-        try {
+        Set<String> result = RedisOperation.supply(() -> {
             var typedOps = stringRedisTemplate.opsForZSet();
-            Set<String> result = typedOps.reverseRange(RedisKeys.trendingDailyKey(), 0, limit - 1);
-            if (result == null || result.isEmpty()) {
-                return Collections.emptyList();
-            }
-            return result.stream()
-                    .map(id -> { try { return UUID.fromString(id); } catch (IllegalArgumentException e) { return null; } })
-                    .filter(java.util.Objects::nonNull)
-                    .toList();
-        } catch (RedisConnectionFailureException e) {
-            log.warn("Redis unavailable, cannot get trending jobs: {}", e.getMessage());
-            return Collections.emptyList();
-        } catch (DataAccessException e) {
-            log.warn("Failed to get trending jobs: {}", e.getMessage());
-            return Collections.emptyList();
-        }
+            return typedOps.reverseRange(RedisKeys.trendingDailyKey(), 0, limit - 1);
+        }, "Failed to get trending jobs");
+
+        return RedisOperation.parseUuids(result);
     }
 
     @Override
     public void removeJob(UUID jobId) {
-        try {
-            stringRedisTemplate.opsForZSet().remove(RedisKeys.trendingDailyKey(), jobId.toString());
-        } catch (RedisConnectionFailureException e) {
-            log.warn("Redis unavailable, skipping removal of job {} from trending: {}", jobId, e.getMessage());
-        } catch (DataAccessException e) {
-            log.warn("Failed to remove job {} from trending: {}", jobId, e.getMessage());
-        }
+        RedisOperation.run(() -> {
+            String member = jobId.toString();
+            stringRedisTemplate.opsForZSet().remove(RedisKeys.trendingDailyKey(), member);
+            stringRedisTemplate.opsForZSet().remove(RedisKeys.trendingDailyKey(LocalDate.now().minusDays(1)), member);
+        }, "Failed to remove job {} from trending", jobId);
     }
 
     @Scheduled(cron = "0 5 0 * * ?")
@@ -79,7 +64,7 @@ public class TrendingJobServiceImpl implements TrendingJobService {
         String yesterdayKey = RedisKeys.trendingDailyKey(yesterday);
         String todayKey = RedisKeys.trendingDailyKey();
 
-        try {
+        RedisOperation.run(() -> {
             Boolean exists = stringRedisTemplate.hasKey(yesterdayKey);
             if (!exists) {
                 log.debug("No yesterday trending data to decay");
@@ -104,10 +89,6 @@ public class TrendingJobServiceImpl implements TrendingJobService {
             stringRedisTemplate.delete(yesterdayKey);
             log.info("Decayed {} entries from {} into {} (factor={})",
                     tuples.size(), yesterdayKey, todayKey, TrendingConstant.DECAY_FACTOR);
-        } catch (RedisConnectionFailureException e) {
-            log.warn("Redis unavailable for daily trending decay: {}", e.getMessage());
-        } catch (DataAccessException e) {
-            log.warn("Failed to apply daily trending decay: {}", e.getMessage());
-        }
+        }, "Failed to apply daily trending decay");
     }
 }

@@ -23,6 +23,7 @@ import com.itjob.repository.projection.JobApplicationCountProjection;
 import com.itjob.service.JobCacheService;
 import com.itjob.enums.ViewEntity;
 import com.itjob.service.JobService;
+import com.itjob.service.RecentViewService;
 import com.itjob.service.TrendingJobService;
 import com.itjob.service.ViewCountService;
 import com.itjob.specification.helper.SpecificationHelper;
@@ -43,6 +44,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,7 @@ public class JobServiceImpl implements JobService {
     private final JobCacheService jobCacheService;
     private final ViewCountService viewCountService;
     private final TrendingJobService trendingJobService;
+    private final RecentViewService recentViewService;
     
     @Override
     @Cacheable(value = CacheName.JOB_FEATURED,
@@ -161,6 +164,10 @@ public class JobServiceImpl implements JobService {
 
         viewCountService.incrementView(ViewEntity.JOB, id, currentUserId != null ? currentUserId.toString() : null);
 
+        if (currentUserId != null) {
+            recentViewService.recordView(currentUserId, id);
+        }
+
         long pendingViews = viewCountService.getPendingViewDelta(ViewEntity.JOB, id);
         if (pendingViews > 0) {
             Integer current = response.getViewCount();
@@ -168,6 +175,31 @@ public class JobServiceImpl implements JobService {
         }
 
         return response;
+    }
+
+    @Override
+    public List<JobResponse> getRecentlyViewedJobs(UUID userId, int limit) {
+        log.debug("Fetching {} recently viewed jobs for user {}", limit, userId);
+        List<UUID> ids = recentViewService.getRecentViewIds(userId, limit);
+
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Job> jobs = jobRepository.findAllById(ids);
+        Map<UUID, Job> jobMap = new HashMap<>();
+        for (Job job : jobs) {
+            jobMap.put(job.getId(), job);
+        }
+
+        List<JobResponse> result = ids.stream()
+                .map(jobMap::get)
+                .filter(java.util.Objects::nonNull)
+                .map(jobMapper::toJobResponse)
+                .toList();
+
+        log.debug("getRecentlyViewedJobs({}) returned {} jobs", limit, result.size());
+        return result;
     }
     
     @Override

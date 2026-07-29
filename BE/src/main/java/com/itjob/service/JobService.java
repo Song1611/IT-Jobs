@@ -15,6 +15,8 @@ public interface JobService {
     List<JobResponse> getFeaturedJobs(int limit);
 
     List<JobResponse> getTrendingJobs(int limit);
+
+    List<JobResponse> getRecentlyViewedJobs(UUID userId, int limit);
     
     // Search jobs with filter array (Specification-based)
     PageResponse<JobResponse> searchJobs(String[] filters, Pageable pageable);
