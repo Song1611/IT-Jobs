@@ -73,6 +73,13 @@ public final class RedisKeys {
         return RECENT_VIEW_PREFIX + ":user:" + userId;
     }
 
+    // ========== RECOMMENDATIONS ==========
+    private static final String RECOMMEND_PREFIX = "recommend";
+
+    public static String recommendKey(UUID userId) {
+        return RECOMMEND_PREFIX + ":user:" + userId;
+    }
+
     // ========== LOCK ==========
     public static final String LOCK_PREFIX = "lock";
 

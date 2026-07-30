@@ -40,9 +40,9 @@ public class ViewCountServiceImpl implements ViewCountService {
     @PostConstruct
     void initUpdaters() {
         dbUpdaters = Map.of(
-                ViewEntity.JOB, (id, count) -> jobRepository.incrementViewCount(id, count),
-                ViewEntity.COMPANY, (id, count) -> companyRepository.incrementViewCount(id, count),
-                ViewEntity.BLOG, (id, count) -> blogRepository.incrementViewCount(id, count)
+                ViewEntity.JOB, jobRepository::incrementViewCount,
+                ViewEntity.COMPANY, companyRepository::incrementViewCount,
+                ViewEntity.BLOG, blogRepository::incrementViewCount
         );
     }
 

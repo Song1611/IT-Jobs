@@ -40,6 +40,10 @@ public interface JobRepository extends JpaRepository<Job, UUID>, JpaSpecificatio
     
     // Find jobs by status
     Page<Job> findByStatus(String status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"company", "skills"})
+    @Query("SELECT j FROM Job j WHERE j.status = :status ORDER BY j.createdAt DESC")
+    List<Job> findLatestOpenJobs(@Param("status") String status, Pageable pageable);
     
     // Count jobs by company
     long countByCompanyId(UUID companyId);

@@ -6,12 +6,11 @@ import com.itjob.dto.response.BlogBriefResponse;
 import com.itjob.dto.response.BlogResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.BlogService;
-import com.itjob.service.JwtService;
+import com.itjob.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +23,6 @@ import java.util.UUID;
 public class BlogController {
     
     private final BlogService blogService;
-    private final JwtService jwtService;
     
     /**
      * Public APIs
@@ -98,10 +96,9 @@ public class BlogController {
     
     @GetMapping("/me")
     public ApiResponse<PageResponse<BlogBriefResponse>> getMyBlogs(
-            Authentication authentication,
             Pageable pageable) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Getting blogs for user: {}", userId);
         
@@ -113,10 +110,9 @@ public class BlogController {
     
     @PostMapping
     public ApiResponse<BlogResponse> createBlog(
-            @Valid @RequestBody BlogRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody BlogRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Creating blog for user: {}", userId);
         
@@ -129,10 +125,9 @@ public class BlogController {
     @PutMapping("/{id}")
     public ApiResponse<BlogResponse> updateBlog(
             @PathVariable UUID id,
-            @Valid @RequestBody BlogRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody BlogRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Updating blog {} by user {}", id, userId);
         
@@ -144,10 +139,9 @@ public class BlogController {
     
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteBlog(
-            @PathVariable UUID id,
-            Authentication authentication) {
+            @PathVariable UUID id) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Deleting blog {} by user {}", id, userId);
         

@@ -169,7 +169,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    @DistributedLock(key = "'review:approve:' + #id", waitTime = 0, leaseTime = 10)
+    @DistributedLock(key = "'review:approve:' + #id")
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     @Caching(
@@ -195,7 +195,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    @DistributedLock(key = "'review:reject:' + #id", waitTime = 0, leaseTime = 10)
+    @DistributedLock(key = "'review:reject:' + #id")
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
     @Caching(

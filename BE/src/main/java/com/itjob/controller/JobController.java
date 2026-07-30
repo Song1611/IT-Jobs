@@ -5,13 +5,12 @@ import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.JobService;
-import com.itjob.service.JwtService;
+import com.itjob.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +23,6 @@ import java.util.UUID;
 public class JobController {
     
     private final JobService jobService;
-    private final JwtService jwtService;
     
     /**
      * Guest & Candidate APIs
@@ -56,16 +54,29 @@ public class JobController {
 
     @GetMapping("/recently-viewed")
     public ApiResponse<List<JobResponse>> getRecentlyViewedJobs(
-            @RequestParam(defaultValue = "10") int limit,
-            Authentication authentication) {
+            @RequestParam(defaultValue = "10") int limit) {
 
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
 
         log.info("Getting recently viewed jobs for user {}, limit: {}", userId, limit);
 
         return ApiResponse.<List<JobResponse>>builder()
                 .message("Recently viewed jobs retrieved successfully")
                 .result(jobService.getRecentlyViewedJobs(userId, limit))
+                .build();
+    }
+
+    @GetMapping("/recommendations")
+    public ApiResponse<List<JobResponse>> getRecommendedJobs(
+            @RequestParam(defaultValue = "10") int limit) {
+
+        UUID userId = SecurityUtil.getCurrentUserId();
+
+        log.info("Getting recommended jobs for user {}, limit: {}", userId, limit);
+
+        return ApiResponse.<List<JobResponse>>builder()
+                .message("Recommended jobs retrieved successfully")
+                .result(jobService.getRecommendedJobs(userId, limit))
                 .build();
     }
     
@@ -106,10 +117,9 @@ public class JobController {
     
     @GetMapping("/{id}")
     public ApiResponse<JobResponse> getJobById(
-            @PathVariable UUID id,
-            Authentication authentication) {
+            @PathVariable UUID id) {
         
-        UUID userId = jwtService.extractUserIdSafely(authentication);
+        UUID userId = SecurityUtil.isAuthenticated() ? SecurityUtil.getCurrentUserId() : null;
         
         log.info("Getting job by id: {}, userId: {}", id, userId);
         
@@ -128,10 +138,9 @@ public class JobController {
     public ApiResponse<PageResponse<JobResponse>> getCompanyJobs(
             @PathVariable UUID companyId,
             @RequestParam(required = false) String status,
-            Pageable pageable,
-            Authentication authentication) {
+            Pageable pageable) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Getting jobs for company: {}, status: {}, by user: {}", companyId, status, userId);
         
@@ -145,10 +154,9 @@ public class JobController {
     @PreAuthorize("hasRole('EMPLOYER')")
     public ApiResponse<JobResponse> createJob(
             @PathVariable UUID companyId,
-            @Valid @RequestBody JobRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody JobRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Creating job for company: {} by user: {}", companyId, userId);
         
@@ -163,10 +171,9 @@ public class JobController {
     public ApiResponse<JobResponse> updateJob(
             @PathVariable UUID id,
             @PathVariable UUID companyId,
-            @Valid @RequestBody JobRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody JobRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Updating job: {} for company: {} by user: {}", id, companyId, userId);
         
@@ -180,10 +187,9 @@ public class JobController {
     @PreAuthorize("hasRole('EMPLOYER')")
     public ApiResponse<Void> deleteJob(
             @PathVariable UUID id,
-            @PathVariable UUID companyId,
-            Authentication authentication) {
+            @PathVariable UUID companyId) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Deleting job: {} from company: {} by user: {}", id, companyId, userId);
         
@@ -215,10 +221,9 @@ public class JobController {
     @PutMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> approveJob(
-            @PathVariable UUID id,
-            Authentication authentication) {
+            @PathVariable UUID id) {
         
-        UUID adminId = jwtService.extractUserId(authentication);
+        UUID adminId = SecurityUtil.getCurrentUserId();
         
         log.info("Admin {} approving job: {}", adminId, id);
         
@@ -233,10 +238,9 @@ public class JobController {
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> rejectJob(
             @PathVariable UUID id,
-            @RequestParam String reason,
-            Authentication authentication) {
+            @RequestParam String reason) {
         
-        UUID adminId = jwtService.extractUserId(authentication);
+        UUID adminId = SecurityUtil.getCurrentUserId();
         
         log.info("Admin {} rejecting job: {} with reason: {}", adminId, id, reason);
         
