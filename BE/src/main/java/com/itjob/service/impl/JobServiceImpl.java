@@ -25,6 +25,7 @@ import com.itjob.enums.ViewEntity;
 import com.itjob.service.JobService;
 import com.itjob.service.RecentViewService;
 import com.itjob.service.RecommendationService;
+import com.itjob.service.SearchSuggestionService;
 import com.itjob.service.TrendingJobService;
 import com.itjob.service.ViewCountService;
 import com.itjob.specification.helper.SpecificationHelper;
@@ -72,6 +73,7 @@ public class JobServiceImpl implements JobService {
     private final TrendingJobService trendingJobService;
     private final RecentViewService recentViewService;
     private final RecommendationService recommendationService;
+    private final SearchSuggestionService searchSuggestionService;
     
     @Override
     @Cacheable(value = CacheName.JOB_FEATURED,
@@ -271,6 +273,8 @@ public class JobServiceImpl implements JobService {
         
         job = jobRepository.save(job);
         
+        searchSuggestionService.recordKeyword(job.getTitle());
+        
         // Use mapper
         return jobMapper.toJobResponse(job);
     }
@@ -330,6 +334,8 @@ public class JobServiceImpl implements JobService {
         }
         
         job = jobRepository.save(job);
+        
+        searchSuggestionService.recordKeyword(job.getTitle());
         
         // Use mapper
         return jobMapper.toJobResponse(job);
