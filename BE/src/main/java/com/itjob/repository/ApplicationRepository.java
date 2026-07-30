@@ -25,6 +25,8 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID> 
     
     // Find applications by user (for candidate view)
     Page<Application> findByUserIdOrderByAppliedAtDesc(UUID userId, Pageable pageable);
+
+    List<Application> findByUserId(UUID userId);
     
     // Find applications by job (for HR view)
     Page<Application> findByJobIdOrderByAppliedAtDesc(UUID jobId, Pageable pageable);

@@ -24,6 +24,7 @@ import com.itjob.service.JobCacheService;
 import com.itjob.enums.ViewEntity;
 import com.itjob.service.JobService;
 import com.itjob.service.RecentViewService;
+import com.itjob.service.RecommendationService;
 import com.itjob.service.TrendingJobService;
 import com.itjob.service.ViewCountService;
 import com.itjob.specification.helper.SpecificationHelper;
@@ -47,7 +48,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -71,6 +71,7 @@ public class JobServiceImpl implements JobService {
     private final ViewCountService viewCountService;
     private final TrendingJobService trendingJobService;
     private final RecentViewService recentViewService;
+    private final RecommendationService recommendationService;
     
     @Override
     @Cacheable(value = CacheName.JOB_FEATURED,
@@ -86,12 +87,7 @@ public class JobServiceImpl implements JobService {
         }
         
         log.debug("Fetching {} featured jobs from database", limit);
-        Pageable pageable = PageRequest.of(0, limit);
-        List<Job> jobs = jobRepository.findFeaturedJobs(JobStatus.OPEN.getValue(), pageable);
-        
-        List<JobResponse> result = jobs.stream()
-                .map(jobMapper::toJobResponse)
-                .collect(Collectors.toList());
+        List<JobResponse> result = fetchFeaturedJobs(limit);
         log.debug("getFeaturedJobs({}) completed in {} ms", limit, System.currentTimeMillis() - start);
         return result;
     }
@@ -103,20 +99,10 @@ public class JobServiceImpl implements JobService {
 
         if (topIds.isEmpty()) {
             log.debug("No trending jobs in Redis, falling back to featured jobs");
-            return getFeaturedJobs(limit);
+            return fetchFeaturedJobs(limit);
         }
 
-        List<Job> jobs = jobRepository.findAllById(topIds);
-        Map<UUID, Job> jobMap = new HashMap<>();
-        for (Job job : jobs) {
-            jobMap.put(job.getId(), job);
-        }
-
-        List<JobResponse> result = topIds.stream()
-                .map(jobMap::get)
-                .filter(java.util.Objects::nonNull)
-                .map(jobMapper::toJobResponse)
-                .toList();
+        List<JobResponse> result = fetchJobResponsesByIdOrder(topIds);
 
         log.debug("getTrendingJobs({}) returned {} jobs", limit, result.size());
         return result;
@@ -181,24 +167,17 @@ public class JobServiceImpl implements JobService {
     public List<JobResponse> getRecentlyViewedJobs(UUID userId, int limit) {
         log.debug("Fetching {} recently viewed jobs for user {}", limit, userId);
         List<UUID> ids = recentViewService.getRecentViewIds(userId, limit);
-
-        if (ids.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Job> jobs = jobRepository.findAllById(ids);
-        Map<UUID, Job> jobMap = new HashMap<>();
-        for (Job job : jobs) {
-            jobMap.put(job.getId(), job);
-        }
-
-        List<JobResponse> result = ids.stream()
-                .map(jobMap::get)
-                .filter(java.util.Objects::nonNull)
-                .map(jobMapper::toJobResponse)
-                .toList();
-
+        List<JobResponse> result = fetchJobResponsesByIdOrder(ids);
         log.debug("getRecentlyViewedJobs({}) returned {} jobs", limit, result.size());
+        return result;
+    }
+
+    @Override
+    public List<JobResponse> getRecommendedJobs(UUID userId, int limit) {
+        log.debug("Fetching {} recommended jobs for user {}", limit, userId);
+        List<UUID> ids = recommendationService.getRecommendedJobs(userId, limit);
+        List<JobResponse> result = fetchJobResponsesByIdOrder(ids);
+        log.debug("getRecommendedJobs({}) returned {} jobs", limit, result.size());
         return result;
     }
     
@@ -458,6 +437,29 @@ public class JobServiceImpl implements JobService {
         log.info("Job {} rejected by admin {}: {}", id, adminId, reason);
     }
     
+    private List<JobResponse> fetchFeaturedJobs(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return jobRepository.findFeaturedJobs(JobStatus.OPEN.getValue(), pageable).stream()
+                .map(jobMapper::toJobResponse)
+                .toList();
+    }
+
+    private List<JobResponse> fetchJobResponsesByIdOrder(List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Job> jobs = jobRepository.findAllById(ids);
+        Map<UUID, Job> jobMap = new HashMap<>();
+        for (Job job : jobs) {
+            jobMap.put(job.getId(), job);
+        }
+        return ids.stream()
+                .map(jobMap::get)
+                .filter(java.util.Objects::nonNull)
+                .map(jobMapper::toJobResponse)
+                .toList();
+    }
+
     /**
      * Build PageResponse for Job listings
      */
@@ -504,6 +506,7 @@ public class JobServiceImpl implements JobService {
     }
 
     private String generateUniqueJobSlug(String title) {
+
         return generateUniqueJobSlug(title, null);
     }
 

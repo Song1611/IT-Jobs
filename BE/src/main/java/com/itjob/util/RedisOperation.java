@@ -37,7 +37,8 @@ public final class RedisOperation {
             return List.of();
         }
         return strings.stream()
-                .map(id -> { try { return UUID.fromString(id); } catch (IllegalArgumentException e) { return null; } })
+                .map(id -> { try { return UUID.fromString(id); }
+                catch (IllegalArgumentException e) { return null; } })
                 .filter(Objects::nonNull)
                 .toList();
     }

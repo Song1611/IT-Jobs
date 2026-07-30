@@ -8,13 +8,12 @@ import com.itjob.service.ApplicationService;
 import com.itjob.service.CompanyService;
 import com.itjob.service.DashboardService;
 import com.itjob.service.JobService;
-import com.itjob.service.JwtService;
+import com.itjob.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -30,7 +29,6 @@ public class HRController {
     private final CompanyService companyService;
     private final ApplicationService applicationService;
     private final DashboardService dashboardService;
-    private final JwtService jwtService;
     
     /**
      * Dashboard
@@ -38,8 +36,7 @@ public class HRController {
     
     @GetMapping("/dashboard/summary")
     public ApiResponse<DashboardStatsResponse> getDashboardSummary(
-            @RequestParam UUID companyId,
-            Authentication authentication) {
+            @RequestParam UUID companyId) {
         
         log.info("Getting HR dashboard summary for company {}", companyId);
         
@@ -54,8 +51,8 @@ public class HRController {
      */
     
     @GetMapping("/company")
-    public ApiResponse<CompanyResponse> getMyCompany(Authentication authentication) {
-        UUID userId = jwtService.extractUserId(authentication);
+    public ApiResponse<CompanyResponse> getMyCompany() {
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Getting company for user {}", userId);
         
@@ -67,10 +64,9 @@ public class HRController {
     
     @PostMapping("/company")
     public ApiResponse<CompanyResponse> createCompany(
-            @Valid @RequestBody CompanyRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody CompanyRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Creating company for user {}", userId);
         
@@ -83,10 +79,9 @@ public class HRController {
     @PutMapping("/company/{id}")
     public ApiResponse<CompanyResponse> updateCompany(
             @PathVariable UUID id,
-            @Valid @RequestBody CompanyRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody CompanyRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Updating company {} by user {}", id, userId);
         
@@ -117,10 +112,9 @@ public class HRController {
     @PostMapping("/jobs")
     public ApiResponse<JobResponse> createJob(
             @RequestParam UUID companyId,
-            @Valid @RequestBody JobRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody JobRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Creating job for company {} by user {}", companyId, userId);
         
@@ -134,10 +128,9 @@ public class HRController {
     public ApiResponse<JobResponse> updateJob(
             @PathVariable UUID id,
             @RequestParam UUID companyId,
-            @Valid @RequestBody JobRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody JobRequest request) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Updating job {} by user {}", id, userId);
         
@@ -150,10 +143,9 @@ public class HRController {
     @DeleteMapping("/jobs/{id}")
     public ApiResponse<Void> deleteJob(
             @PathVariable UUID id,
-            @RequestParam UUID companyId,
-            Authentication authentication) {
+            @RequestParam UUID companyId) {
         
-        UUID userId = jwtService.extractUserId(authentication);
+        UUID userId = SecurityUtil.getCurrentUserId();
         
         log.info("Deleting job {} for company {} by user {}", id, companyId, userId);
         

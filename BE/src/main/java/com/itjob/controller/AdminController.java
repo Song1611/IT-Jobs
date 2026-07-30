@@ -10,15 +10,14 @@ import com.itjob.enums.ReviewStatus;
 import com.itjob.service.CompanyService;
 import com.itjob.service.DashboardService;
 import com.itjob.service.JobService;
-import com.itjob.service.JwtService;
 import com.itjob.service.ReviewService;
 import com.itjob.service.UserService;
+import com.itjob.util.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -35,7 +34,6 @@ public class AdminController {
     private final JobService jobService;
     private final DashboardService dashboardService;
     private final ReviewService reviewService;
-    private final JwtService jwtService;
     
     /**
      * Dashboard
@@ -103,10 +101,9 @@ public class AdminController {
     @PatchMapping("/companies/{id}/approval")
     public ApiResponse<Void> updateCompanyApproval(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateStatusRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody UpdateStatusRequest request) {
         
-        UUID adminId = jwtService.extractUserId(authentication);
+        UUID adminId = SecurityUtil.getCurrentUserId();
         
         log.info("Admin {} updating company {} approval to {}", adminId, id, request.getStatus());
         
@@ -143,10 +140,9 @@ public class AdminController {
     @PatchMapping("/jobs/{id}/approval")
     public ApiResponse<Void> updateJobApproval(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateStatusRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody UpdateStatusRequest request) {
         
-        UUID adminId = jwtService.extractUserId(authentication);
+        UUID adminId = SecurityUtil.getCurrentUserId();
         
         log.info("Admin {} updating job {} approval to {}", adminId, id, request.getStatus());
         
@@ -181,10 +177,9 @@ public class AdminController {
     @PatchMapping("/reviews/{id}/approval")
     public ApiResponse<ReviewResponse> updateReviewApproval(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateStatusRequest request,
-            Authentication authentication) {
+            @Valid @RequestBody UpdateStatusRequest request) {
         
-        UUID adminId = jwtService.extractUserId(authentication);
+        UUID adminId = SecurityUtil.getCurrentUserId();
         
         log.info("Admin {} updating review {} approval to {}", adminId, id, request.getStatus());
         

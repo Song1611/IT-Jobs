@@ -21,6 +21,7 @@ import com.itjob.repository.ApplicationRepository;
 import com.itjob.repository.JobRepository;
 import com.itjob.repository.UserRepository;
 import com.itjob.service.ApplicationService;
+import com.itjob.service.RecommendationService;
 import com.itjob.service.TrendingJobService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,11 +36,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import com.itjob.util.PageResponseUtil;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -53,11 +49,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final UserMapper userMapper;
     private final CompanyMapper companyMapper;
     private final TrendingJobService trendingJobService;
+    private final RecommendationService recommendationService;
     
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @DistributedLock(key = "'apply:' + #request.jobId + ':' + #userId", waitTime = 0, leaseTime = 5)
+    @DistributedLock(key = "'apply:' + #request.jobId + ':' + #userId", leaseTime = 5)
     @CacheEvict(value = CacheName.DASHBOARD_HR,
                 key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#result.job.company.id)")
     public ApplicationResponse applyForJob(ApplicationRequest request, UUID userId) {
@@ -88,6 +85,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         jobRepository.save(job);
 
         trendingJobService.recordScore(job.getId(), TrendingScore.APPLY);
+        recommendationService.invalidateCache(userId);
 
         return buildFullApplicationResponse(application);
     }
@@ -142,6 +140,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         jobRepository.save(job);
 
         trendingJobService.recordScore(job.getId(), -TrendingScore.APPLY);
+        recommendationService.invalidateCache(userId);
     }
     
     @Override
