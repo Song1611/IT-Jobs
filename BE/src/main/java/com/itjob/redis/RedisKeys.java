@@ -80,6 +80,13 @@ public final class RedisKeys {
         return RECOMMEND_PREFIX + ":user:" + userId;
     }
 
+    // ========== SEARCH HISTORY ==========
+    private static final String SEARCH_HISTORY_PREFIX = "search:history";
+
+    public static String searchHistoryKey(UUID userId) {
+        return SEARCH_HISTORY_PREFIX + ":user:" + userId;
+    }
+
     // ========== SEARCH SUGGESTION ==========
     private static final String SUGGEST_PREFIX = "suggest";
 
