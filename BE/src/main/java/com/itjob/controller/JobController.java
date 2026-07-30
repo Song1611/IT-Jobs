@@ -5,6 +5,7 @@ import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.JobService;
+import com.itjob.service.SearchHistoryService;
 import com.itjob.service.SearchSuggestionService;
 import com.itjob.util.SecurityUtil;
 import jakarta.validation.Valid;
@@ -30,6 +31,7 @@ public class JobController {
     
     private final JobService jobService;
     private final SearchSuggestionService searchSuggestionService;
+    private final SearchHistoryService searchHistoryService;
     
     /**
      * Guest & Candidate APIs
@@ -69,6 +71,19 @@ public class JobController {
         return ApiResponse.<List<String>>builder()
                 .message("Suggestions retrieved successfully")
                 .result(suggestions)
+                .build();
+    }
+
+    @GetMapping("/search/history")
+    public ApiResponse<List<String>> getSearchHistory(
+            @RequestParam(defaultValue = "10") @Min(1) @Max(50) int limit) {
+
+        UUID userId = SecurityUtil.getCurrentUserId();
+        log.debug("Getting search history for user {}", userId);
+        List<String> history = searchHistoryService.getSearchHistory(userId, limit);
+        return ApiResponse.<List<String>>builder()
+                .message("Search history retrieved successfully")
+                .result(history)
                 .build();
     }
 
@@ -130,6 +145,8 @@ public class JobController {
         
         if (keyword != null && !keyword.isBlank()) {
             searchSuggestionService.recordKeyword(keyword);
+            UUID userId = SecurityUtil.getCurrentUserId();
+            searchHistoryService.recordSearch(userId, keyword);
         }
         
         PageResponse<JobResponse> result = jobService.searchJobs(filter, pageable);
