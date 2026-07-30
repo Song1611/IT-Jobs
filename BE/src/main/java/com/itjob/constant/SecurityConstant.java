@@ -22,6 +22,7 @@ public final class SecurityConstant {
             "/api/provinces/**",
             "/api/companies/**",
             "/api/jobs/**",
-            "/api/blogs/**"
+            "/api/blogs/**",
+            "/api/users/*/skills"
     };
 }
