@@ -5,12 +5,17 @@ import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.JobService;
+import com.itjob.service.SearchSuggestionService;
 import com.itjob.util.SecurityUtil;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,9 +25,11 @@ import java.util.UUID;
 @RequestMapping("/api/jobs")
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class JobController {
     
     private final JobService jobService;
+    private final SearchSuggestionService searchSuggestionService;
     
     /**
      * Guest & Candidate APIs
@@ -52,6 +59,19 @@ public class JobController {
                 .build();
     }
 
+    @GetMapping("/suggestions")
+    public ApiResponse<List<String>> getSuggestions(
+            @RequestParam @Size(min = 1, max = 50) String q,
+            @RequestParam(defaultValue = "10") @Min(1) @Max(20) int limit) {
+
+        log.debug("Job search suggestions for: {}", q);
+        List<String> suggestions = searchSuggestionService.getSuggestions(q, limit);
+        return ApiResponse.<List<String>>builder()
+                .message("Suggestions retrieved successfully")
+                .result(suggestions)
+                .build();
+    }
+
     @GetMapping("/recently-viewed")
     public ApiResponse<List<JobResponse>> getRecentlyViewedJobs(
             @RequestParam(defaultValue = "10") int limit) {
@@ -66,7 +86,7 @@ public class JobController {
                 .build();
     }
 
-    @GetMapping("/recommendations")
+    @GetMapping("/recommendations") 
     public ApiResponse<List<JobResponse>> getRecommendedJobs(
             @RequestParam(defaultValue = "10") int limit) {
 
@@ -103,9 +123,14 @@ public class JobController {
     @GetMapping
     public ApiResponse<PageResponse<JobResponse>> searchJobs(
             @RequestParam(required = false) String[] filter,
+            @RequestParam(required = false) @Size(max = 100) String keyword,
             Pageable pageable) {
         
         log.info("Searching jobs with filters: {}", filter != null ? String.join(", ", filter) : "none");
+        
+        if (keyword != null && !keyword.isBlank()) {
+            searchSuggestionService.recordKeyword(keyword);
+        }
         
         PageResponse<JobResponse> result = jobService.searchJobs(filter, pageable);
         

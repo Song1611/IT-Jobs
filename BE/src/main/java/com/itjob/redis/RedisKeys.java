@@ -80,6 +80,13 @@ public final class RedisKeys {
         return RECOMMEND_PREFIX + ":user:" + userId;
     }
 
+    // ========== SEARCH SUGGESTION ==========
+    private static final String SUGGEST_PREFIX = "suggest";
+
+    public static String suggestPrefixKey(String prefix) {
+        return SUGGEST_PREFIX + ":" + prefix;
+    }
+
     // ========== LOCK ==========
     public static final String LOCK_PREFIX = "lock";
 
