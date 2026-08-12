@@ -43,4 +43,10 @@ public final class CacheName {
     // ========== DASHBOARD CACHES (Short TTL) ==========
     public static final String DASHBOARD_ADMIN = "dashboard_admin";
     public static final String DASHBOARD_HR = "dashboard_hr";
+
+    // ========== POST CACHES ==========
+    public static final String POST_DETAIL = "post_detail";
+    public static final String POST_LIST = "post_list";
+    public static final String POST_BY_COMPANY = "post_by_company";
+    public static final String POST_BY_USER = "post_by_user";
 }

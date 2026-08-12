@@ -111,6 +111,30 @@ public class CacheKeyGenerator {
     public static String forIdWithPageable(Object parentId, Pageable pageable) {
         return "id" + DELIMITER + parentId + DELIMITER + buildPageableKey(pageable);
     }
+
+    /**
+     * Generate cache key for company-scoped paginated list.
+     * <p>Format: "company:uuid::page:0:size:10:sort:createdAt,DESC"
+     *
+     * @param companyId Company ID
+     * @param pageable  Pageable object
+     * @return Cache key string
+     */
+    public static String forCompanyPage(Object companyId, Pageable pageable) {
+        return "company" + DELIMITER + companyId + DELIMITER + DELIMITER + buildPageableKey(pageable);
+    }
+
+    /**
+     * Generate cache key for user-scoped paginated list.
+     * <p>Format: "user:uuid::page:0:size:10:sort:createdAt,DESC"
+     *
+     * @param userId   User ID
+     * @param pageable Pageable object
+     * @return Cache key string
+     */
+    public static String forUserPage(Object userId, Pageable pageable) {
+        return "user" + DELIMITER + userId + DELIMITER + DELIMITER + buildPageableKey(pageable);
+    }
     
     /**
      * Normalize filter array by sorting, then produce a deterministic string for cache key.

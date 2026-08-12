@@ -51,7 +51,13 @@ public enum CacheTTL {
     VIEW_DEBOUNCE("view_debounce", Duration.ofMinutes(5)),
 
     // ========== REACTION COUNTER TTL (raw Redis keys, not Spring Cache) ==========
-    REACTION_KEY("reaction_key", Duration.ofDays(7));
+    REACTION_KEY("reaction_key", Duration.ofDays(7)),
+
+    // ========== POST CACHES ==========
+    POST_DETAIL(CacheName.POST_DETAIL, Duration.ofMinutes(10)),
+    POST_LIST(CacheName.POST_LIST, Duration.ofMinutes(5)),
+    POST_BY_COMPANY(CacheName.POST_BY_COMPANY, Duration.ofMinutes(10)),
+    POST_BY_USER(CacheName.POST_BY_USER, Duration.ofMinutes(10));
 
     private final String cacheName;
     private final Duration ttl;

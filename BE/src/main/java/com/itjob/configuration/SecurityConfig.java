@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         (authorize) -> authorize
                                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
                                 .requestMatchers(SecurityConstant.PUBLIC_ENDPOINTS).permitAll()
                                 .anyRequest().authenticated()
                 )

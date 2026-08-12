@@ -2,6 +2,7 @@ package com.itjob.service;
 
 import com.itjob.dto.request.BlogRequest;
 import com.itjob.dto.response.BlogBriefResponse;
+import com.itjob.dto.response.BlogCategoryResponse;
 import com.itjob.dto.response.BlogResponse;
 import com.itjob.dto.response.PageResponse;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,8 @@ import java.util.UUID;
 public interface BlogService {
     
     // Public APIs
+    List<BlogCategoryResponse> getAllCategories();
+    
     List<BlogBriefResponse> getRecentBlogs(int limit);
     
     PageResponse<BlogBriefResponse> getAllBlogs(String[] filters, Pageable pageable);

@@ -32,4 +32,7 @@ public class Attachment {
     
     @Column(name = "file_url", nullable = false)
     String fileUrl;
+    
+    @Column(name = "file_public_id", length = 500)
+    String filePublicId;
 }

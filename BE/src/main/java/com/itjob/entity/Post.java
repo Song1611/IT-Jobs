@@ -24,6 +24,10 @@ public class Post {
     @JoinColumn(name = "author_id", nullable = false)
     User author;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    Company company;
+    
     @Column(nullable = false, columnDefinition = "TEXT")
     String content;
     
