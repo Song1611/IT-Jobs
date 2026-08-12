@@ -9,7 +9,8 @@ public enum ViewEntity {
 
     JOB("job"),
     COMPANY("company"),
-    BLOG("blog");
+    BLOG("blog"),
+    POST("post");
 
     private final String key;
 }

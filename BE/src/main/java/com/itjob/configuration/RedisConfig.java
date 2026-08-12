@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.itjob.redis.CacheTTL;
 import com.itjob.exception.RedisCacheErrorHandler;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CachingConfigurer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableCaching
 @EnableScheduling
-public class RedisConfig {
+public class RedisConfig implements CachingConfigurer {
 
     @Bean
     public GenericJackson2JsonRedisSerializer redisSerializer() {
@@ -102,8 +103,8 @@ public class RedisConfig {
                 .build();
     }
 
-    @Bean
-    public CacheErrorHandler cacheErrorHandler() {
+    @Override
+    public CacheErrorHandler errorHandler() {
         return new RedisCacheErrorHandler();
     }
 

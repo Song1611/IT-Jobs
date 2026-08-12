@@ -3,6 +3,7 @@ package com.itjob.controller;
 import com.itjob.dto.request.BlogRequest;
 import com.itjob.dto.response.ApiResponse;
 import com.itjob.dto.response.BlogBriefResponse;
+import com.itjob.dto.response.BlogCategoryResponse;
 import com.itjob.dto.response.BlogResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.service.BlogService;
@@ -27,6 +28,17 @@ public class BlogController {
     /**
      * Public APIs
      */
+    
+    @GetMapping("/categories")
+    public ApiResponse<List<BlogCategoryResponse>> getAllCategories() {
+        
+        log.info("Getting all blog categories");
+        
+        return ApiResponse.<List<BlogCategoryResponse>>builder()
+                .message("Blog categories retrieved successfully")
+                .result(blogService.getAllCategories())
+                .build();
+    }
     
     @GetMapping("/recent")
     public ApiResponse<List<BlogBriefResponse>> getRecentBlogs(

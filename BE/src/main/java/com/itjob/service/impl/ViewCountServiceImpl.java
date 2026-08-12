@@ -7,6 +7,7 @@ import com.itjob.enums.ViewEntity;
 import com.itjob.repository.BlogRepository;
 import com.itjob.repository.CompanyRepository;
 import com.itjob.repository.JobRepository;
+import com.itjob.repository.PostRepository;
 import com.itjob.service.TrendingJobService;
 import com.itjob.service.ViewCountService;
 import jakarta.annotation.PostConstruct;
@@ -33,6 +34,7 @@ public class ViewCountServiceImpl implements ViewCountService {
     private final JobRepository jobRepository;
     private final CompanyRepository companyRepository;
     private final BlogRepository blogRepository;
+    private final PostRepository postRepository;
     private final TrendingJobService trendingJobService;
 
     private Map<ViewEntity, BiFunction<UUID, Long, Integer>> dbUpdaters;
@@ -42,7 +44,8 @@ public class ViewCountServiceImpl implements ViewCountService {
         dbUpdaters = Map.of(
                 ViewEntity.JOB, jobRepository::incrementViewCount,
                 ViewEntity.COMPANY, companyRepository::incrementViewCount,
-                ViewEntity.BLOG, blogRepository::incrementViewCount
+                ViewEntity.BLOG, blogRepository::incrementViewCount,
+                ViewEntity.POST, postRepository::incrementViewCount
         );
     }
 

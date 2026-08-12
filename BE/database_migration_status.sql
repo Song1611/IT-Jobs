@@ -48,3 +48,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_blogs_slug ON blogs(slug);
 -- jobs.slug already has UNIQUE constraint from schema
 CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_slug ON jobs(slug);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_companies_slug ON companies(slug);
+
+-- ========================================
+-- MIGRATION: Add file_public_id to attachments (Cloudinary public_id)
+-- Stored so files can be deleted from Cloudinary when a post/comment is removed
+-- ========================================
+
+ALTER TABLE attachments
+    ADD COLUMN IF NOT EXISTS file_public_id VARCHAR(500);

@@ -20,6 +20,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.Optional;
 import java.util.Set;
@@ -62,8 +64,11 @@ public class ReactionServiceImpl implements ReactionService {
                             .post(post).user(user).reactionType(normalizedType).build());
                 });
 
-        updateRedisCounter(ReactionEntity.POST, postId, result.delta());
-        long totalCount = getCurrentCount(ReactionEntity.POST, postId);
+        // Redis counter is updated only AFTER the DB transaction commits, so a
+        // rollback cannot leave a phantom pending delta. Pattern matches the
+        // cache eviction in PostServiceImpl.
+        runAfterCommit(() -> updateRedisCounter(ReactionEntity.POST, postId, result.delta()));
+        long totalCount = getCurrentCount(ReactionEntity.POST, postId, result.delta());
         return ReactionResponse.builder()
                 .entityType("post")
                 .entityId(postId.toString())
@@ -92,8 +97,8 @@ public class ReactionServiceImpl implements ReactionService {
                             .comment(comment).user(user).reactionType(normalizedType).build());
                 });
 
-        updateRedisCounter(ReactionEntity.COMMENT, commentId, result.delta());
-        long totalCount = getCurrentCount(ReactionEntity.COMMENT, commentId);
+        runAfterCommit(() -> updateRedisCounter(ReactionEntity.COMMENT, commentId, result.delta()));
+        long totalCount = getCurrentCount(ReactionEntity.COMMENT, commentId, result.delta());
         return ReactionResponse.builder()
                 .entityType("comment")
                 .entityId(commentId.toString())
@@ -106,7 +111,7 @@ public class ReactionServiceImpl implements ReactionService {
     private String normalizeType(String reactionType) {
         String normalized = reactionType != null ? reactionType.toLowerCase() : null;
         if (normalized == null || normalized.isBlank()) {
-            throw new IllegalArgumentException("Reaction type is required");
+            throw new AppException(ErrorCode.REACTION_TYPE_REQUIRED);
         }
         return normalized;
     }
@@ -159,13 +164,32 @@ public class ReactionServiceImpl implements ReactionService {
         }
     }
 
-    private long getCurrentCount(ReactionEntity entity, UUID id) {
+    /**
+     * Current count = DB synced count + pending delta (Redis) + local toggle delta.
+     * {@code localDelta} accounts for the in-flight toggle whose Redis increment
+     * is deferred to afterCommit, so the API response is accurate before commit.
+     */
+    private long getCurrentCount(ReactionEntity entity, UUID id, long localDelta) {
         long dbCount = switch (entity) {
             case POST -> postRepository.getReactionCountById(id).orElse(0);
             case COMMENT -> commentRepository.getReactionCountById(id).orElse(0);
         };
         long pendingDelta = getPendingReactionDelta(entity, id);
-        return dbCount + pendingDelta;
+        return dbCount + pendingDelta + localDelta;
+    }
+
+    /** Run a side effect only after the DB transaction commits; else run immediately. */
+    private void runAfterCommit(Runnable callback) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    callback.run();
+                }
+            });
+        } else {
+            callback.run();
+        }
     }
 
     @Scheduled(fixedDelayString = "${reaction.sync.interval:300000}")

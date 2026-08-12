@@ -4,6 +4,7 @@ import com.itjob.annotation.DistributedLock;
 import com.itjob.redis.CacheName;
 import com.itjob.dto.request.BlogRequest;
 import com.itjob.dto.response.BlogBriefResponse;
+import com.itjob.dto.response.BlogCategoryResponse;
 import com.itjob.dto.response.BlogResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.entity.Blog;
@@ -11,6 +12,7 @@ import com.itjob.entity.BlogCategory;
 import com.itjob.entity.User;
 import com.itjob.exception.AppException;
 import com.itjob.exception.ErrorCode;
+import com.itjob.mapper.BlogCategoryMapper;
 import com.itjob.mapper.BlogMapper;
 import com.itjob.repository.BlogCategoryRepository;
 import com.itjob.repository.BlogRepository;
@@ -53,9 +55,20 @@ public class BlogServiceImpl implements BlogService {
     private final BlogCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final BlogMapper blogMapper;
+    private final BlogCategoryMapper blogCategoryMapper;
     private final SpecificationHelper specificationHelper;
     private final BlogCacheService blogCacheService;
     private final ViewCountService viewCountService;
+
+    @Override
+    @Cacheable(value = CacheName.BLOG_CATEGORY_LIST, key = "'all'")
+    public List<BlogCategoryResponse> getAllCategories() {
+        log.debug("Fetching all blog categories from database");
+
+        return categoryRepository.findAll().stream()
+                .map(blogCategoryMapper::toBlogCategoryResponse)
+                .collect(Collectors.toList());
+    }
 
     @Override
     @Cacheable(value = CacheName.BLOG_RECENT,

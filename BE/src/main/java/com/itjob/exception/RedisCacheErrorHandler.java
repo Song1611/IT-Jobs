@@ -18,6 +18,17 @@ public class RedisCacheErrorHandler implements CacheErrorHandler {
                 cache.getName(),
                 key,
                 exception);
+
+        // Evict the corrupt entry so the next read falls back to DB
+        // and re-caches fresh data with the current serializer
+        try {
+            cache.evict(key);
+            log.warn("Evicted corrupt cache entry. Cache={}, Key={}",
+                    cache.getName(), key);
+        } catch (Exception evictException) {
+            log.error("Failed to evict corrupt cache entry. Cache={}, Key={}",
+                    cache.getName(), key, evictException);
+        }
     }
 
     @Override
