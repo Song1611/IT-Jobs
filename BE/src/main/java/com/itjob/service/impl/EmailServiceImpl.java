@@ -32,6 +32,13 @@ public class EmailServiceImpl implements EmailService {
         send(email, subject, html);
     }
 
+    @Override
+    public void sendChangePasswordOtp(String email, String otp) {
+        String subject = "Confirm password change - IT Job";
+        String html = buildOtpHtml(otp, "Password Change Code", "Confirm your new password");
+        send(email, subject, html);
+    }
+
     private void send(String to, String subject, String html) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

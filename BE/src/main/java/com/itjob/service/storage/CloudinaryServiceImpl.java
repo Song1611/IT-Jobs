@@ -73,9 +73,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         } else if (contentType.startsWith("video/")) {
             resourceType = "video";
         } else {
-            throw new IllegalArgumentException(
-                    "Unsupported file type: " + contentType
-            );
+            resourceType = "raw";
         }
         return resourceType;
     }
