@@ -21,6 +21,7 @@ function BlogListSection() {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const postsPerPage = 6;
 
@@ -45,11 +46,13 @@ function BlogListSection() {
         const response = await blogApi.getAll(
           currentPage,
           postsPerPage,
-          selectedCategoryId ?? undefined
+          selectedCategoryId ?? undefined,
+          searchTerm.trim() || undefined
         );
 
-        setBlogs(response.data);
-        setTotalPages(response.totalPages);
+        setBlogs(response.items || []);
+        setTotalPages(response.totalPages || 1);
+        setTotalItems(response.totalElements || 0);
       } catch (err) {
         console.error("❌ Error fetching blogs:", err);
       } finally {
@@ -57,19 +60,12 @@ function BlogListSection() {
       }
     }
     fetchBlogs();
-  }, [currentPage, selectedCategoryId]);
+  }, [currentPage, selectedCategoryId, searchTerm]);
 
-  // Reset to page 1 when category changes
+  // Reset to page 1 when category or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategoryId]);
-
-  // Client-side search filter
-  const filteredBlogs = blogs.filter((blog) => {
-    if (!searchTerm) return true;
-    return blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    blog.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  }, [selectedCategoryId, searchTerm]);
 
   return (
     <div>
@@ -115,7 +111,7 @@ function BlogListSection() {
       {/* Blog Posts Grid */}
       {!loading &&
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredBlogs.map((post) =>
+          {blogs.map((post) =>
         <Card key={post.id} className="flex flex-col hover:shadow-lg transition-shadow">
               <Link href={`/blog/${post.id}`}>
                 <div className="relative h-48 w-full overflow-hidden rounded-t-lg cursor-pointer">
@@ -130,7 +126,7 @@ function BlogListSection() {
               </Link>
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge variant="secondary">{post.category}</Badge>
+                  <Badge variant="secondary">{post.category?.name || post.category}</Badge>
                   <span className="text-xs text-muted-foreground">{post.readTime}</span>
                 </div>
                 <Link href={`/blog/${post.id}`}>
@@ -146,11 +142,11 @@ function BlogListSection() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <User className="h-4 w-4" />
-                    <span>{post.author}</span>
+                    <span>{post.author?.fullName || post.author}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{new Date(post.date).toLocaleDateString("vi-VN")}</span>
+                    <span>{new Date(post.createdAt).toLocaleDateString("vi-VN")}</span>
                   </div>
                 </div>
               </CardContent>
@@ -168,7 +164,7 @@ function BlogListSection() {
       }
 
       {/* No Results */}
-      {!loading && filteredBlogs.length === 0 &&
+      {!loading && blogs.length === 0 &&
       <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">
             Không tìm thấy bài viết nào phù hợp
@@ -177,7 +173,7 @@ function BlogListSection() {
       }
 
       {/* Pagination */}
-      {!loading && filteredBlogs.length > 0 && totalPages > 1 &&
+      {!loading && blogs.length > 0 && totalPages > 1 &&
       <div className="flex items-center justify-center gap-2 mt-12">
           <Button
           variant="outline"
@@ -236,9 +232,9 @@ function BlogListSection() {
       }
 
       {/* Results Info */}
-      {!loading && filteredBlogs.length > 0 &&
+      {!loading && blogs.length > 0 &&
       <div className="text-center mt-6 text-sm text-muted-foreground">
-          Trang {currentPage} / {totalPages} - Tổng số {filteredBlogs.length} bài viết
+          Trang {currentPage} / {totalPages} - Tổng số {totalItems} bài viết
         </div>
       }
     </div>);

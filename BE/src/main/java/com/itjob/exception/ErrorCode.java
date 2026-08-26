@@ -41,6 +41,7 @@ public enum ErrorCode {
     POST_CONTENT_REQUIRED(4032, "Post content is required", HttpStatus.BAD_REQUEST),
     COMMENT_CONTENT_REQUIRED(4033, "Comment content is required", HttpStatus.BAD_REQUEST),
     REACTION_TYPE_REQUIRED(4034, "Reaction type is required", HttpStatus.BAD_REQUEST),
+    CURRENT_PASSWORD_INCORRECT(4035, "Current password is incorrect", HttpStatus.BAD_REQUEST),
     INVALID_LIMIT(4014, "Limit must be greater than 0", HttpStatus.BAD_REQUEST),
     LIMIT_EXCEEDED(4015, "Limit cannot exceed 100", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(4016, "Review not found", HttpStatus.NOT_FOUND),
@@ -58,6 +59,10 @@ public enum ErrorCode {
     USER_ALREADY_VERIFIED(4027, "Email already verified", HttpStatus.BAD_REQUEST),
 
     // 9000-9999: System
+    EMAIL_SENDING_FAILED(9001, "Failed to send email. Please try again later", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_UPLOAD_FAILED(9002, "Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_DELETE_FAILED(9003, "Failed to delete file", HttpStatus.INTERNAL_SERVER_ERROR),
+    HASHING_FAILED(9004, "Failed to process hashing operation", HttpStatus.INTERNAL_SERVER_ERROR),
     UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR
     ),
     ;

@@ -9,8 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 @Component
 @Slf4j
@@ -26,17 +24,23 @@ public class TypeConverter {
         //Integer
         try {
             return Integer.parseInt(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+            // Not an integer, try the next type.
+        }
 
         //Long
         try {
             return Long.parseLong(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+            // Not a long, try the next type.
+        }
 
         //Double
         try {
             return Double.parseDouble(value);
-        } catch (NumberFormatException ignored) {}
+        } catch (NumberFormatException ignored) {
+            // Not a double, try the next type.
+        }
 
         //Boolean
         if (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false")) {
@@ -46,7 +50,9 @@ public class TypeConverter {
         //LocalDate
         try {
             return LocalDate.parse(value, DATE_FORMATTER);
-        } catch (DateTimeParseException ignored) {}
+        } catch (DateTimeParseException ignored) {
+            // Not a valid ISO date, treat it as a String.
+        }
 
         //Default: String
         return value;
@@ -60,7 +66,7 @@ public class TypeConverter {
         return Arrays.stream(value.split(","))
                 .map(String::trim)
                 .map(this::convertAuto)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Object[] parseBetweenValueAuto(String value) {

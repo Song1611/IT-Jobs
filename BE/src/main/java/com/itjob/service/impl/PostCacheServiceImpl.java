@@ -97,7 +97,6 @@ public class PostCacheServiceImpl implements PostCacheService {
 
         response.setAttachments(attachmentResponses);
 
-        // Interaction must be assembled per request with current user;
         // leave it null here so callers know it is not cached.
         response.setInteraction(null);
 

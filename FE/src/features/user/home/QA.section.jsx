@@ -14,13 +14,11 @@ function QASection() {
     async function fetchBlogs() {
       try {
         setLoading(true);
-        // Backend chưa có BlogController, tạm thời dùng mock data
-        // const response = await blogApi.getAll(1, 6);
-        // setBlogs(response.data || response.items || response);
-        setBlogs(oldBlogs);
+        const response = await blogApi.getAll(1, 6);
+        setBlogs(response.items || []);
       } catch (err) {
-        // console.error("❌ Error fetching blogs:", err);
-        setBlogs(oldBlogs);
+        console.error("❌ Error fetching blogs:", err);
+        setBlogs([]);
       } finally {
         setLoading(false);
       }
@@ -92,11 +90,11 @@ function QASection() {
                 {featured.excerpt}
               </p>
               <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                <span>{featured.author}</span>
+                <span>{featured.author?.fullName || featured.author}</span>
                 <span>•</span>
                 <span>{featured.readTime}</span>
                 <span>•</span>
-                <span>{new Date(featured.date).toLocaleDateString("vi-VN")}</span>
+                <span>{featured.createdAt ? new Date(featured.createdAt).toLocaleDateString("vi-VN") : ""}</span>
               </div>
               <span className="text-primary text-sm mt-1 inline-block hover:underline">
                 Đọc thêm
@@ -141,73 +139,3 @@ function QASection() {
 }
 
 export default QASection;
-
-const oldBlogs = [
-{
-  title: "7 kinh nghiệm hữu ích khi làm việc với GIT trong dự án",
-  desc: "Bài viết được sự cho phép của tác giả Sơn Dương Git là một công cụ không thể thiếu...",
-  image:
-  "https://salt-2.topdev.vn/JohoPgp8csRxm526Oo0oJ4eB5S61LjJs8n6eCeMXXh0/rs:fit/w:600/h:282/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9raW5oLW5naGllbS1zdS1kdW5nLWdpdC10cm9uZy1kdS1hbi5wbmc",
-  link: "#",
-  featured: true
-},
-{
-  title: "Bài tập Python từ cơ bản đến nâng cao (có lời giải)",
-  desc: "Python là một ngôn ngữ lập trình bậc cao, mã nguồn mở được sử dụng rộng rãi...",
-  image:
-  "https://salt-2.topdev.vn/DxZEF2Q3mJ9NI5a2-VLlT_379bvDMXQnp9-VTNKEDZ0/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9iYWktdGFwLXB5dGhvbi10dS1jby1iYW4tZGVuLW5hbmctY2FvLWNvLWxvaS1naWFpLWNvbXByZXNzZWQuanBn",
-  link: "#"
-},
-{
-  title: "Những thực phẩm lập trình viên nên và không nên ăn",
-  desc: "Dinh dưỡng đóng vai trò rất quan trọng đối với sức khỏe và hiệu suất làm việc...",
-  image:
-  "https://salt-2.topdev.vn/TlEiQpye_0jxDh-Zdd2dzns4xVObGlx3XvtwB8ZYW34/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9uaHVuZy10aHVjLXBoYW0tbGFwLXRyaW5oLXZpZW4tbmVuLXZhLWtob25nLW5lbi1hbi5qcGc",
-  link: "#"
-},
-{
-  title:
-  "KICC HCMC x TOPDEV - Bước đệm nâng tầm sự nghiệp cho nhân tài IT Việt Nam",
-  desc: "Năm 2024, chương trình hợp tác giữa KICC HCMC x TOPDEV sẽ quay trở lại...",
-  image:
-  "https://salt-2.topdev.vn/fh7YP_lzV0VXIQFz8kLmNmBDc_mea4Gf2skJ28UunLM/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9raWNjeHRvcGRldi5wbmc",
-  link: "#"
-},
-{
-  title:
-  "KICC HCMC x TOPDEV - Bước đệm nâng tầm sự nghiệp cho nhân tài IT Việt Nam",
-  desc: "Năm 2024, chương trình hợp tác giữa KICC HCMC x TOPDEV sẽ quay trở lại...",
-  image:
-  "https://salt-2.topdev.vn/fh7YP_lzV0VXIQFz8kLmNmBDc_mea4Gf2skJ28UunLM/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9raWNjeHRvcGRldi5wbmc",
-  link: "#"
-},
-{
-  title:
-  "KICC HCMC x TOPDEV - Bước đệm nâng tầm sự nghiệp cho nhân tài IT Việt Nam",
-  desc: "Năm 2024, chương trình hợp tác giữa KICC HCMC x TOPDEV sẽ quay trở lại...",
-  image:
-  "https://salt-2.topdev.vn/fh7YP_lzV0VXIQFz8kLmNmBDc_mea4Gf2skJ28UunLM/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9raWNjeHRvcGRldi5wbmc",
-  link: "#"
-},
-{
-  title: "7 kinh nghiệm hữu ích khi làm việc với GIT trong dự án",
-  desc: "Bài viết được sự cho phép của tác giả Sơn Dương Git là một công cụ không thể thiếu...",
-  image:
-  "https://salt-2.topdev.vn/JohoPgp8csRxm526Oo0oJ4eB5S61LjJs8n6eCeMXXh0/rs:fit/w:600/h:282/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9raW5oLW5naGllbS1zdS1kdW5nLWdpdC10cm9uZy1kdS1hbi5wbmc",
-  link: "#",
-  featured: true
-},
-{
-  title: "Bài tập Python từ cơ bản đến nâng cao (có lời giải)",
-  desc: "Python là một ngôn ngữ lập trình bậc cao, mã nguồn mở được sử dụng rộng rãi...",
-  image:
-  "https://salt-2.topdev.vn/DxZEF2Q3mJ9NI5a2-VLlT_379bvDMXQnp9-VTNKEDZ0/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9iYWktdGFwLXB5dGhvbi10dS1jby1iYW4tZGVuLW5hbmctY2FvLWNvLWxvaS1naWFpLWNvbXByZXNzZWQuanBn",
-  link: "#"
-},
-{
-  title: "Những thực phẩm lập trình viên nên và không nên ăn",
-  desc: "Dinh dưỡng đóng vai trò rất quan trọng đối với sức khỏe và hiệu suất làm việc...",
-  image:
-  "https://salt-2.topdev.vn/TlEiQpye_0jxDh-Zdd2dzns4xVObGlx3XvtwB8ZYW34/rs:fit/w:208/h:128/el:1/g:ce/ext:webp/aHR0cHM6Ly90b3BkZXYudm4vYmxvZy93cC1jb250ZW50L3VwbG9hZHMvMjAyNC8xMC9uaHVuZy10aHVjLXBoYW0tbGFwLXRyaW5oLXZpZW4tbmVuLXZhLWtob25nLW5lbi1hbi5qcGc",
-  link: "#"
-}];

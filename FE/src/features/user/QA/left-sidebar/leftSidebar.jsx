@@ -2,7 +2,7 @@
 
 import ProfileSection from "@/features/user/QA/left-sidebar/profile.section";
 import FriendFollow from "@/features/user/QA/right-sidebar/friend-follow.section";
-import { FollowListProps } from "@/types/follow.type";
+
 
 export default function LeftSidebar({ followList }) {
   return (

@@ -2,6 +2,8 @@ package com.itjob.service.storage;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.itjob.exception.AppException;
+import com.itjob.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
         String resourceType = getString(file);
 
+        Map<String, Object> result;
+
         try {
             Map<String, Object> params = ObjectUtils.asMap(
                     "folder", folder,
@@ -30,19 +34,8 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                     "resource_type", resourceType
             );
 
-            @SuppressWarnings("unchecked")
-            Map<String, Object> result = cloudinary.uploader()
+            result = cloudinary.uploader()
                     .upload(file.getBytes(), params);
-
-            String secureUrl = (String) result.get("secure_url");
-            String publicId = (String) result.get("public_id");
-
-            if (secureUrl == null) {
-                throw new RuntimeException("Cloudinary did not return secure URL");
-            }
-
-            return new CloudinaryUploadResult(secureUrl, publicId, resourceType);
-
         } catch (Exception e) {
             log.error(
                     "Cloudinary upload failed. filename={}, folder={}",
@@ -51,8 +44,19 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                     e
             );
 
-            throw new RuntimeException("Failed to upload file", e);
+            throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
         }
+
+        String secureUrl = (String) result.get("secure_url");
+        String publicId = (String) result.get("public_id");
+
+        if (secureUrl == null || secureUrl.isBlank()) {
+            log.error("Cloudinary did not return secure URL. filename={}, folder={}",
+                    file.getOriginalFilename(), folder);
+            throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+
+        return new CloudinaryUploadResult(secureUrl, publicId, resourceType);
     }
 
     private static String getString(MultipartFile file) {
@@ -73,9 +77,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         } else if (contentType.startsWith("video/")) {
             resourceType = "video";
         } else {
-            throw new IllegalArgumentException(
-                    "Unsupported file type: " + contentType
-            );
+            resourceType = "raw";
         }
         return resourceType;
     }
@@ -100,7 +102,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                     e
             );
 
-            throw new RuntimeException("Failed to delete file", e);
+            throw new AppException(ErrorCode.FILE_DELETE_FAILED);
         }
     }
 }

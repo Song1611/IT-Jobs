@@ -45,23 +45,8 @@ public class ApplicationInitConfig {
         log.info("Initializing application.....");
         return args -> {
             // Initialize roles if they don't exist
-            Role userRole = roleRepository.findById(PredefinedRole.USER_ROLE)
-                    .orElseGet(() -> {
-                        log.info("Creating USER role");
-                        return roleRepository.save(Role.builder()
-                                .name(PredefinedRole.USER_ROLE)
-                                .description("User role")
-                                .build());
-                    });
-
-            Role adminRole = roleRepository.findById(PredefinedRole.ADMIN_ROLE)
-                    .orElseGet(() -> {
-                        log.info("Creating ADMIN role");
-                        return roleRepository.save(Role.builder()
-                                .name(PredefinedRole.ADMIN_ROLE)
-                                .description("Admin role")
-                                .build());
-                    });
+            ensureRole(roleRepository, PredefinedRole.USER_ROLE, "User role");
+            Role adminRole = ensureRole(roleRepository, PredefinedRole.ADMIN_ROLE, "Admin role");
 
             // Initialize admin user if it doesn't exist
             if (userRepository.findByEmail(adminUserName).isEmpty()) {
@@ -85,6 +70,16 @@ public class ApplicationInitConfig {
             }
             log.info("Application initialization completed .....");
         };
+    }
+
+    private Role ensureRole(RoleRepository roleRepository, String name, String description) {
+        return roleRepository.findById(name).orElseGet(() -> {
+            log.info("Creating {} role", name);
+            return roleRepository.save(Role.builder()
+                    .name(name)
+                    .description(description)
+                    .build());
+        });
     }
 
 }

@@ -132,7 +132,7 @@ public class JobServiceImpl implements JobService {
         
         List<JobResponse> items = jobPage.getContent().stream()
                 .map(jobMapper::toJobResponse)
-                .collect(Collectors.toList());
+                .toList();
         
         PageResponse<JobResponse> result = buildJobPageResponse(jobPage, items);
         log.debug("searchJobs completed in {} ms", System.currentTimeMillis() - start);
@@ -208,7 +208,7 @@ public class JobServiceImpl implements JobService {
         
         List<UUID> jobIds = jobs.stream()
                 .map(Job::getId)
-                .collect(Collectors.toList());
+                .toList();
         
         Map<UUID, Long> applicationCountMap = applicationRepository.countApplicationsByJobIds(jobIds)
                 .stream()
@@ -224,7 +224,7 @@ public class JobServiceImpl implements JobService {
                     response.setApplicationCount(count.intValue());
                     return response;
                 })
-                .collect(Collectors.toList());
+                .toList();
         
         PageResponse<JobResponse> result = buildJobPageResponse(jobPage, items);
         log.debug("getCompanyJobs({}) completed in {} ms", companyId, System.currentTimeMillis() - start);
@@ -240,7 +240,7 @@ public class JobServiceImpl implements JobService {
             @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
             @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#companyId)"),
             @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                        key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
             @CacheEvict(value = CacheName.DASHBOARD_HR,
                         key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#companyId)")
     })
@@ -293,7 +293,7 @@ public class JobServiceImpl implements JobService {
                     @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
                     @CacheEvict(value = CacheName.COMPANY_BY_ID, key = "T(com.itjob.util.CacheKeyGenerator).forId(#companyId)"),
                     @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                                key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
                     @CacheEvict(value = CacheName.DASHBOARD_HR,
                                 key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#companyId)")
             })
@@ -308,7 +308,7 @@ public class JobServiceImpl implements JobService {
         Company company = job.getCompany();
         
         // Verify company is not deleted
-        if (company.getIsDeleted()) {
+        if (Boolean.TRUE.equals(company.getIsDeleted())) {
             throw new AppException(ErrorCode.COMPANY_NOT_FOUND);
         }
         
@@ -350,7 +350,7 @@ public class JobServiceImpl implements JobService {
             @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
             @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
             @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                        key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
             @CacheEvict(value = CacheName.DASHBOARD_HR,
                         key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#companyId)")
     })
@@ -388,7 +388,7 @@ public class JobServiceImpl implements JobService {
         // Use mapper without skills for admin listings
         List<JobResponse> items = jobPage.getContent().stream()
                 .map(jobMapper::toJobResponseWithCompanyOnly)
-                .collect(Collectors.toList());
+                .toList();
         
         return buildJobPageResponse(jobPage, items);
     }
@@ -403,7 +403,7 @@ public class JobServiceImpl implements JobService {
             @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
             @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
             @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+                        key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX")
     })
     public void approveJob(UUID id, UUID adminId) {
         Job job = jobRepository.findById(id)
@@ -428,7 +428,7 @@ public class JobServiceImpl implements JobService {
             @CacheEvict(value = CacheName.JOB_SEARCH, allEntries = true),
             @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
             @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+                        key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX")
     })
     public void rejectJob(UUID id, UUID adminId, String reason) {
         Job job = jobRepository.findById(id)

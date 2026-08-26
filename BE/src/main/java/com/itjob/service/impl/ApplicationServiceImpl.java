@@ -216,7 +216,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         
         verifyApplicationBelongsToCompany(application, companyId);
         
-        if (!application.getViewedByEmployer()) {
+        if (!Boolean.TRUE.equals(application.getViewedByEmployer())) {
             application.setViewedByEmployer(true);
             application.setViewedAt(LocalDateTime.now());
             applicationRepository.save(application);

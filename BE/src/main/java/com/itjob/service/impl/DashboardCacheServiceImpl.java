@@ -66,7 +66,7 @@ public class DashboardCacheServiceImpl implements DashboardCacheService {
     @Override
     @Cacheable(
         value = CacheName.DASHBOARD_ADMIN,
-        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"
+        key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"
     )
     public DashboardStatsResponse getCachedAdminStats() {
         log.info("Cache MISS - Fetching admin dashboard stats from database");
@@ -74,9 +74,6 @@ public class DashboardCacheServiceImpl implements DashboardCacheService {
         long totalUsers = userRepository.count();
         long totalCompanies = companyRepository.count();
         long totalJobs = jobRepository.count();
-        
-        // Count by role if needed
-        // long totalEmployers = userRepository.countByRole("HR");
         
         long pendingCompanies = companyRepository.countByStatus(CompanyStatus.PENDING.getValue());
         long activeCompanies = companyRepository.countByStatusAndIsDeleted(

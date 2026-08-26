@@ -67,7 +67,7 @@ public class BlogServiceImpl implements BlogService {
 
         return categoryRepository.findAll().stream()
                 .map(blogCategoryMapper::toBlogCategoryResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -89,7 +89,7 @@ public class BlogServiceImpl implements BlogService {
 
         return blogs.stream()
                 .map(blogMapper::toBlogBriefResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -127,8 +127,9 @@ public class BlogServiceImpl implements BlogService {
         long start = System.currentTimeMillis();
         log.debug("Fetching blogs by category: {} from database", categoryId);
 
-        categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new AppException(ErrorCode.BLOG_CATEGORY_NOT_FOUND));
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new AppException(ErrorCode.BLOG_CATEGORY_NOT_FOUND);
+        }
 
         Page<Blog> blogPage = blogRepository.findByCategoryId(categoryId, pageable);
 

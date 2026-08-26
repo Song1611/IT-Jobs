@@ -120,9 +120,8 @@ const CompanyManagement = () => {
         return;
       }
 
-      await companyApi.delete(company.id);
-      alert("Xóa công ty thành công");
-      fetchCompanies(); // Refresh list
+      alert("Xóa công ty chưa được hỗ trợ. Vui lòng sử dụng tính năng từ chối/khóa.");
+      fetchCompanies();
     } catch (err) {
       alert("Không thể xóa công ty: " + (err instanceof Error ? err.message : "Lỗi không xác định"));
     }

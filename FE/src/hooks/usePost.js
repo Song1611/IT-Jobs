@@ -35,11 +35,11 @@ initialPageSize = 10)
         );
 
         if (reset) {
-          setPosts(response.data);
+          setPosts(response.items);
         } else {
           setPosts((prev) => [
           ...prev,
-          ...response.data]
+          ...response.items]
           );
         }
 
@@ -104,11 +104,11 @@ initialPageSize = 10)
         );
 
         if (reset) {
-          setPosts(response.data);
+          setPosts(response.items);
         } else {
           setPosts((prev) => [
           ...prev,
-          ...response.data]
+          ...response.items]
           );
         }
 
@@ -171,12 +171,12 @@ initialPageSize = 6)
         );
 
         if (reset) {
-          setMedia(response.data);
+          setMedia(response.items);
         } else {
-          setMedia((prev) => [...prev, ...response.data]);
+          setMedia((prev) => [...prev, ...response.items]);
         }
 
-        setTotalItems(response.totalItems);
+        setTotalItems(response.totalElements || 0);
         setHasMore(pageNumber < response.totalPages);
         setPage(pageNumber);
       } catch (err) {
@@ -230,9 +230,9 @@ initialPageSize = 10)
         );
 
         if (reset) {
-          setComments(response.data);
+          setComments(response.items);
         } else {
-          setComments((prev) => [...prev, ...response.data]);
+          setComments((prev) => [...prev, ...response.items]);
         }
 
         setHasMore(pageNumber < response.totalPages);

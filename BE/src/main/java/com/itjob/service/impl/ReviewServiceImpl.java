@@ -67,7 +67,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Caching(evict = {
             @CacheEvict(value = CacheName.REVIEW_BY_COMPANY, allEntries = true),
             @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                        key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+                        key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX")
     })
     public ReviewResponse createReview(UUID companyId, UUID userId, ReviewRequest request) {
         log.debug("Creating review for company {} by user {}", companyId, userId);
@@ -180,7 +180,7 @@ public class ReviewServiceImpl implements ReviewService {
             evict = {
                     @CacheEvict(value = CacheName.REVIEW_BY_COMPANY, allEntries = true),
                     @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+                                key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX")
             })
     public ReviewResponse approveReview(UUID id, UUID adminId) {
         log.debug("Approving review {} by admin {}", id, adminId);
@@ -206,7 +206,7 @@ public class ReviewServiceImpl implements ReviewService {
             evict = {
                     @CacheEvict(value = CacheName.REVIEW_BY_COMPANY, allEntries = true),
                     @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+                                key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX")
             })
     public ReviewResponse rejectReview(UUID id, UUID adminId, String reason) {
         log.debug("Rejecting review {} by admin {}: {}", id, adminId, reason);

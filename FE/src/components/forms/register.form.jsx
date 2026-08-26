@@ -19,19 +19,8 @@ import {
   CardTitle,
   CardContent } from
 "@/components/ui/shadcn/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"@/components/ui/shadcn/select";
 import { FcGoogle } from "react-icons/fc";
-import { authApi } from "@/services/auth.api";
-import {
-  RegisterFormData,
-  RegisterFormSchema } from
-"@/lib/validations/register.validation";
+import { RegisterFormSchema } from "@/lib/validations/register.validation";
 import { useAuth } from "@/components/providers/auth.provider";
 import Routes from "@/constants/routes";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,10 +36,7 @@ export default function FormRegister() {
     defaultValues: {
       fullName: "",
       email: "",
-      phone: "",
-      password: "",
-      gender: "",
-      dateOfBirth: ""
+      password: ""
     }
   });
 
@@ -61,7 +47,7 @@ export default function FormRegister() {
     const result = await registerUser(values);
 
     if (result.success) {
-      router.push(Routes.login);
+      router.push(`${Routes.verifyEmail}?email=${encodeURIComponent(values.email)}`);
     } else {
       setError(result.error || "Đăng ký thất bại. Vui lòng thử lại.");
     }
@@ -100,36 +86,19 @@ export default function FormRegister() {
               } />
             
 
-            {/* Email & Phone - Grid 2 columns */}
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) =>
-                <FormItem>
-                    <FormLabel className="text-sm">Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@example.com" className="h-9" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                } />
-              
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) =>
-                <FormItem>
-                    <FormLabel className="text-sm">Số điện thoại</FormLabel>
-                    <FormControl>
-                      <Input placeholder="0987654321" className="h-9" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                } />
-              
-            </div>
+            {/* Email */}
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) =>
+              <FormItem>
+                  <FormLabel className="text-sm">Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="email@example.com" className="h-9" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              } />
 
             {/* Password */}
             <FormField
@@ -183,12 +152,9 @@ export default function FormRegister() {
             {/* Link to HR register */}
             <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
               Bạn là nhà tuyển dụng?{" "}
-              <a
-                href="/register/hr"
-                className="cursor-target text-green-600 dark:text-green-400 hover:underline">
-                
-                Đăng ký tài khoản HR
-              </a>
+              <span className="text-gray-500 dark:text-gray-500">
+                Đăng ký tài khoản HR sẽ sớm được mở
+              </span>
             </p>
 
             {/* Link phụ */}

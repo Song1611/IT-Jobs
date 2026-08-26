@@ -45,8 +45,8 @@ export default function AppliedJobsPage() {
     async function fetchApplications() {
       try {
         setLoading(true);
-        const response = await applicationApi.getByUser(user.id, 1, 50);
-        setApplications(response.data || []);
+        const response = await applicationApi.getByUser(1, 50);
+        setApplications(response.items || []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Không thể tải danh sách ứng tuyển");
       } finally {
@@ -96,20 +96,23 @@ export default function AppliedJobsPage() {
 
         <div className="space-y-4">
             {applications.map((app) =>
-          <Card key={app.$id || `${app.jobId}-${app.userId}`}>
+          <Card key={app.id}>
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex gap-4 flex-1">
                       <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Image src={app.companyLogo} alt={app.companyName} width="150" height="150" />
+                        {app.job?.company?.avatar ?
+                        <Image src={app.job.company.avatar} alt={app.job.company.name || ''} width="150" height="150" /> :
+                        <Briefcase className="h-6 w-6 text-muted-foreground" />
+                        }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg truncate">{app.jobTitle}</h3>
-                        <p className="text-muted-foreground">{app.companyName}</p>
+                        <h3 className="font-semibold text-lg truncate">{app.job?.title}</h3>
+                        <p className="text-muted-foreground">{app.job?.company?.name}</p>
                         <div className="flex flex-wrap gap-3 mt-2 text-sm text-muted-foreground">
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4 flex-shrink-0" />
-                            <span>Ứng tuyển: {new Date(app.createdAt).toLocaleDateString("vi-VN")}</span>
+                            <span>Ứng tuyển: {new Date(app.appliedAt || app.createdAt).toLocaleDateString("vi-VN")}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <FileText className="h-4 w-4 flex-shrink-0" />
@@ -144,7 +147,7 @@ export default function AppliedJobsPage() {
                     <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.push(`/jobs/${app.jobId}`)}>
+                  onClick={() => router.push(`/jobs/${app.job?.id}`)}>
                   
                       Xem công việc
                     </Button>

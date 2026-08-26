@@ -1,16 +1,25 @@
 package com.itjob.service.impl;
 
+import com.itjob.dto.request.ChangePasswordRequest;
 import com.itjob.dto.request.UserUpdateRequest;
+import com.itjob.dto.response.AttachmentResponse;
 import com.itjob.dto.response.PageResponse;
 import com.itjob.dto.response.UserResponse;
+import com.itjob.entity.Attachment;
 import com.itjob.entity.User;
 import com.itjob.exception.AppException;
 import com.itjob.exception.ErrorCode;
+import com.itjob.mapper.PostMapper;
 import com.itjob.mapper.UserMapper;
+import com.itjob.repository.AttachmentRepository;
 import com.itjob.repository.RoleRepository;
 import com.itjob.repository.SkillRepository;
 import com.itjob.repository.UserRepository;
+import com.itjob.service.EmailService;
+import com.itjob.service.OtpService;
 import com.itjob.service.UserService;
+import com.itjob.service.storage.CloudinaryService;
+import com.itjob.service.storage.CloudinaryUploadResult;
 import com.itjob.specification.helper.SpecificationHelper;
 import com.itjob.util.PageResponseUtil;
 import lombok.AccessLevel;
@@ -26,6 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,6 +53,13 @@ public class UserServiceImpl implements UserService {
     SpecificationHelper specificationHelper;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    CloudinaryService cloudinaryService;
+    AttachmentRepository attachmentRepository;
+    PostMapper postMapper;
+    OtpService otpService;
+    EmailService emailService;
+
+    private static final String UPLOAD_FOLDER = "itjob/users";
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -204,5 +221,87 @@ public class UserServiceImpl implements UserService {
         assert authentication != null;
         return authentication.getAuthorities().stream()
                 .anyMatch(auth -> Objects.equals(auth.getAuthority(), "ROLE_ADMIN"));
+    }
+
+    @Override
+    @Transactional
+    @PostAuthorize("returnObject.email == authentication.name or hasRole('ADMIN')")
+    public UserResponse updateAvatar(String id, MultipartFile file) {
+        User user = getUserEntity(id);
+        CloudinaryUploadResult result = cloudinaryService.upload(file, UPLOAD_FOLDER);
+        user.setAvatar(result.url());
+        user = userRepository.save(user);
+        log.info("Updated avatar for user: {}", id);
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    @PostAuthorize("returnObject.email == authentication.name or hasRole('ADMIN')")
+    public UserResponse updateCoverImage(String id, MultipartFile file) {
+        User user = getUserEntity(id);
+        CloudinaryUploadResult result = cloudinaryService.upload(file, UPLOAD_FOLDER);
+        user.setCoverImage(result.url());
+        user = userRepository.save(user);
+        log.info("Updated cover image for user: {}", id);
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    @PostAuthorize("returnObject.email == authentication.name or hasRole('ADMIN')")
+    public UserResponse updateCV(String id, MultipartFile file) {
+        User user = getUserEntity(id);
+        CloudinaryUploadResult result = cloudinaryService.upload(file, UPLOAD_FOLDER);
+        user.setCvUrl(result.url());
+        user = userRepository.save(user);
+        log.info("Updated CV for user: {}", id);
+        return userMapper.toUserResponse(user);
+    }
+
+    @Override
+    @Transactional
+    public void sendChangePasswordOtp(String id) {
+        User user = getUserEntity(id);
+
+        String otp = otpService.generateAndStore(user.getEmail());
+        emailService.sendChangePasswordOtp(user.getEmail(), otp);
+
+        log.info("Change password OTP sent for user: {}", id);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String id, ChangePasswordRequest request) {
+        User user = getUserEntity(id);
+
+        boolean verified = otpService.verify(user.getEmail(), request.getOtp());
+        if (!verified) {
+            throw new AppException(ErrorCode.OTP_INVALID);
+        }
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new AppException(ErrorCode.CURRENT_PASSWORD_INCORRECT);
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        log.info("Changed password for user: {}", id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponse<AttachmentResponse> getMedia(UUID userId, Pageable pageable) {
+        if (!userRepository.existsById(userId)) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        Page<Attachment> attachmentsPage = attachmentRepository.findByPostAuthorId(userId, pageable);
+        return PageResponseUtil.build(attachmentsPage, postMapper::toAttachmentResponse);
+    }
+
+    private User getUserEntity(String id) {
+        return userRepository.findById(UUID.fromString(id))
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 }

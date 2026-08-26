@@ -1,5 +1,8 @@
 package com.itjob.util;
 
+import com.itjob.exception.AppException;
+import com.itjob.exception.ErrorCode;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -16,7 +19,7 @@ public final class HashUtil {
             byte[] hash = md.digest(input.getBytes());
             return HEX.formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 not available", e);
+            throw new AppException(ErrorCode.HASHING_FAILED);
         }
     }
 }

@@ -41,7 +41,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     public List<UUID> getRecommendedJobs(UUID userId, int limit) {
         List<String> cached = RedisOperation.supply(() -> {
             String key = RedisKeys.recommendKey(userId);
-            return stringRedisTemplate.opsForList().range(key, 0, limit - 1);
+            return stringRedisTemplate.opsForList().range(key, 0, (long)limit - 1);
         }, "Failed to read recommendation cache for user {}", userId);
 
         if (cached != null && !cached.isEmpty()) {
@@ -182,7 +182,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         if (jobSkillNames.isEmpty()) return 0;
 
         long matched = userSkillNames.stream().filter(jobSkillNames::contains).count();
-        return matched * RecommendationConstant.SCORE_SKILL_MATCH;
+        return matched * (double)RecommendationConstant.SCORE_SKILL_MATCH;
     }
 
     private boolean isLocationMatch(Job job, String userAddress) {

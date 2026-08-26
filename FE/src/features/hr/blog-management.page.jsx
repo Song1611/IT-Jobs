@@ -71,8 +71,8 @@ export default function HRBlogManagementPage() {
 
     try {
       setLoading(true);
-      const response = await blogApi.getByUserId(user.id);
-      setBlogs(response.data || []);
+      const response = await blogApi.getMyBlogs();
+      setBlogs(response.items || []);
     } catch (error) {
       toast.error("Không thể tải danh sách blog");
       setBlogs([]);
@@ -107,9 +107,15 @@ export default function HRBlogManagementPage() {
     }
   };
 
-  const handleEdit = (blog) => {
+  const handleEdit = async (blog) => {
     setEditBlog(blog);
     setCreateMode(false);
+    try {
+      const detail = await blogApi.getById(blog.id);
+      setEditBlog(detail || blog);
+    } catch (error) {
+      setEditBlog(blog);
+    }
   };
 
   const handleCreate = () => {
@@ -136,7 +142,7 @@ export default function HRBlogManagementPage() {
       toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
-    if (!formData.categoryId || formData.categoryId === 0) {
+    if (!formData.categoryId) {
       toast.error("Vui lòng chọn danh mục");
       return;
     }
@@ -144,29 +150,14 @@ export default function HRBlogManagementPage() {
     try {
       setSaving(true);
 
-      // Tạo FormData để gửi multipart/form-data
-      const data = new FormData();
-
-      if (createMode) {
-        // Create mode: gửi đầy đủ fields
-        data.append("UserId", user.id.toString());
-        data.append("CategoryId", formData.categoryId.toString());
-        data.append("Title", formData.title);
-        data.append("Excerpt", formData.excerpt);
-        data.append("Content", formData.content);
-        data.append("ReadTime", formData.readTime || "5 phút đọc");
-      } else {
-        // Update mode: chỉ gửi các fields có trong BlogUpdateRequest
-        data.append("CategoryId", formData.categoryId.toString());
-        data.append("Title", formData.title);
-        data.append("Excerpt", formData.excerpt);
-        data.append("Content", formData.content);
-        data.append("ReadTime", formData.readTime || "5 phút đọc");
-      }
-
-      if (imageFile) {
-        data.append("Image", imageFile);
-      }
+      const data = {
+        categoryId: formData.categoryId,
+        title: formData.title,
+        excerpt: formData.excerpt,
+        content: formData.content,
+        readTime: formData.readTime || "5 phút đọc",
+        image: formData.image || undefined
+      };
 
       if (createMode) {
         await blogApi.create(data);

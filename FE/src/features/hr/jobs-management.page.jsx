@@ -74,7 +74,8 @@ const JobsManagement = () => {
         return;
       }
 
-      const response = await jobApi.getByUser(user.id, 1, 50);
+      const cId = company?.id || user.id;
+      const response = await jobApi.getByUser(cId, 1, 50);
 
       if (response && response.items) {
         setJobs(response.items);
@@ -256,8 +257,9 @@ const JobsManagement = () => {
       return;
     }
 
+    const cId = company?.id || user.id;
     try {
-      await jobApi.create(user.id, data);
+      await jobApi.create(cId, data);
       alert("Đăng tin tuyển dụng thành công!");
       fetchJobs();
     } catch (error) {
@@ -269,8 +271,9 @@ const JobsManagement = () => {
   const handleSaveEdit = async () => {
     if (!selectedJob || !token) return;
 
+    const cId = company?.id || editForm.companyId;
     try {
-      await jobApi.update(selectedJob.id, editForm);
+      await jobApi.update(selectedJob.id, cId, editForm);
       alert("Cập nhật thành công!");
       setModalOpen(false);
       fetchJobs();
@@ -288,7 +291,8 @@ const JobsManagement = () => {
     }
 
     try {
-      await jobApi.delete(job.id, user.id);
+      const cId = company?.id || user.id;
+      await jobApi.delete(job.id, cId);
       alert("Đã gỡ bỏ thành công!");
       fetchJobs();
     } catch (error) {

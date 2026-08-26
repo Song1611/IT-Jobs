@@ -77,8 +77,8 @@ export default function QAPage() {
         ...post,
         interaction: {
           ...post.interaction,
-          isLikedByCurrentUser: result.isLiked,
-          totalLikes: result.totalLikes
+          isLikedByCurrentUser: result.reacted,
+          totalLikes: result.reactionCount
         }
       } :
       post
@@ -155,7 +155,7 @@ export default function QAPage() {
         ...p,
         interaction: {
           ...p.interaction,
-          comments: [...p.interaction.comments, ...response.data]
+          comments: [...p.interaction.comments, ...response.items]
         }
       } :
       p

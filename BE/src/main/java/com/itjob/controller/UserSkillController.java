@@ -124,7 +124,6 @@ public class UserSkillController {
                 .map(s -> SkillResponse.builder()
                         .id(s.getId().toString())
                         .name(s.getName())
-                        .build())
-                .collect(Collectors.toList());
+                        .build()).toList();
     }
 }

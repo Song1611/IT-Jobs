@@ -223,7 +223,7 @@ const UserHeader = () => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link
-                    href={user?.id ? Routes.profile(user.id) : "#"}
+                    href={user?.id ? Routes.profile() : "#"}
                     className="cursor-target flex items-center">
                     
                       <User className="mr-2 h-4 w-4" />
@@ -538,7 +538,7 @@ const UserHeader = () => {
                           CỘNG ĐỒNG
                         </h3>
                         <Link
-                        href={user?.id ? Routes.profile(user.id) : "#"}
+                        href={user?.id ? Routes.profile() : "#"}
                         className="flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md hover:bg-muted transition-colors">
                         
                           <User className="h-4 w-4" />

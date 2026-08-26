@@ -75,7 +75,7 @@ public class SearchSuggestionServiceImpl implements SearchSuggestionService {
 
         return RedisOperation.supply(() -> {
             Set<String> result = stringRedisTemplate.opsForZSet().reverseRange(
-                    RedisKeys.suggestPrefixKey(finalPrefix), 0, finalLimit - 1);
+                    RedisKeys.suggestPrefixKey(finalPrefix), 0, (long)finalLimit - 1);
             return result != null ? List.copyOf(result) : List.of();
         }, "Failed to get suggestions for prefix: {}", prefix);
     }
