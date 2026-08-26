@@ -1,6 +1,6 @@
 import { apiPost, apiDelete, apiGetPaginated } from "./api";
 
-const ENDPOINT = "/api/Post";
+const ENDPOINT = "/api/posts";
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -11,8 +11,9 @@ export const interactionApi = {
   // Toggle like cho bài post
   toggleLike: (postId, userId) => {
     return apiPost(
-      `${ENDPOINT}/${postId}/like`,
-      { postId, userId }
+      `/api/reactions/posts/${postId}`,
+      {},
+      { params: { type: 'LIKE' } }
     );
   },
 
@@ -65,7 +66,11 @@ export const interactionApi = {
       throw new Error(error.message || "Failed to add comment");
     }
 
-    return response.json();
+    const json = await response.json();
+    if (json && typeof json.code === "number" && json.code !== 1000) {
+      throw new Error(json.message || "Failed to add comment");
+    }
+    return json.result !== undefined ? json.result : json;
   },
 
   // Xóa comment

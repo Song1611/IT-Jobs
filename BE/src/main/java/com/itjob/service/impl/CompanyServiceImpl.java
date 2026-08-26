@@ -128,7 +128,7 @@
                 @CacheEvict(value = CacheName.COMPANY_FEATURED, allEntries = true),
                 @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
                 @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                            key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()")
+                            key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX")
         })
         public CompanyResponse createCompany(CompanyRequest request, UUID userId) {
             log.info("Creating company for user {}", userId);
@@ -166,7 +166,7 @@
                         @CacheEvict(value = CacheName.JOB_BY_COMPANY, allEntries = true),
                         @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
                         @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                    key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                                    key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
                         @CacheEvict(value = CacheName.DASHBOARD_HR,
                                     key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
                 })
@@ -245,7 +245,7 @@
             // Extract company IDs
             List<UUID> companyIds = companies.stream()
                     .map(Company::getId)
-                    .collect(Collectors.toList());
+                    .toList();
             
             // Batch query: Get all job counts in one query using type-safe projection
             List<CompanyJobCountProjection> jobCounts = jobRepository.countJobsByCompanyIdsAndStatus(
@@ -269,7 +269,7 @@
                         response.setJobCount((int) jobCount);
                         return response;
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         }
         
         @Override
@@ -305,7 +305,7 @@
                         @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
                         @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
                         @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                    key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                                    key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
                         @CacheEvict(value = CacheName.DASHBOARD_HR,
                                     key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
                 })
@@ -338,7 +338,7 @@
                         @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
                         @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
                         @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                    key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                                    key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
                         @CacheEvict(value = CacheName.DASHBOARD_HR,
                                     key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
                 })
@@ -371,7 +371,7 @@
                         @CacheEvict(value = CacheName.COMPANY_SEARCH, allEntries = true),
                         @CacheEvict(value = CacheName.COMPANY_MY, allEntries = true),
                         @CacheEvict(value = CacheName.DASHBOARD_ADMIN,
-                                    key = "T(com.itjob.util.CacheKeyGenerator).forAdminDashboard()"),
+                                    key = "T(com.itjob.util.CacheKeyGenerator).STATS_SUFFIX"),
                         @CacheEvict(value = CacheName.DASHBOARD_HR,
                                     key = "T(com.itjob.util.CacheKeyGenerator).forHRDashboard(#id)")
                 })

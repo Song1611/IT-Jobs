@@ -68,23 +68,24 @@ public final class RedisKeys {
 
     // ========== RECENTLY VIEWED ==========
     private static final String RECENT_VIEW_PREFIX = "recent";
+    private static final String USER_SCOPE = ":user:";
 
     public static String recentViewKey(UUID userId) {
-        return RECENT_VIEW_PREFIX + ":user:" + userId;
+        return RECENT_VIEW_PREFIX + USER_SCOPE + userId;
     }
 
     // ========== RECOMMENDATIONS ==========
     private static final String RECOMMEND_PREFIX = "recommend";
 
     public static String recommendKey(UUID userId) {
-        return RECOMMEND_PREFIX + ":user:" + userId;
+        return RECOMMEND_PREFIX + USER_SCOPE + userId;
     }
 
     // ========== SEARCH HISTORY ==========
     private static final String SEARCH_HISTORY_PREFIX = "search:history";
 
     public static String searchHistoryKey(UUID userId) {
-        return SEARCH_HISTORY_PREFIX + ":user:" + userId;
+        return SEARCH_HISTORY_PREFIX + USER_SCOPE + userId;
     }
 
     // ========== SEARCH SUGGESTION ==========

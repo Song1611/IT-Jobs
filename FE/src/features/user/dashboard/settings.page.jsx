@@ -21,11 +21,30 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+
+  const handleSendOtp = async () => {
+    if (!user?.id || !token) {
+      toast.error("Vui lòng đăng nhập lại");
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      await userApi.sendChangePasswordOtp(user.id);
+      toast.success("Mã OTP đã được gửi vào email của bạn");
+    } catch (error) {
+      toast.error(error.message || "Gửi OTP thất bại");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
 
   const handleChangePassword = async () => {
     // Validation
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!currentPassword || !newPassword || !confirmPassword || !otp) {
       toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
@@ -51,7 +70,8 @@ export default function SettingsPage() {
       const response = await userApi.changePassword(
         user.id,
         currentPassword,
-        newPassword
+        newPassword,
+        otp
       );
 
       toast.success(response.message || "Đổi mật khẩu thành công");
@@ -60,6 +80,7 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
+      setOtp("");
     } catch (error) {
       toast.error(error.message || "Đổi mật khẩu thất bại");
     } finally {
@@ -127,6 +148,23 @@ export default function SettingsPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)} />
               
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="otp">Mã OTP</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="otp"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  placeholder="Nhập mã OTP từ email" />
+                <Button
+                  variant="outline"
+                  onClick={handleSendOtp}
+                  disabled={isSendingOtp}
+                  className="shrink-0">
+                  {isSendingOtp ? "Đang gửi..." : "Gửi OTP"}
+                </Button>
+              </div>
             </div>
             <Button onClick={handleChangePassword} disabled={isChangingPassword}>
               {isChangingPassword ? "Đang xử lý..." : "Đổi mật khẩu"}

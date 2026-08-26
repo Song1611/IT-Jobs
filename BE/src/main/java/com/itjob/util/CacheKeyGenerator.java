@@ -26,6 +26,7 @@ public class CacheKeyGenerator {
     
     private static final String DELIMITER = ":";
     private static final String PARAM_DELIMITER = ",";
+    public static final String STATS_SUFFIX = "stats";
     
     /**
      * Generate cache key for simple entity by ID.
@@ -214,17 +215,6 @@ public class CacheKeyGenerator {
     }
     
     /**
-     * Generate cache key for admin dashboard.
-     * <p>Format: "stats"
-     * <p>Usage: Admin dashboard statistics
-     *
-     * @return Cache key string
-     */
-    public static String forAdminDashboard() {
-        return "stats";
-    }
-    
-    /**
      * Generate cache key for HR dashboard.
      * <p>Format: "hr:uuid:stats"
      * <p>Usage: HR-specific dashboard statistics
@@ -233,7 +223,7 @@ public class CacheKeyGenerator {
      * @return Cache key string
      */
     public static String forHRDashboard(Object hrId) {
-        return "hr" + DELIMITER + hrId + DELIMITER + "stats";
+        return "hr" + DELIMITER + hrId + DELIMITER + STATS_SUFFIX;
     }
     
     /**
@@ -245,7 +235,7 @@ public class CacheKeyGenerator {
      * @return Cache key string
      */
     public static String forUserDashboard(Object userId) {
-        return "user" + DELIMITER + userId + DELIMITER + "stats";
+        return "user" + DELIMITER + userId + DELIMITER + STATS_SUFFIX;
     }
 }
 

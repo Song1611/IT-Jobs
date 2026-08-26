@@ -162,6 +162,18 @@
 
 	<build>
 		<plugins>
+					<plugin>
+						<groupId>org.sonarsource.scanner.maven</groupId>
+						<artifactId>sonar-maven-plugin</artifactId>
+						<version>5.7.0.6970</version>
+						<configuration>
+							<!-- JaCoCo XML report produced by the jacoco:report goal during the test phase -->
+							<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+							<!-- Unit + integration test execution reports -->
+							<sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
+							<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+						</configuration>
+					</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -230,6 +242,16 @@
 						</configuration>
 						</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<api.version>1.41</api.version>
+						<user.timezone>UTC</user.timezone>
+					</systemPropertyVariables>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

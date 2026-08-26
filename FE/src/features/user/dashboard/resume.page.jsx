@@ -26,7 +26,6 @@ import { ScrollArea } from "@/components/ui/shadcn/scroll-area";
 
 
 
-
 export default function ResumePage() {
   const { user, token, updateUser } = useAuth();
   const [userSkills, setUserSkills] = useState([]);
@@ -49,9 +48,8 @@ export default function ResumePage() {
 
     try {
       setLoading(true);
-      const response = await userApi.getSkills(user.id);
+      const response = await userApi.getMySkills();
 
-      // Handle different response formats
       let skills = [];
       if (Array.isArray(response)) {
         skills = response;
@@ -59,6 +57,8 @@ export default function ResumePage() {
         skills = Array.isArray(response.data) ? response.data : [];
       } else if (response && typeof response === 'object' && '$values' in response) {
         skills = Array.isArray(response.$values) ? response.$values : [];
+      } else if (response && Array.isArray(response.items)) {
+        skills = response.items;
       }
 
       setUserSkills(skills);
@@ -74,8 +74,14 @@ export default function ResumePage() {
     if (!token) return;
 
     try {
-      const response = await skillApi.getAll(1, 100);
-      setAllSkills(response.data || []);
+      const response = await skillApi.getAll();
+      let skills = [];
+      if (Array.isArray(response)) {
+        skills = response;
+      } else if (response && Array.isArray(response.data)) {
+        skills = response.data;
+      }
+      setAllSkills(skills);
     } catch (error) {
       console.error("Failed to load all skills:", error);
     }
@@ -87,7 +93,7 @@ export default function ResumePage() {
 
     try {
       setAddingSkill(true);
-      await userApi.addSkill(user.id, skillId);
+      await userApi.addMySkill({ skillId });
       await loadUserSkills();
       setDialogOpen(false);
       setSearchQuery("");
@@ -103,7 +109,7 @@ export default function ResumePage() {
     if (!user?.id || !token) return;
 
     try {
-      await userApi.removeSkill(user.id, skillId);
+      await userApi.removeMySkill(skillId);
       await loadUserSkills();
     } catch (error) {
       alert("Xóa kỹ năng thất bại");
@@ -120,8 +126,8 @@ export default function ResumePage() {
       const response = await userApi.updateCV(user.id, file);
 
       // Update user with new CV URL
-      if (response.data && response.data.cvUrl) {
-        updateUser({ cvUrl: response.data.cvUrl });
+      if (response.result && response.result.cvUrl) {
+        updateUser({ cvUrl: response.result.cvUrl });
       }
 
       alert("Tải CV lên thành công!");

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Button } from "../ui/shadcn/button";
 import { Briefcase, MapPin } from "lucide-react";
-import { SearchCompany } from "@/services/search.api";
 import { Card } from "../ui/shadcn/card";
 
 export function CompanyCard({ company }) {

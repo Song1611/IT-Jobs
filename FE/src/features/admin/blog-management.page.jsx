@@ -77,7 +77,7 @@ const BlogManagement = () => {
     title: "",
     excerpt: "",
     content: "",
-    categoryId: 0,
+    categoryId: "",
     readTime: "",
     image: ""
   });
@@ -89,15 +89,15 @@ const BlogManagement = () => {
       const authToken = token || getAuthToken();
       const response = await blogApi.getAll(currentPage, pageSize, undefined);
 
-      // Handle backend response format with $values
-      let blogsData = response.data;
+      // Handle backend response format
+      let blogsData = response.items;
       if (blogsData && typeof blogsData === "object" && "$values" in blogsData) {
         blogsData = blogsData.$values;
       }
 
       setBlogs(Array.isArray(blogsData) ? blogsData : []);
       setTotalPages(response.totalPages || 1);
-      setTotalItems(response.totalItems || 0);
+      setTotalItems(response.totalElements || 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Không thể tải danh sách bài viết");
     } finally {
@@ -127,7 +127,7 @@ const BlogManagement = () => {
         title: editBlog.title || "",
         excerpt: editBlog.excerpt || "",
         content: editBlog.content || "",
-        categoryId: editBlog.categoryId || 0,
+        categoryId: editBlog.category?.id || "",
         readTime: editBlog.readTime || "",
         image: editBlog.image || ""
       });
@@ -136,7 +136,7 @@ const BlogManagement = () => {
         title: "",
         excerpt: "",
         content: "",
-        categoryId: 0,
+        categoryId: "",
         readTime: "",
         image: ""
       });
@@ -144,16 +144,18 @@ const BlogManagement = () => {
   }, [editBlog, createMode]);
 
   // Get unique category names from blogs for filtering
-  const blogCategories = [...new Set(blogs.map((b) => b.category).filter(Boolean))];
+  const blogCategories = [...new Set(blogs.map((b) => b.category?.name || b.category).filter(Boolean))];
 
   // Filter blogs client-side
   const filteredBlogs = blogs.filter((blog) => {
+    const blogAuthor = blog.author?.fullName || blog.author;
     const matchesSearch =
     blog.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    blogAuthor?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     blog.excerpt?.toLowerCase().includes(searchQuery.toLowerCase());
+    const blogCategoryName = blog.category?.name || blog.category;
     const matchesFilter =
-    filterCategory === "all" || blog.category === filterCategory;
+    filterCategory === "all" || blogCategoryName === filterCategory;
     return matchesSearch && matchesFilter;
   });
 
@@ -167,7 +169,7 @@ const BlogManagement = () => {
   },
   {
     label: "Tác giả",
-    value: new Set(blogs.map((b) => b.author)).size,
+    value: new Set(blogs.map((b) => b.author?.fullName || b.author)).size,
     icon: User,
     color: "from-blue-500/20 to-blue-600/20"
   },
@@ -196,9 +198,15 @@ const BlogManagement = () => {
     setEditBlog(null);
   };
 
-  const handleEdit = (blog) => {
+  const handleEdit = async (blog) => {
     setEditBlog(blog);
     setCreateMode(false);
+    try {
+      const detail = await blogApi.getById(blog.id);
+      setEditBlog(detail || blog);
+    } catch (error) {
+      setEditBlog(blog);
+    }
   };
 
   const handleDelete = (blog) => {
@@ -241,7 +249,7 @@ const BlogManagement = () => {
       toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
-    if (!formData.categoryId || formData.categoryId === 0) {
+    if (!formData.categoryId) {
       toast.error("Vui lòng chọn danh mục");
       return;
     }
@@ -249,7 +257,6 @@ const BlogManagement = () => {
     try {
       setSaving(true);
       const blogData = {
-        userId: user.id,
         categoryId: formData.categoryId,
         title: formData.title,
         excerpt: formData.excerpt,
@@ -367,9 +374,9 @@ const BlogManagement = () => {
             <div className="space-y-2">
               <Label htmlFor="category">Danh mục *</Label>
               <Select
-                value={formData.categoryId > 0 ? formData.categoryId.toString() : ""}
+                value={formData.categoryId ? formData.categoryId.toString() : ""}
                 onValueChange={(value) =>
-                setFormData({ ...formData, categoryId: parseInt(value) })
+                setFormData({ ...formData, categoryId: value })
                 }>
                 
                 <SelectTrigger>

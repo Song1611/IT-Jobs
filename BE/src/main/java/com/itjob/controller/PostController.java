@@ -23,6 +23,8 @@ import java.util.UUID;
 @Slf4j
 public class PostController {
 
+    private static final String POSTS_RETRIEVED_SUCCESSFULLY = "Posts retrieved successfully";
+
     private final PostService postService;
     private final ViewCountService viewCountService;
 
@@ -30,7 +32,7 @@ public class PostController {
     public ApiResponse<PageResponse<PostResponse>> getAllPosts(Pageable pageable) {
         log.info("Getting all posts");
         return ApiResponse.<PageResponse<PostResponse>>builder()
-                .message("Posts retrieved successfully")
+                .message(POSTS_RETRIEVED_SUCCESSFULLY)
                 .result(postService.getAll(pageable))
                 .build();
     }
@@ -68,7 +70,7 @@ public class PostController {
             Pageable pageable) {
         log.info("Getting posts by user: {}", userId);
         return ApiResponse.<PageResponse<PostResponse>>builder()
-                .message("Posts retrieved successfully")
+                .message(POSTS_RETRIEVED_SUCCESSFULLY)
                 .result(postService.getByUser(userId, pageable))
                 .build();
     }
@@ -79,7 +81,7 @@ public class PostController {
             Pageable pageable) {
         log.info("Getting posts by company: {}", companyId);
         return ApiResponse.<PageResponse<PostResponse>>builder()
-                .message("Posts retrieved successfully")
+                .message(POSTS_RETRIEVED_SUCCESSFULLY)
                 .result(postService.getByCompany(companyId, pageable))
                 .build();
     }
@@ -87,14 +89,14 @@ public class PostController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PostResponse> createPost(
             @RequestParam("Content") String content,
-            @RequestParam(required = false) UUID CompanyId,
-            @RequestParam(required = false) List<MultipartFile> Images,
-            @RequestParam(required = false) MultipartFile Video) {
+            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) List<MultipartFile> images,
+            @RequestParam(required = false) MultipartFile video) {
         UUID userId = SecurityUtil.getCurrentUserId();
         log.info("Creating post for user: {}", userId);
         return ApiResponse.<PostResponse>builder()
                 .message("Post created successfully")
-                .result(postService.create(userId, content, CompanyId, Images, Video))
+                .result(postService.create(userId, content, companyId, images, video))
                 .build();
     }
 
@@ -114,12 +116,12 @@ public class PostController {
     public ApiResponse<PostResponse> updatePostWithImages(
             @PathVariable UUID id,
             @RequestParam("Content") String content,
-            @RequestParam(required = false) List<MultipartFile> Images) {
+            @RequestParam(required = false) List<MultipartFile> images) {
         UUID userId = SecurityUtil.getCurrentUserId();
         log.info("Updating post {} with images by user {}", id, userId);
         return ApiResponse.<PostResponse>builder()
                 .message("Post updated successfully")
-                .result(postService.updateWithImages(id, userId, content, Images))
+                .result(postService.updateWithImages(id, userId, content, images))
                 .build();
     }
 

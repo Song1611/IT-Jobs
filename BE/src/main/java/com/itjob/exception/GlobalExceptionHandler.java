@@ -17,13 +17,13 @@ public class GlobalExceptionHandler {
      * These are exceptions thrown intentionally in the service layer
      */
     @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse<?>> handlingAppException(AppException exception) {
+    ResponseEntity<ApiResponse<Void>> handlingAppException(AppException exception) {
         ErrorCode errorCode = exception.getErrorCode();
         
         log.warn("AppException: code={}, message={}", 
                 errorCode.getCode(), errorCode.getMessage());
         
-        ApiResponse<?> apiResponse = ApiResponse.builder()
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();
@@ -39,12 +39,12 @@ public class GlobalExceptionHandler {
      * NOT from Security Filter Chain (those are handled by CustomAccessDeniedHandler)
      */
     @ExceptionHandler(value = AccessDeniedException.class)
-    ResponseEntity<ApiResponse<?>> handlingAccessDeniedException(AccessDeniedException exception) {
+    ResponseEntity<ApiResponse<Void>> handlingAccessDeniedException(AccessDeniedException exception) {
         ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
         
         log.warn("AccessDeniedException in service layer: {}", exception.getMessage());
         
-        ApiResponse<?> apiResponse = ApiResponse.builder()
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();
@@ -59,12 +59,12 @@ public class GlobalExceptionHandler {
      * Thrown when user lookup fails during authentication
      */
     @ExceptionHandler(value = UsernameNotFoundException.class)
-    ResponseEntity<ApiResponse<?>> handlingUsernameNotFoundException(UsernameNotFoundException exception) {
+    ResponseEntity<ApiResponse<Void>> handlingUsernameNotFoundException(UsernameNotFoundException exception) {
         ErrorCode errorCode = ErrorCode.USER_NOT_FOUND;
         
         log.warn("UsernameNotFoundException: {}", exception.getMessage());
         
-        ApiResponse<?> apiResponse = ApiResponse.builder()
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();
@@ -79,12 +79,12 @@ public class GlobalExceptionHandler {
      * This is the fallback handler for unexpected errors
      */
     @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse<?>> handlingUncategorizedException(Exception exception) {
+    ResponseEntity<ApiResponse<Void>> handlingUncategorizedException(Exception exception) {
         ErrorCode errorCode = ErrorCode.UNCATEGORIZED_EXCEPTION;
         
         log.error("Uncategorized exception: ", exception);
         
-        ApiResponse<?> apiResponse = ApiResponse.builder()
+        ApiResponse<Void> apiResponse = ApiResponse.<Void>builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
                 .build();

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { searchApi, SearchData, SearchJob, SearchCompany } from "@/services/search.api";
+import { searchApi } from "@/services/search.api";
 import { Button } from "@/components/ui/shadcn/button";
 import { Badge } from "@/components/ui/shadcn/badge";
 import { Building2, MapPin, Calendar, Briefcase, Search, AlertCircle } from "lucide-react";

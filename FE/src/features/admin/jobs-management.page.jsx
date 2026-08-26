@@ -113,9 +113,8 @@ const JobsManagement = () => {
         return;
       }
 
-      await jobApi.delete(job.id);
-      alert("Xóa công việc thành công");
-      fetchJobs(); // Refresh list
+      alert("Xóa công việc chưa được hỗ trợ. Vui lòng sử dụng tính năng phê duyệt/từ chối.");
+      fetchJobs();
     } catch (err) {
       alert("Không thể xóa công việc: " + (err instanceof Error ? err.message : "Lỗi không xác định"));
     }

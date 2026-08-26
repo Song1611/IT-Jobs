@@ -42,7 +42,7 @@ public class TrendingJobServiceImpl implements TrendingJobService {
     public List<UUID> getTopJobIds(int limit) {
         Set<String> result = RedisOperation.supply(() -> {
             var typedOps = stringRedisTemplate.opsForZSet();
-            return typedOps.reverseRange(RedisKeys.trendingDailyKey(), 0, limit - 1);
+            return typedOps.reverseRange(RedisKeys.trendingDailyKey(), 0, (long)limit - 1);
         }, "Failed to get trending jobs");
 
         return RedisOperation.parseUuids(result);

@@ -31,7 +31,7 @@ public class RecentViewServiceImpl implements RecentViewService {
             String member = jobId.toString();
             stringRedisTemplate.opsForList().remove(key, 1, member);
             stringRedisTemplate.opsForList().leftPush(key, member);
-            stringRedisTemplate.opsForList().trim(key, 0, RecentViewConstant.MAX_SIZE - 1);
+            stringRedisTemplate.opsForList().trim(key, 0, (long) RecentViewConstant.MAX_SIZE - 1);
             stringRedisTemplate.expire(key, RecentViewConstant.TTL_DAYS, TimeUnit.DAYS);
         }, "Failed to record recent view for user {}: {}", userId);
     }
@@ -43,7 +43,7 @@ public class RecentViewServiceImpl implements RecentViewService {
         }
         List<String> ids = RedisOperation.supply(() -> {
             String key = RedisKeys.recentViewKey(userId);
-            return stringRedisTemplate.opsForList().range(key, 0, limit - 1);
+            return stringRedisTemplate.opsForList().range(key, 0, (long)limit - 1);
         }, "Failed to get recent views for user {}: {}", userId);
 
         return RedisOperation.parseUuids(ids);

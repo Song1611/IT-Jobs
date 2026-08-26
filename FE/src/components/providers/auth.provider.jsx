@@ -161,6 +161,25 @@ export function AuthProvider({ children }) {
     };
 
     initializeAuth();
+
+    // Listen to token_refreshed event from api.js interceptor
+    const handleTokenRefreshed = (e) => {
+      const newToken = e.detail;
+      setToken(newToken);
+      setAuthToken(newToken);
+      try {
+        setJwtPayload(jwtDecode(newToken));
+      } catch (error) {
+        console.error("Failed to decode refreshed JWT token:", error);
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("token_refreshed", handleTokenRefreshed);
+      return () => {
+        window.removeEventListener("token_refreshed", handleTokenRefreshed);
+      };
+    }
   }, []);
 
   // Route protection effect
@@ -258,9 +277,13 @@ export function AuthProvider({ children }) {
       };
     } catch (error) {
       console.error("Login error:", error);
+      let errorMessage = error.message;
+      if (errorMessage === "Unauthenticated" || errorMessage === "Unauthorized" || errorMessage.includes("401")) {
+        errorMessage = "Email hoặc mật khẩu không đúng";
+      }
       return {
         success: false,
-        error: error.message || "Email hoặc mật khẩu không đúng"
+        error: errorMessage || "Email hoặc mật khẩu không đúng"
       };
     }
   };
@@ -270,26 +293,7 @@ export function AuthProvider({ children }) {
   {
     try {
       const response = await authApi.registerUser(data);
-
-      if (response.success && response.data) {
-        const { accessToken, user: userData } = response.data;
-
-        // Save to localStorage
-        if (typeof window !== "undefined") {
-          localStorage.setItem("userInfo", JSON.stringify(userData));
-        }
-
-        setUser(userData);
-        setToken(accessToken);
-        setAuthToken(accessToken);
-
-        // Redirect to home for regular users
-        router.push(Routes.home);
-
-        return { success: true };
-      }
-
-      return { success: false, error: response.message || "Đăng ký thất bại" };
+      return { success: true, data: response };
     } catch (error) {
       console.error("Register user error:", error);
       return {
@@ -304,32 +308,7 @@ export function AuthProvider({ children }) {
   {
     try {
       const response = await authApi.registerHR(data);
-
-      if (response.success && response.data) {
-        const {
-          accessToken,
-          user: userData,
-          company: companyData
-        } = response.data;
-
-        // Save to localStorage
-        if (typeof window !== "undefined") {
-          localStorage.setItem("userInfo", JSON.stringify(userData));
-          localStorage.setItem("company", JSON.stringify(companyData));
-        }
-
-        setUser(userData);
-        setCompany(companyData);
-        setToken(accessToken);
-        setAuthToken(accessToken);
-
-        // Redirect to HR dashboard
-        router.push("/hr");
-
-        return { success: true };
-      }
-
-      return { success: false, error: response.message || "Đăng ký thất bại" };
+      return { success: true, data: response };
     } catch (error) {
       console.error("Register HR error:", error);
       return {

@@ -1,29 +1,24 @@
-import { apiGet, apiPost, apiPut, apiDelete, apiGetPaginated, apiGetById } from './api';
+import { apiGet, apiPost, apiPut, apiDelete } from './api';
 
 const ENDPOINT = '/api/skills';
 
 export const skillApi = {
-  // Lấy danh sách skills
-  getAll: (pageNumber = 1, pageSize = 20) => {
-    return apiGetPaginated(ENDPOINT, pageNumber, pageSize);
+  getAll: () => {
+    return apiGet(ENDPOINT);
   },
 
-  // Lấy chi tiết skill
   getById: (id) => {
-    return apiGetById(ENDPOINT, id);
+    return apiGet(`${ENDPOINT}/${id}`);
   },
 
-  // Tạo skill mới
   create: (data) => {
     return apiPost(ENDPOINT, data);
   },
 
-  // Cập nhật skill
   update: (id, data) => {
     return apiPut(`${ENDPOINT}/${id}`, data);
   },
 
-  // Xóa skill
   delete: (id) => {
     return apiDelete(`${ENDPOINT}/${id}`);
   }

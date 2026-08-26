@@ -1,39 +1,29 @@
-import { apiPost, apiPut, apiDelete, apiGetPaginated, apiGetById } from './api';
+import { apiPost, apiPut, apiDelete, apiGet, apiGetPaginated } from './api';
 
-const ENDPOINT = '/api/Reviews';
+const ENDPOINT = '/api/reviews';
+const COMPANY_ENDPOINT = '/api/companies';
 
 export const reviewApi = {
-  // Lấy danh sách đánh giá
-  getAll: (pageNumber = 1, pageSize = 10) => {
-    return apiGetPaginated(ENDPOINT, pageNumber, pageSize);
-  },
-
-  // Lấy chi tiết đánh giá
   getById: (id) => {
-    return apiGetById(ENDPOINT, id);
+    return apiGet(`${ENDPOINT}/${id}`);
   },
 
-  // Lấy đánh giá theo công ty
   getByCompany: (companyId, pageNumber = 1, pageSize = 10) => {
-    return apiGetPaginated(`${ENDPOINT}/company/${companyId}`, pageNumber, pageSize);
+    return apiGetPaginated(`${COMPANY_ENDPOINT}/${companyId}/reviews`, pageNumber, pageSize);
   },
 
-  // Lấy đánh giá theo user
-  getByUser: (userId, pageNumber = 1, pageSize = 10) => {
-    return apiGetPaginated(`${ENDPOINT}/user/${userId}`, pageNumber, pageSize);
+  getMyReviews: (pageNumber = 1, pageSize = 10) => {
+    return apiGetPaginated(`${ENDPOINT}/me`, pageNumber, pageSize);
   },
 
-  // Tạo đánh giá mới
-  create: (data) => {
-    return apiPost(ENDPOINT, data);
+  create: (companyId, data) => {
+    return apiPost(`${COMPANY_ENDPOINT}/${companyId}/reviews`, data);
   },
 
-  // Cập nhật đánh giá
   update: (id, data) => {
     return apiPut(`${ENDPOINT}/${id}`, data);
   },
 
-  // Xóa đánh giá
   delete: (id) => {
     return apiDelete(`${ENDPOINT}/${id}`);
   }

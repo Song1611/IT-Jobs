@@ -1,5 +1,7 @@
 package com.itjob.service.impl;
 
+import com.itjob.exception.AppException;
+import com.itjob.exception.ErrorCode;
 import com.itjob.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -51,7 +53,7 @@ public class EmailServiceImpl implements EmailService {
             log.debug("Email sent to {}", to);
         } catch (MessagingException e) {
             log.error("Failed to send email to {}", to, e);
-            throw new RuntimeException("Failed to send email", e);
+            throw new AppException(ErrorCode.EMAIL_SENDING_FAILED);
         }
     }
 

@@ -32,7 +32,10 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json"
   },
-  withCredentials: true // Support HttpOnly cookie
+  withCredentials: true, // Support HttpOnly cookie
+  paramsSerializer: {
+    indexes: null
+  }
 });
 
 // A separate instance for refreshing token to avoid interceptor loops
@@ -94,50 +97,74 @@ api.interceptors.response.use(
     
     // Check if error is 401 and we haven't retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          subscribeTokenRefresh((token) => {
-            originalRequest.headers['Authorization'] = `Bearer ${token}`;
-            resolve(api(originalRequest));
+      const isAuthEndpoint = originalRequest.url?.includes('/api/auth/refresh') ||
+                             originalRequest.url?.includes('/api/auth/login') ||
+                             originalRequest.url?.includes('/api/auth/register');
+                             
+      // Only attempt to refresh token if it's NOT an auth endpoint
+      if (!isAuthEndpoint) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            subscribeTokenRefresh((token, err) => {
+              if (err) {
+                reject(err);
+              } else {
+                originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                resolve(api(originalRequest));
+              }
+            });
           });
-        });
-      }
-
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Backend now reads refresh token from HttpOnly cookie
-        const res = await apiRefresh.post('/api/auth/refresh');
-        
-        // Ensure successful refresh returns data
-        if (res.data?.code === 1000 || res.data?.result) {
-            const resultData = res.data.result || res.data;
-            const newAccessToken = resultData.accessToken;
-            
-            setAuthToken(newAccessToken);
-            
-            isRefreshing = false;
-            onRefreshed(newAccessToken);
-            
-            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-            return api(originalRequest);
-        } else {
-            throw new Error("Refresh failed");
         }
-      } catch (refreshError) {
-        isRefreshing = false;
-        refreshSubscribers = [];
-        
-        // Logout logic
-        setAuthToken(null);
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("userInfo");
-          localStorage.removeItem("company");
-          window.location.href = "/login";
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          // Backend now reads refresh token from HttpOnly cookie
+          const res = await apiRefresh.post('/api/auth/refresh');
+          
+          // Ensure successful refresh returns data
+          if (res.data?.code === 1000 || res.data?.result) {
+              const resultData = res.data.result || res.data;
+              const newAccessToken = resultData.accessToken;
+              
+              setAuthToken(newAccessToken);
+              
+              // Notify React state (AuthProvider) that token has been refreshed
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('token_refreshed', { detail: newAccessToken }));
+              }
+              
+              isRefreshing = false;
+              onRefreshed(newAccessToken);
+              
+              originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+              return api(originalRequest);
+          } else {
+              throw new Error("Refresh failed");
+          }
+        } catch (refreshError) {
+          isRefreshing = false;
+          
+          // Create a standard error
+          const finalError = new Error("Session expired or silent refresh failed");
+          
+          // Reject all queued requests
+          refreshSubscribers.forEach(cb => cb(null, finalError));
+          refreshSubscribers = [];
+          
+          // Logout logic
+          setAuthToken(null);
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("userInfo");
+            localStorage.removeItem("company");
+            if (window.location.pathname !== "/login" && window.location.pathname !== "/register") {
+              window.location.href = "/login";
+            }
+          }
+          
+          return Promise.reject(finalError);
         }
-        
-        return Promise.reject(refreshError);
       }
     }
 
@@ -163,9 +190,8 @@ export async function apiGet(endpoint, config) {
     });
     return response;
   } catch (error) {
-    console.error("❌ API GET Error:", error);
     throw new Error(
-      `Failed to fetch: ${error instanceof Error ? error.message : "Network error"}`
+      `${error instanceof Error ? error.message : "Network error"}`
     );
   }
 }

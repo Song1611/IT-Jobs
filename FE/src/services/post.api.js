@@ -7,7 +7,7 @@ import {
   apiGet } from
 "./api";
 
-const ENDPOINT = "/api/Post";
+const ENDPOINT = "/api/posts";
 
 function getToken() {
   if (typeof window === 'undefined') return null;
@@ -21,9 +21,9 @@ export const postApi = {
   pageSize = 10,
   currentUserId) =>
   {
-    const params = { pageNumber, pageSize };
+    const params = {};
     if (currentUserId) params.currentUserId = currentUserId;
-    return apiGet(ENDPOINT, { params });
+    return apiGetPaginated(ENDPOINT, pageNumber, pageSize, { params });
   },
 
   // Lấy chi tiết bài đăng
@@ -40,11 +40,9 @@ export const postApi = {
   pageSize = 10,
   currentUserId) =>
   {
-    const params = { pageNumber, pageSize };
+    const params = {};
     if (currentUserId) params.currentUserId = currentUserId;
-    return apiGet(`${ENDPOINT}/user/${userId}`, {
-      params
-    });
+    return apiGetPaginated(`${ENDPOINT}/user/${userId}`, pageNumber, pageSize, { params });
   },
 
   // Lấy bài đăng theo company
@@ -54,12 +52,9 @@ export const postApi = {
   pageSize = 10,
   currentUserId) =>
   {
-    const params = { pageNumber, pageSize };
+    const params = {};
     if (currentUserId) params.currentUserId = currentUserId;
-    return apiGet(
-      `${ENDPOINT}/company/${companyId}`,
-      { params }
-    );
+    return apiGetPaginated(`${ENDPOINT}/company/${companyId}`, pageNumber, pageSize, { params });
   },
 
   // Tạo bài đăng mới với attachments
@@ -101,7 +96,10 @@ export const postApi = {
       throw new Error(error.message || "Failed to create post");
     }
 
-    return response.json();
+    const json = await response.json();
+    return json.code !== undefined && json.code !== 1000
+      ? Promise.reject(new Error(json.message || `API Error: ${json.code}`))
+      : (json.result !== undefined ? json.result : json);
   },
 
   // Cập nhật bài đăng (chỉ text)
@@ -144,7 +142,10 @@ export const postApi = {
       throw new Error(error.message || "Failed to update post");
     }
 
-    return response.json();
+    const json = await response.json();
+    return json.code !== undefined && json.code !== 1000
+      ? Promise.reject(new Error(json.message || `API Error: ${json.code}`))
+      : (json.result !== undefined ? json.result : json);
   },
 
   // Xóa bài đăng
@@ -168,8 +169,9 @@ export const postApi = {
   // Toggle like bài đăng
   toggleLike: (postId, userId) => {
     return apiPost(
-      `${ENDPOINT}/${postId}/like`,
-      { userId }
+      `/api/reactions/posts/${postId}`,
+      {},
+      { params: { type: 'LIKE' } }
     );
   },
 
@@ -209,7 +211,11 @@ export const postApi = {
       throw new Error(error.message || "Failed to add comment");
     }
 
-    return response.json();
+    const json = await response.json();
+    if (json && typeof json.code === "number" && json.code !== 1000) {
+      throw new Error(json.message || "Failed to add comment");
+    }
+    return json.result !== undefined ? json.result : json;
   },
 
   // Xóa comment

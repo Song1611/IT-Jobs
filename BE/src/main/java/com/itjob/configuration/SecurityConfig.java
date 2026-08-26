@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        (authorize) -> authorize
+                        authorize -> authorize
                                 .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/posts/**").permitAll()
                                 .requestMatchers(SecurityConstant.PUBLIC_ENDPOINTS).permitAll()

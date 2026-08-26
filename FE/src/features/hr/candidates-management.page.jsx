@@ -97,12 +97,12 @@ function CandidatesManagement() {
   };
 
   const handleAccept = async (row) => {
-    if (!token) return;
+    if (!token || !company?.id) return;
     try {
-      await applicationApi.accept(row.jobId, row.userId, row.cvUrl, row.coverLetter);
-      console.log(`✅ Đã chấp nhận ứng viên ${row.userFullName}`);
-      alert(`✅ Đã chấp nhận ứng viên ${row.userFullName}`);
-      await fetchApplications(); // Refresh data
+      await applicationApi.accept(row.id, company.id);
+      console.log(`✅ Đã chấp nhận ứng viên ${row.userFullName || row.candidate?.fullName}`);
+      alert(`✅ Đã chấp nhận ứng viên ${row.userFullName || row.candidate?.fullName}`);
+      await fetchApplications();
     } catch (error) {
       console.error("❌ Error accepting application:", error);
       alert("❌ Có lỗi xảy ra khi chấp nhận ứng viên");
@@ -110,12 +110,12 @@ function CandidatesManagement() {
   };
 
   const handleReject = async (row) => {
+    if (!company?.id) return;
     try {
-      const token = "your-token-here"; // TODO: Get from auth context
-      await applicationApi.reject(row.jobId, row.userId, row.cvUrl, row.coverLetter);
-      console.log(`❌ Đã từ chối ứng viên ${row.userFullName}`);
-      alert(`❌ Đã từ chối ứng viên ${row.userFullName}`);
-      await fetchApplications(); // Refresh data
+      await applicationApi.reject(row.id, company.id);
+      console.log(`❌ Đã từ chối ứng viên ${row.userFullName || row.candidate?.fullName}`);
+      alert(`❌ Đã từ chối ứng viên ${row.userFullName || row.candidate?.fullName}`);
+      await fetchApplications();
     } catch (error) {
       console.error("❌ Error rejecting application:", error);
       alert("❌ Có lỗi xảy ra khi từ chối ứng viên");
@@ -123,13 +123,12 @@ function CandidatesManagement() {
   };
 
   const handleDelete = async (row) => {
-    if (confirm(`⚠️ Bạn có chắc muốn xóa đơn ứng tuyển của ${row.userFullName}?`)) {
+    if (confirm(`⚠️ Bạn có chắc muốn xóa đơn ứng tuyển của ${row.userFullName || row.candidate?.fullName}?`)) {
       try {
-        const token = "your-token-here"; // TODO: Get from auth context
-        await applicationApi.delete(row.jobId, row.userId);
-        console.log(`🗑️ Đã xóa đơn ứng tuyển của ${row.userFullName}`);
-        alert(`✅ Đã xóa đơn ứng tuyển của ${row.userFullName} thành công`);
-        await fetchApplications(); // Refresh data
+        await applicationApi.delete(row.id);
+        console.log(`🗑️ Đã xóa đơn ứng tuyển của ${row.userFullName || row.candidate?.fullName}`);
+        alert(`✅ Đã xóa đơn ứng tuyển của ${row.userFullName || row.candidate?.fullName} thành công`);
+        await fetchApplications();
       } catch (error) {
         console.error("❌ Error deleting application:", error);
         alert("❌ Có lỗi xảy ra khi xóa đơn ứng tuyển");

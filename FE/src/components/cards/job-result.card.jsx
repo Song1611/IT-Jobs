@@ -1,4 +1,3 @@
-import { SearchJob } from "@/services/search.api";
 import { Building2, Calendar } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "../ui/shadcn/badge";

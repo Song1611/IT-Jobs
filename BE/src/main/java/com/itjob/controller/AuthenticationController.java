@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthenticationController {
 
+    private static final String REFRESH_TOKEN_COOKIE = "refreshToken";
+
     private final AuthenticationService authenticationService;
 
     @Value("${jwt.refresh-token-duration}")
@@ -42,7 +44,7 @@ public class AuthenticationController {
         AuthenticationResponse response =
                 authenticationService.authenticate(request);
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, response.getRefreshToken())
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
@@ -59,7 +61,7 @@ public class AuthenticationController {
 
     @PostMapping("/refresh")
     public ApiResponse<AuthenticationResponse> refreshToken(
-            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            @CookieValue(name = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
 
         log.info("Refresh token request");
@@ -72,7 +74,7 @@ public class AuthenticationController {
         AuthenticationResponse response =
                 authenticationService.refreshToken(request);
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, response.getRefreshToken())
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")
@@ -139,7 +141,7 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public ApiResponse<Void> logout(
-            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            @CookieValue(name = REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
 
         log.info("Logout request");
@@ -149,7 +151,7 @@ public class AuthenticationController {
             authenticationService.logout(request);
         }
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .path("/")

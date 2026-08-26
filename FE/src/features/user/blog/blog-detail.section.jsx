@@ -38,7 +38,7 @@ function BlogDetailSection({ id }) {
       try {
         setLoading(true);
         setError(null);
-        const response = await blogApi.getById(Number(id));
+        const response = await blogApi.getById(id);
         setPost(response);
       } catch (err) {
         console.error("❌ Error fetching blog detail:", err);
@@ -47,8 +47,11 @@ function BlogDetailSection({ id }) {
       }
     }
 
-    if (id) {
+    const hasValidId = id && typeof id === "string" && id !== "undefined";
+    if (hasValidId) {
       fetchBlogDetail();
+    } else {
+      setLoading(false);
     }
   }, [id]);
 
@@ -100,17 +103,17 @@ function BlogDetailSection({ id }) {
 
       {/* Header */}
       <div className="mb-8">
-        <Badge className="mb-4">{post.category}</Badge>
+        <Badge className="mb-4">{post.category?.name || post.category}</Badge>
         <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
         
         <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
           <div className="flex items-center gap-2">
             <User className="h-4 w-4" />
-            <span>{post.author}</span>
+            <span>{post.author?.fullName || post.author}</span>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            <span>{new Date(post.date).toLocaleDateString("vi-VN")}</span>
+            <span>{new Date(post.createdAt).toLocaleDateString("vi-VN")}</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
@@ -203,7 +206,7 @@ function BlogDetailSection({ id }) {
             <User className="h-6 w-6" />
           </div>
           <div>
-            <p className="font-semibold">{post.author}</p>
+            <p className="font-semibold">{post.author?.fullName || post.author}</p>
             <p className="text-sm text-muted-foreground">Tác giả</p>
           </div>
         </div>

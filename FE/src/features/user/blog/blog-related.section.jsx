@@ -159,7 +159,7 @@ function BlogRelatedSection({ currentId }) {
             <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge variant="secondary">{post.category}</Badge>
+                  <Badge variant="secondary">{post.category?.name || post.category}</Badge>
                   <span className="text-xs text-muted-foreground">{post.readTime}</span>
                 </div>
                 <CardTitle className="line-clamp-2 text-lg hover:text-primary transition-colors">
@@ -173,7 +173,7 @@ function BlogRelatedSection({ currentId }) {
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <User className="h-3 w-3" />
-                    <span className="text-xs">{post.author}</span>
+                    <span className="text-xs">{post.author?.fullName || post.author}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />

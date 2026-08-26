@@ -163,7 +163,7 @@ export default function DashboardOverviewPage() {
               </Link>
             </Button>
             <Button className="w-full justify-start hover:bg-primary/10 hover:text-primary" variant="outline" asChild>
-              <Link href={user?.id ? Routes.profile(user.id) : "#"}>
+              <Link href={user?.id ? Routes.profile() : "#"}>
                 <TrendingUp className="mr-2 h-4 w-4" />
                 Xem hồ sơ công khai
               </Link>

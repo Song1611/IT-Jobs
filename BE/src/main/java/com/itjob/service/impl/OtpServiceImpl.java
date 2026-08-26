@@ -26,7 +26,7 @@ public class OtpServiceImpl implements OtpService {
     @Override
     public String generateAndStore(String email) {
         String cooldownKey = RedisKeys.otpCooldown(email);
-        if (redisTemplate.hasKey(cooldownKey)) {
+            if (redisTemplate.hasKey(cooldownKey)) {
             throw new AppException(ErrorCode.TOO_MANY_REQUESTS);
         }
 

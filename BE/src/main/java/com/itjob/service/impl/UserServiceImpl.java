@@ -292,8 +292,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AttachmentResponse> getMedia(UUID userId, Pageable pageable) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (!userRepository.existsById(userId)) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
 
         Page<Attachment> attachmentsPage = attachmentRepository.findByPostAuthorId(userId, pageable);
         return PageResponseUtil.build(attachmentsPage, postMapper::toAttachmentResponse);

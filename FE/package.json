@@ -49,9 +49,7 @@
     "sonner": "^2.0.7",
     "swiper": "^11.2.10",
     "tailwind-merge": "^3.3.1",
-    "three": "^0.179.1",
     "typed.js": "^2.1.0",
-    "vanta": "^0.5.24",
     "zod": "^4.1.0"
   },
   "devDependencies": {

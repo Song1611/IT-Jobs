@@ -3,7 +3,6 @@ package com.itjob.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.RedisConnectionFailureException;
 
 import java.util.List;
 import java.util.Objects;
@@ -24,8 +23,6 @@ public final class RedisOperation {
     public static <T> T supply(Supplier<T> action, String warnMsg, Object... args) {
         try {
             return action.get();
-        } catch (RedisConnectionFailureException e) {
-            log.warn(warnMsg, args);
         } catch (DataAccessException e) {
             log.warn(warnMsg, args);
         }

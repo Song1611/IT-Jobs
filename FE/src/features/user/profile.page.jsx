@@ -53,10 +53,6 @@ import { ProfileSkeleton } from "@/components/ui/skeletons";
 
 
 
-
-
-
-
 export default function ProfilePage({ userId }) {
   const { user, token, updateUser } = useAuth();
   const router = useRouter();
@@ -67,9 +63,9 @@ export default function ProfilePage({ userId }) {
   const [profileError, setProfileError] = useState(null);
 
   // Check if current user is viewing their own profile
-  const isOwnProfile = user?.id === Number(userId) || !userId && user;
+  const isOwnProfile = user?.id === String(userId) || (!userId && user);
   const displayUser = isOwnProfile ? user : profileUser;
-  const targetUserId = userId ? Number(userId) : user?.id || 0;
+  const targetUserId = userId ? String(userId) : user?.id || "";
 
   // State for creating posts
   const [newPost, setNewPost] = useState("");
@@ -135,9 +131,8 @@ export default function ProfilePage({ userId }) {
         return;
       }
 
-      const targetId = Number(userId);
+      const targetId = String(userId);
       const isOwn = user?.id === targetId;
-
 
       if (isOwn) {
         // Viewing own profile, use current user data
@@ -177,7 +172,7 @@ export default function ProfilePage({ userId }) {
 
     try {
       setSkillsLoading(true);
-      const response = await userApi.getSkills(targetUserId);
+      const response = await userApi.getUserSkills(targetUserId);
       // Handle both array response and object with data property
       const skillsData = Array.isArray(response) ? response : response?.data || [];
       setUserSkills(skillsData);
@@ -197,11 +192,11 @@ export default function ProfilePage({ userId }) {
     try {
       const response = await userApi.updateAvatar(user.id, file);
       // Update user state instead of reloading
-      if (response.data?.avatar) {
+      if (response.result?.avatar) {
         // Thêm timestamp để tránh browser cache
-        const avatarUrl = response.data.avatar.includes("?") ?
-        `${response.data.avatar}&t=${Date.now()}` :
-        `${response.data.avatar}?t=${Date.now()}`;
+        const avatarUrl = response.result.avatar.includes("?") ?
+        `${response.result.avatar}&t=${Date.now()}` :
+        `${response.result.avatar}?t=${Date.now()}`;
         updateUser({ avatar: avatarUrl });
       }
     } catch (error) {
@@ -220,11 +215,11 @@ export default function ProfilePage({ userId }) {
     try {
       const response = await userApi.updateCoverImage(user.id, file);
       // Update user state instead of reloading
-      if (response.data?.coverImage) {
+      if (response.result?.coverImage) {
         // Thêm timestamp để tránh browser cache
-        const coverImageUrl = response.data.coverImage.includes("?") ?
-        `${response.data.coverImage}&t=${Date.now()}` :
-        `${response.data.coverImage}?t=${Date.now()}`;
+        const coverImageUrl = response.result.coverImage.includes("?") ?
+        `${response.result.coverImage}&t=${Date.now()}` :
+        `${response.result.coverImage}?t=${Date.now()}`;
         updateUser({ coverImage: coverImageUrl });
       }
     } catch (error) {
@@ -305,8 +300,8 @@ export default function ProfilePage({ userId }) {
         ...post,
         interaction: {
           ...post.interaction,
-          isLikedByCurrentUser: result.isLiked,
-          totalLikes: result.totalLikes
+          isLikedByCurrentUser: result.reacted,
+          totalLikes: result.reactionCount
         }
       } :
       post
@@ -1063,8 +1058,8 @@ export default function ProfilePage({ userId }) {
                 className={`cursor-target relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 transition-all duration-300 ${
                 idx === currentMediaIndex ?
                 "ring-2 ring-white scale-110" :
-                "opacity-60 hover:opacity-100"}`
-                }>
+                "opacity-60 hover:opacity-100"}`} 
+                >
                 
                     {item.fileType === "video" ?
                 <>

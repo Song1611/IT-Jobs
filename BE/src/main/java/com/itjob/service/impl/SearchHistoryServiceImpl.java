@@ -35,7 +35,7 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
             String key = RedisKeys.searchHistoryKey(userId);
             stringRedisTemplate.opsForList().remove(key, 1, finalKeyword);
             stringRedisTemplate.opsForList().leftPush(key, finalKeyword);
-            stringRedisTemplate.opsForList().trim(key, 0, SearchHistoryConstant.MAX_SIZE - 1);
+            stringRedisTemplate.opsForList().trim(key, 0, (long)SearchHistoryConstant.MAX_SIZE - 1);
             stringRedisTemplate.expire(key, SearchHistoryConstant.TTL_DAYS, TimeUnit.DAYS);
         }, "Failed to record search history for user {}: {}", userId, keyword);
     }
@@ -46,7 +46,7 @@ public class SearchHistoryServiceImpl implements SearchHistoryService {
 
         return RedisOperation.supply(() -> {
             String key = RedisKeys.searchHistoryKey(userId);
-            return stringRedisTemplate.opsForList().range(key, 0, limit - 1);
+            return stringRedisTemplate.opsForList().range(key, 0, (long)limit - 1);
         }, "Failed to get search history for user {}", userId);
     }
 }

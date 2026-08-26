@@ -25,7 +25,7 @@ const images = [
 },
 {
   id: 2,
-  img: "https://res.cloudinary.com/dumprllvt/image/upload/v1765520667/kinh-nghiem-pv_ltbrxi.jpg"
+  img: "https://res.cloudinary.com/dumprllvt/image/upload/v1765444438/base-cover_scopmm.jpg"
 },
 {
   id: 3,

@@ -52,7 +52,7 @@ export default function ProfileSection() {
       <CardContent className="p-0">
         {/* Avatar & Info */}
         <div className="px-4 -mt-7 pb-3">
-          <Link href={`/profile/${user?.id}`} className="cursor-target">
+          <Link href={`/profile`} className="cursor-target">
             <Avatar className="h-14 w-14 ring-4 ring-background border border-border/50 cursor-target hover:ring-primary/50 transition-all">
               <AvatarImage
                 src={user?.avatar || "/default-avatar.png"}
@@ -64,7 +64,7 @@ export default function ProfileSection() {
             </Avatar>
           </Link>
 
-          <Link href={`/profile/${user?.id}`} className="cursor-target hover:underline">
+          <Link href={`/profile`} className="cursor-target hover:underline">
             <h3 className="font-semibold text-sm mt-2">
               {user?.fullName || "Người dùng"}
             </h3>

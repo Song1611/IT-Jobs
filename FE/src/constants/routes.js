@@ -5,10 +5,11 @@ const Routes = {
   login: "/login",
   register: "/register",
   registerHR: "/register/hr",
+  verifyEmail: "/verify-email",
   accessDenied: "/access-denied",
 
   // User routes
-  profile: (userId) => `/profile/${userId}`,
+  profile: (userId) => (userId ? `/profile/${userId}` : "/profile"),
   profileEdit: "/profile/edit",
 
   // Dashboard routes (employee)

@@ -59,6 +59,10 @@ public enum ErrorCode {
     USER_ALREADY_VERIFIED(4027, "Email already verified", HttpStatus.BAD_REQUEST),
 
     // 9000-9999: System
+    EMAIL_SENDING_FAILED(9001, "Failed to send email. Please try again later", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_UPLOAD_FAILED(9002, "Failed to upload file", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_DELETE_FAILED(9003, "Failed to delete file", HttpStatus.INTERNAL_SERVER_ERROR),
+    HASHING_FAILED(9004, "Failed to process hashing operation", HttpStatus.INTERNAL_SERVER_ERROR),
     UNCATEGORIZED_EXCEPTION(9999, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR
     ),
     ;

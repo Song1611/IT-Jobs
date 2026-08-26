@@ -145,17 +145,12 @@ const HRCompanyInfo = () => {
 
     try {
       setUploadingAvatar(true);
-      const token = localStorage.getItem("accessToken") || undefined;
-      const result = await companyApi.uploadAvatar(file);
-
-      setCompanyData((prev) => prev ? { ...prev, avatar: result.avatarUrl } : prev);
-      toast.success("Upload ảnh đại diện thành công!");
+      toast.error("Upload ảnh chưa được hỗ trợ. Vui lòng cập nhật URL ảnh trực tiếp.");
     } catch (error) {
       console.error("Error uploading avatar:", error);
       toast.error("Không thể upload ảnh đại diện");
     } finally {
       setUploadingAvatar(false);
-      // Reset input
       if (avatarInputRef.current) {
         avatarInputRef.current.value = "";
       }
@@ -181,17 +176,12 @@ const HRCompanyInfo = () => {
 
     try {
       setUploadingCover(true);
-      const token = localStorage.getItem("accessToken") || undefined;
-      const result = await companyApi.uploadCover(file);
-
-      setCompanyData((prev) => prev ? { ...prev, coverImage: result.coverImageUrl } : prev);
-      toast.success("Upload ảnh bìa thành công!");
+      toast.error("Upload ảnh chưa được hỗ trợ. Vui lòng cập nhật URL ảnh trực tiếp.");
     } catch (error) {
       console.error("Error uploading cover:", error);
       toast.error("Không thể upload ảnh bìa");
     } finally {
       setUploadingCover(false);
-      // Reset input
       if (coverInputRef.current) {
         coverInputRef.current.value = "";
       }

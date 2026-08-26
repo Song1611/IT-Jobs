@@ -74,10 +74,10 @@ export function AdminBlogRow({ blog, onEdit, onDelete }) {
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs">
-              {blog.author?.charAt(0) || "A"}
+              {(blog.author?.fullName || blog.author || "A").charAt(0)}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium">{blog.author || "Admin"}</span>
+          <span className="text-sm font-medium">{blog.author?.fullName || blog.author || "Admin"}</span>
         </div>
       </td>
 
@@ -86,7 +86,7 @@ export function AdminBlogRow({ blog, onEdit, onDelete }) {
         {blog.category ?
         <Badge variant="outline" className="gap-1">
             <Tag className="h-3 w-3" />
-            {blog.category}
+            {blog.category?.name || blog.category}
           </Badge> :
 
         <span className="text-muted-foreground">-</span>
