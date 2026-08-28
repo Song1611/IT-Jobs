@@ -172,6 +172,15 @@
 							<!-- Unit + integration test execution reports -->
 							<sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
 							<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+							<!-- Pure data classes with no business logic are excluded from coverage
+							     requirements (see bestpractiseForTesting.md §9: no tests for them by design) -->
+							<sonar.exclusions>
+								**/dto/**,
+								**/entity/**,
+								**/enums/**,
+								**/constant/**,
+								**/repository/projection/**
+							</sonar.exclusions>
 						</configuration>
 					</plugin>
 			<plugin>
