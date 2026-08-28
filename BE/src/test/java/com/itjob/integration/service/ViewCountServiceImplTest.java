@@ -6,6 +6,7 @@ import com.itjob.entity.Post;
 import com.itjob.entity.User;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.enums.ViewEntity;
+import com.itjob.redis.RedisKeys;
 import com.itjob.repository.CompanyRepository;
 import com.itjob.repository.JobRepository;
 import com.itjob.repository.PostRepository;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.UUID;
 
@@ -34,6 +36,9 @@ class ViewCountServiceImplTest extends AbstractServiceIntegrationTest {
 
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     @Test
     @DisplayName("incrementView + syncToDatabase -> persists the pending view count")
@@ -135,6 +140,19 @@ class ViewCountServiceImplTest extends AbstractServiceIntegrationTest {
 
         // Assert
         assertThat(viewCountService.getPendingViewDelta(ViewEntity.JOB, missingId)).isZero();
+    }
+
+    @Test
+    @DisplayName("syncToDatabase -> cleans up malformed view keys")
+    void syncCleansMalformedKeys() {
+        // Arrange
+        stringRedisTemplate.opsForValue().set("view:job:not-a-uuid", "5");
+        stringRedisTemplate.opsForSet().add(RedisKeys.DIRTY_VIEW_SET, "view:job:not-a-uuid");
+
+        // Act & Assert
+        viewCountService.syncToDatabase();
+        assertThat(stringRedisTemplate.opsForSet().isMember(RedisKeys.DIRTY_VIEW_SET, "view:job:not-a-uuid")).isFalse();
+        assertThat(stringRedisTemplate.hasKey("view:job:not-a-uuid")).isFalse();
     }
 
     private Company savedCompany(String name) {

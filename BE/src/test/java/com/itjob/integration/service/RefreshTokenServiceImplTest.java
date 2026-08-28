@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
@@ -96,10 +97,14 @@ class RefreshTokenServiceImplTest extends AbstractServiceIntegrationTest {
         // Arrange
         User user = createVerifiedUser("user-" + UUID.randomUUID() + "@example.com");
         String token = refreshTokenService.createRefreshToken(user);
+        refreshTokenService.revokeRefreshToken(token);
 
         // Act & Assert
-        refreshTokenService.revokeRefreshToken(token);
-        refreshTokenService.revokeRefreshToken(token);
+        assertThatCode(() -> refreshTokenService.revokeRefreshToken(token))
+                .doesNotThrowAnyException();
+
+        RefreshToken persisted = refreshTokenRepository.findByToken(UUID.fromString(token)).orElseThrow();
+        assertThat(persisted.isRevoked()).isTrue();
     }
 
     @Test
