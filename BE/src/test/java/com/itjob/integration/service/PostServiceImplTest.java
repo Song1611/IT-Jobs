@@ -2,7 +2,6 @@ package com.itjob.integration.service;
 
 import com.itjob.dto.response.PostResponse;
 import com.itjob.entity.Company;
-import com.itjob.entity.Post;
 import com.itjob.entity.User;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.exception.AppException;
@@ -260,7 +259,7 @@ class PostServiceImplTest extends AbstractServiceIntegrationTest {
         PostResponse response = postService.create(author.getId(), "With image", null, List.of(image), null);
 
         assertThat(response.getAttachments()).hasSize(1);
-        assertThat(response.getAttachments().get(0).getFileUrl()).isEqualTo("https://cdn/img.png");
+        assertThat(response.getAttachments().getFirst().getFileUrl()).isEqualTo("https://cdn/img.png");
     }
 
     @Test
@@ -285,7 +284,7 @@ class PostServiceImplTest extends AbstractServiceIntegrationTest {
         PostResponse response = postService.create(author.getId(), "With video", null, null, video);
 
         assertThat(response.getAttachments()).hasSize(1);
-        assertThat(response.getAttachments().get(0).getFileType()).isEqualTo("video");
+        assertThat(response.getAttachments().getFirst().getFileType()).isEqualTo("video");
     }
 
     @Test

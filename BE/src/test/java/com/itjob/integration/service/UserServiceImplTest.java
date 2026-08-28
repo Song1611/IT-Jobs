@@ -151,7 +151,7 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
     @DisplayName("changePassword -> updates the password with a valid OTP")
     void changePasswordUpdatesPassword() {
         User user = createEnabledUser("user-" + UUID.randomUUID() + "@example.com");
-        seedOtp(user.getEmail(), "123456");
+        seedOtp(user.getEmail());
 
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setCurrentPassword("password123");
@@ -183,7 +183,7 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
     @DisplayName("changePassword -> throws CURRENT_PASSWORD_INCORRECT for a wrong current password")
     void changePasswordWrongCurrentThrows() {
         User user = createEnabledUser("user-" + UUID.randomUUID() + "@example.com");
-        seedOtp(user.getEmail(), "123456");
+        seedOtp(user.getEmail());
 
         ChangePasswordRequest request = new ChangePasswordRequest();
         request.setCurrentPassword("wrong-password");
@@ -278,8 +278,8 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
         assertThat(response.getRoles()).isEmpty();
     }
 
-    private void seedOtp(String email, String otp) {
+    private void seedOtp(String email) {
         stringRedisTemplate.opsForValue().set(
-                RedisKeys.otp(email), HashUtil.sha256(otp), OtpConstant.OTP_TTL);
+                RedisKeys.otp(email), HashUtil.sha256("123456"), OtpConstant.OTP_TTL);
     }
 }

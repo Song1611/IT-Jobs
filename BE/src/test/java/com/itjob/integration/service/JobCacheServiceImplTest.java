@@ -2,7 +2,6 @@ package com.itjob.integration.service;
 
 import com.itjob.entity.Company;
 import com.itjob.entity.Job;
-import com.itjob.entity.User;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.enums.JobStatus;
 import com.itjob.exception.AppException;
