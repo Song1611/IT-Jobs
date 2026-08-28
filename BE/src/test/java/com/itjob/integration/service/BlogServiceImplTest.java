@@ -79,7 +79,8 @@ class BlogServiceImplTest extends AbstractServiceIntegrationTest {
     @Test
     @DisplayName("getBlogById -> throws BLOG_NOT_FOUND for a missing blog")
     void getBlogByIdNotFoundThrows() {
-        assertThatThrownBy(() -> blogService.getBlogById(UUID.randomUUID()))
+        UUID randomId = UUID.randomUUID();
+        assertThatThrownBy(() -> blogService.getBlogById(randomId))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BLOG_NOT_FOUND);

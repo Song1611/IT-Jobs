@@ -130,7 +130,8 @@ class ReviewServiceImplTest extends AbstractServiceIntegrationTest {
     @Test
     @DisplayName("getReviewById -> throws REVIEW_NOT_FOUND for a missing review")
     void getReviewByIdNotFoundThrows() {
-        assertThatThrownBy(() -> reviewService.getReviewById(UUID.randomUUID()))
+        UUID randomId = UUID.randomUUID();
+        assertThatThrownBy(() -> reviewService.getReviewById(randomId))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.REVIEW_NOT_FOUND);

@@ -55,9 +55,9 @@ class DashboardServiceImplTest extends AbstractServiceIntegrationTest {
 
         var stats = dashboardService.getAdminDashboardStats();
 
-        assertThat(stats.getTotalCompanies()).isGreaterThanOrEqualTo(1);
-        assertThat(stats.getTotalJobs()).isGreaterThanOrEqualTo(1);
-        assertThat(stats.getTotalUsers()).isGreaterThanOrEqualTo(1);
+        assertThat(stats.getTotalCompanies()).isPositive();
+        assertThat(stats.getTotalJobs()).isPositive();
+        assertThat(stats.getTotalUsers()).isPositive();
     }
 
     private User newEmployer() {
