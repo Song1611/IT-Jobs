@@ -172,6 +172,15 @@
 							<!-- Unit + integration test execution reports -->
 							<sonar.junit.reportPaths>${project.build.directory}/surefire-reports</sonar.junit.reportPaths>
 							<sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+							<!-- Pure data classes with no business logic are excluded from coverage
+							     requirements (see bestpractiseForTesting.md §9: no tests for them by design) -->
+							<sonar.exclusions>
+								**/dto/**,
+								**/entity/**,
+								**/enums/**,
+								**/constant/**,
+								**/repository/projection/**
+							</sonar.exclusions>
 						</configuration>
 					</plugin>
 			<plugin>
@@ -220,6 +229,17 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<!-- Exclude pure data classes (no business logic, see bestpractiseForTesting.md §9)
+							     so they do not drag down instruction/branch totals -->
+							<excludes>
+								<exclude>com/itjob/dto/**</exclude>
+								<exclude>com/itjob/entity/**</exclude>
+								<exclude>com/itjob/enums/**</exclude>
+								<exclude>com/itjob/constant/**</exclude>
+								<exclude>com/itjob/repository/projection/**</exclude>
+							</excludes>
+						</configuration>
 					</execution>
 					<execution>
 						<id>check</id>

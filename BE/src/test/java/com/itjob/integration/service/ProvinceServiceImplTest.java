@@ -26,7 +26,7 @@ class ProvinceServiceImplTest extends AbstractServiceIntegrationTest {
     @Test
     @DisplayName("getAllProvinces -> returns all saved provinces")
     void getAllProvincesReturnsSaved() {
-        provinceRepository.save(province("HCM", "Ho Chi Minh"));
+        provinceRepository.save(province());
 
         var result = provinceService.getAllProvinces();
 
@@ -36,7 +36,7 @@ class ProvinceServiceImplTest extends AbstractServiceIntegrationTest {
     @Test
     @DisplayName("getProvinceByCode -> returns the province for a valid code")
     void getProvinceByCodeReturnsProvince() {
-        provinceRepository.save(province("HCM", "Ho Chi Minh"));
+        provinceRepository.save(province());
 
         var result = provinceService.getProvinceByCode("HCM");
 
@@ -52,11 +52,11 @@ class ProvinceServiceImplTest extends AbstractServiceIntegrationTest {
                 .isEqualTo(ErrorCode.PROVINCE_NOT_FOUND);
     }
 
-    private Province province(String code, String name) {
+    private Province province() {
         Province province = new Province();
-        province.setCode(code);
-        province.setName(name);
-        province.setFullName(name);
+        province.setCode("HCM");
+        province.setName("Ho Chi Minh");
+        province.setFullName("Ho Chi Minh");
         return province;
     }
 }

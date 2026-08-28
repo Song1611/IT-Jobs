@@ -13,7 +13,6 @@ import com.itjob.redis.RedisKeys;
 import com.itjob.repository.JobRepository;
 import com.itjob.repository.SkillRepository;
 import com.itjob.service.ApplicationService;
-import com.itjob.service.RecentViewService;
 import com.itjob.service.TrendingJobService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,9 +37,6 @@ class JobServiceImplTest extends AbstractServiceIntegrationTest {
 
     @Autowired
     private TrendingJobService trendingJobService;
-
-    @Autowired
-    private RecentViewService recentViewService;
 
     @Autowired
     private ApplicationService applicationService;

@@ -11,6 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(config = CentralMapperConfig.class, uses = {UserMapper.class, CompanyMapper.class})
 public interface PostMapper {
 
+    @Mapping(target = "user", source = "author")
     @Mapping(target = "attachments", ignore = true)
     @Mapping(target = "interaction", ignore = true)
     PostResponse toPostResponse(Post post);
