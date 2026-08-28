@@ -279,6 +279,56 @@ class BlogServiceImplTest extends AbstractServiceIntegrationTest {
         assertThat(second.getSlug()).isNotEqualTo(first.getSlug());
     }
 
+    @Test
+    @DisplayName("updateBlog -> keeps the slug when title and category are unchanged")
+    void updateBlogSameCategoryAndTitleKeepsSlug() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(author.getId(), author.getEmail(), "USER");
+        BlogCategory category = newCategory();
+        BlogResponse created = blogService.createBlog(author.getId(), blogRequest(category.getId()));
+
+        BlogResponse updated = blogService.updateBlog(created.getId(), author.getId(), blogRequest(category.getId()));
+
+        assertThat(updated.getSlug()).isEqualTo(created.getSlug());
+    }
+
+    @Test
+    @DisplayName("updateBlog -> keeps the slug when the title is null")
+    void updateBlogNullTitleKeepsSlug() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(author.getId(), author.getEmail(), "USER");
+        BlogCategory category = newCategory();
+        BlogResponse created = blogService.createBlog(author.getId(), blogRequest(category.getId()));
+
+        BlogRequest request = blogRequest(category.getId());
+        request.setTitle(null);
+        BlogResponse updated = blogService.updateBlog(created.getId(), author.getId(), request);
+
+        assertThat(updated.getSlug()).isEqualTo(created.getSlug());
+    }
+
+    @Test
+    @DisplayName("updateBlog -> appends a suffix when the new title collides with another blog")
+    void updateBlogTitleCollisionAppendsSuffix() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(author.getId(), author.getEmail(), "USER");
+        BlogCategory category = newCategory();
+        BlogRequest firstRequest = blogRequest(category.getId());
+        firstRequest.setTitle("Title A");
+        BlogResponse first = blogService.createBlog(author.getId(), firstRequest);
+
+        BlogRequest secondRequest = blogRequest(category.getId());
+        secondRequest.setTitle("Title B");
+        BlogResponse second = blogService.createBlog(author.getId(), secondRequest);
+
+        BlogRequest collision = blogRequest(category.getId());
+        collision.setTitle("Title A");
+        BlogResponse updated = blogService.updateBlog(second.getId(), author.getId(), collision);
+
+        assertThat(updated.getSlug()).isNotEqualTo(first.getSlug());
+        assertThat(updated.getSlug()).startsWith("title-a");
+    }
+
     private BlogCategory newCategory() {
         return categoryRepository.save(BlogCategory.builder().name("Tech-" + UUID.randomUUID()).build());
     }

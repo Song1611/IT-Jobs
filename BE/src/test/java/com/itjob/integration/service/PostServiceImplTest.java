@@ -262,4 +262,49 @@ class PostServiceImplTest extends AbstractServiceIntegrationTest {
         assertThat(response.getAttachments()).hasSize(1);
         assertThat(response.getAttachments().get(0).getFileUrl()).isEqualTo("https://cdn/img.png");
     }
+
+    @Test
+    @DisplayName("create -> skips empty image attachments")
+    void createPostWithEmptyImageSkipsUpload() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        MockMultipartFile empty = new MockMultipartFile("file", "img.png", "image/png", new byte[0]);
+
+        PostResponse response = postService.create(author.getId(), "Empty image", null, List.of(empty), null);
+
+        assertThat(response.getAttachments()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("create -> uploads a video attachment via Cloudinary")
+    void createPostWithVideoUploads() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        when(cloudinaryService.upload(any(), anyString()))
+                .thenReturn(new CloudinaryUploadResult("https://cdn/v.mp4", "v-1", "video"));
+        MockMultipartFile video = new MockMultipartFile("file", "v.mp4", "video/mp4", new byte[]{1});
+
+        PostResponse response = postService.create(author.getId(), "With video", null, null, video);
+
+        assertThat(response.getAttachments()).hasSize(1);
+        assertThat(response.getAttachments().get(0).getFileType()).isEqualTo("video");
+    }
+
+    @Test
+    @DisplayName("getById -> resolves the current user for likedByCurrentUser")
+    void getPostByIdAuthenticatedResolvesUser() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(author.getId(), author.getEmail(), "USER");
+        PostResponse created = postService.create(author.getId(), "My post", null, null, null);
+
+        PostResponse response = postService.getById(created.getId());
+
+        assertThat(response.getInteraction().isLikedByCurrentUser()).isFalse();
+    }
+
+    @Test
+    @DisplayName("getAll -> returns empty items for a page with no content")
+    void getAllEmptyPageReturnsEmpty() {
+        var page = postService.getAll(org.springframework.data.domain.PageRequest.of(999, 10));
+
+        assertThat(page.getItems()).isEmpty();
+    }
 }
