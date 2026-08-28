@@ -2,6 +2,8 @@ package com.itjob.integration.controller;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -26,31 +28,12 @@ class AdminControllerTest extends AbstractControllerTest {
                 .andExpect(status().isForbidden());
     }
 
-    @Test
-    @DisplayName("GET /api/admin/users -> 200 for ADMIN")
-    void getAllUsersByAdminReturns200() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"/api/admin/users", "/api/admin/companies", "/api/admin/jobs"})
+    @DisplayName("GET /api/admin/{resource} -> 200 for ADMIN")
+    void adminListEndpointReturns200ForAdmin(String path) throws Exception {
         var admin = newAdmin();
-        mockMvc.perform(get("/api/admin/users")
-                        .header("Authorization", bearer(admin, "ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.items").isArray());
-    }
-
-    @Test
-    @DisplayName("GET /api/admin/companies -> 200 for ADMIN")
-    void getAllCompaniesByAdminReturns200() throws Exception {
-        var admin = newAdmin();
-        mockMvc.perform(get("/api/admin/companies")
-                        .header("Authorization", bearer(admin, "ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.items").isArray());
-    }
-
-    @Test
-    @DisplayName("GET /api/admin/jobs -> 200 for ADMIN")
-    void getAllJobsByAdminReturns200() throws Exception {
-        var admin = newAdmin();
-        mockMvc.perform(get("/api/admin/jobs")
+        mockMvc.perform(get(path)
                         .header("Authorization", bearer(admin, "ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.items").isArray());

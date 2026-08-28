@@ -56,7 +56,8 @@ class CustomJwtDecoderTest {
         signedJWT.sign(new MACSigner(otherKey.getBytes(StandardCharsets.UTF_8)));
 
         // Act & Assert
-        assertThatThrownBy(() -> decoder.decode(signedJWT.serialize()))
+        String token = signedJWT.serialize();
+        assertThatThrownBy(() -> decoder.decode(token))
                 .isInstanceOf(JwtException.class);
     }
 
