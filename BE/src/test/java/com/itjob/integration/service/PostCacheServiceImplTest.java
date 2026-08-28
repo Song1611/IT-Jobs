@@ -91,6 +91,15 @@ class PostCacheServiceImplTest extends AbstractServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("getCachedPostList -> returns empty items for a page with no content")
+    @Transactional
+    void getCachedPostListEmptyPageReturnsEmpty() {
+        var page = postCacheService.getCachedPostList(PageRequest.of(999, 10));
+
+        assertThat(page.getItems()).isEmpty();
+    }
+
+    @Test
     @DisplayName("getCachedPostsByUser -> returns the user's cached posts")
     @Transactional
     void getCachedPostsByUserReturnsPosts() {

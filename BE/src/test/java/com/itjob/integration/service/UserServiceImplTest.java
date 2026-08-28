@@ -216,6 +216,63 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
         assertThat(page.getTotalElements()).isPositive();
     }
 
+    @Test
+    @Transactional
+    @DisplayName("getUsers -> filters by full name")
+    void getUsersWithFiltersReturnsUsers() {
+        User admin = createAdmin();
+        String name = "Filtered-" + UUID.randomUUID().toString().substring(0, 8);
+        userRepository.save(User.builder().fullName(name).email("filtered-" + UUID.randomUUID() + "@example.com").password("x").enabled(true).build());
+        authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
+
+        String[] filters = {"fullName@" + name};
+        var page = userService.getUsers(filters, PageRequest.of(0, 10));
+
+        assertThat(page.getTotalElements()).isPositive();
+        assertThat(page.getItems()).extracting("fullName").contains(name);
+    }
+
+    @Test
+    @DisplayName("getUsers -> throws USER_NOT_FOUND when no user matches")
+    void getUsersEmptyThrows() {
+        User admin = createAdmin();
+        authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
+
+        String[] filters = {"fullName@nonexistent-user-xyz"};
+        assertThatThrownBy(() -> userService.getUsers(filters, PageRequest.of(0, 10)))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("updateUser -> sets a new password when provided")
+    void updateUserWithPasswordEncodes() {
+        User admin = createAdmin();
+        User target = createVerifiedUser("user-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
+
+        UserUpdateRequest request = new UserUpdateRequest();
+        request.setPassword("newpassword123");
+        userService.updateUser(target.getId().toString(), request);
+
+        User persisted = userRepository.findByEmail(target.getEmail()).orElseThrow();
+        assertThat(passwordEncoder.matches("newpassword123", persisted.getPassword())).isTrue();
+    }
+
+    @Test
+    @DisplayName("updateUser -> ignores roles for a non-admin caller")
+    void updateUserRolesIgnoredForNonAdmin() {
+        User user = createVerifiedUser("user-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(user.getId(), user.getEmail(), "USER");
+
+        UserUpdateRequest request = new UserUpdateRequest();
+        request.setRoles(Set.of("ADMIN"));
+        var response = userService.updateUser(user.getId().toString(), request);
+
+        assertThat(response.getRoles()).isEmpty();
+    }
+
     private void seedOtp(String email, String otp) {
         stringRedisTemplate.opsForValue().set(
                 RedisKeys.otp(email), HashUtil.sha256(otp), OtpConstant.OTP_TTL);

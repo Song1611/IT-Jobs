@@ -2,6 +2,7 @@ package com.itjob.integration.service;
 
 import com.itjob.dto.response.PostResponse;
 import com.itjob.entity.Company;
+import com.itjob.entity.Post;
 import com.itjob.entity.User;
 import com.itjob.enums.CompanyStatus;
 import com.itjob.exception.AppException;
@@ -9,15 +10,23 @@ import com.itjob.exception.ErrorCode;
 import com.itjob.repository.CompanyRepository;
 import com.itjob.repository.PostRepository;
 import com.itjob.service.PostService;
+import com.itjob.service.storage.CloudinaryService;
+import com.itjob.service.storage.CloudinaryUploadResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @DisplayName("IT - PostService")
@@ -31,6 +40,9 @@ class PostServiceImplTest extends AbstractServiceIntegrationTest {
 
     @Autowired
     private CompanyRepository companyRepository;
+
+    @MockitoBean
+    private CloudinaryService cloudinaryService;
 
     @Test
     @DisplayName("create -> creates a post without a company")
@@ -207,5 +219,47 @@ class PostServiceImplTest extends AbstractServiceIntegrationTest {
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.POST_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("create -> throws POST_CONTENT_REQUIRED for null content")
+    void createPostNullContentThrows() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+
+        UUID authorId = author.getId();
+        assertThatThrownBy(() -> postService.create(authorId, null, null, null, null))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.POST_CONTENT_REQUIRED);
+    }
+
+    @Test
+    @DisplayName("create -> throws FORBIDDEN when the company has no creator and user is not a member")
+    void createPostCompanyNoCreatorForbidden() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        Company company = companyRepository.save(Company.builder()
+                .name("No Creator Co").slug("nc-" + UUID.randomUUID())
+                .status(CompanyStatus.ACTIVE.getValue()).build());
+
+        UUID companyId = company.getId();
+        UUID authorId = author.getId();
+        assertThatThrownBy(() -> postService.create(authorId, "content", companyId, null, null))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("create -> uploads an image attachment via Cloudinary")
+    void createPostWithImageUploadsAttachment() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        when(cloudinaryService.upload(any(), anyString()))
+                .thenReturn(new CloudinaryUploadResult("https://cdn/img.png", "img-1", "image"));
+        MockMultipartFile image = new MockMultipartFile("file", "img.png", "image/png", new byte[]{1});
+
+        PostResponse response = postService.create(author.getId(), "With image", null, List.of(image), null);
+
+        assertThat(response.getAttachments()).hasSize(1);
+        assertThat(response.getAttachments().get(0).getFileUrl()).isEqualTo("https://cdn/img.png");
     }
 }
