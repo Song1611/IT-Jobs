@@ -175,4 +175,19 @@ class ReactionServiceImplTest extends AbstractServiceIntegrationTest {
 
         assertThat(reactionService.getPendingReactionDelta(ReactionEntity.POST, post.getId())).isZero();
     }
+
+    @Test
+    @DisplayName("syncToDatabase -> persists the comment reaction count")
+    void syncPersistsCommentReactionCount() {
+        User author = createVerifiedUser("author-" + UUID.randomUUID() + "@example.com");
+        Post post = postRepository.save(Post.builder().author(author).content("Test post").build());
+        Comment comment = commentRepository.save(
+                Comment.builder().post(post).author(author).content("Test comment").build());
+
+        reactionService.toggleCommentReaction(comment.getId(), author.getId(), "like");
+        reactionService.syncToDatabase();
+
+        assertThat(reactionService.getPendingReactionDelta(ReactionEntity.COMMENT, comment.getId())).isZero();
+        assertThat(commentRepository.findById(comment.getId()).orElseThrow().getReactionCount()).isEqualTo(1);
+    }
 }

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
@@ -337,8 +338,8 @@ authenticateAsCandidate(candidate);
         UUID company2Id = activeCompanyId(employer2);
         authenticateAs(employer2.getId(), employer2.getEmail(), "EMPLOYER");
 
-        assertThatThrownBy(() -> applicationService.getJobApplications(
-                jobId, company2Id, null, PageRequest.of(0, 10)))
+        Pageable pageable = PageRequest.of(0, 10);
+        assertThatThrownBy(() -> applicationService.getJobApplications(jobId, company2Id, null, pageable))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.FORBIDDEN);

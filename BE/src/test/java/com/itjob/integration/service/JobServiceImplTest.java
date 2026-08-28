@@ -4,12 +4,14 @@ import com.itjob.dto.request.ApplicationRequest;
 import com.itjob.dto.request.JobRequest;
 import com.itjob.dto.response.JobResponse;
 import com.itjob.entity.Job;
+import com.itjob.entity.Skill;
 import com.itjob.entity.User;
 import com.itjob.enums.JobStatus;
 import com.itjob.exception.AppException;
 import com.itjob.exception.ErrorCode;
 import com.itjob.redis.RedisKeys;
 import com.itjob.repository.JobRepository;
+import com.itjob.repository.SkillRepository;
 import com.itjob.service.ApplicationService;
 import com.itjob.service.RecentViewService;
 import com.itjob.service.TrendingJobService;
@@ -21,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,6 +47,9 @@ class JobServiceImplTest extends AbstractServiceIntegrationTest {
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private SkillRepository skillRepository;
 
     @Test
     @DisplayName("createJob -> creates an open job for an active owned company")
@@ -397,7 +403,8 @@ class JobServiceImplTest extends AbstractServiceIntegrationTest {
 
         UUID randomCompanyId = UUID.randomUUID();
         UUID employerId = employer.getId();
-        assertThatThrownBy(() -> jobService.createJob(randomCompanyId, jobRequest("Job"), employerId))
+        JobRequest request = jobRequest("Job");
+        assertThatThrownBy(() -> jobService.createJob(randomCompanyId, request, employerId))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.COMPANY_NOT_FOUND);
@@ -467,5 +474,23 @@ class JobServiceImplTest extends AbstractServiceIntegrationTest {
         var page = jobService.getAllJobs(JobStatus.OPEN.getValue(), PageRequest.of(0, 100));
 
         assertThat(page.getItems()).extracting(JobResponse::getTitle).contains("Open Only Job");
+    }
+
+    @Test
+    @Transactional
+    @DisplayName("createJob -> attaches the requested skills to the job")
+    void createJobWithSkills() {
+        User employer = employerWithActiveCompany();
+        UUID companyId = activeCompanyId(employer);
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+        Skill skill = skillRepository.save(Skill.builder().name("Java").build());
+
+        JobRequest request = jobRequest("Skilled Job");
+        request.setSkillIds(Set.of(skill.getId()));
+        JobResponse created = jobService.createJob(companyId, request, employer.getId());
+
+        assertThat(created.getId()).isNotNull();
+        Job persisted = jobRepository.findById(created.getId()).orElseThrow();
+        assertThat(persisted.getSkills()).extracting(Skill::getName).contains("Java");
     }
 }

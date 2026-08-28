@@ -27,6 +27,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -262,7 +263,8 @@ class AuthenticationServiceImplTest extends AbstractServiceIntegrationTest {
         authenticationService.logout(new LogoutRequest(refreshToken));
 
         // Act & Assert
-        authenticationService.logout(new LogoutRequest(refreshToken));
+        LogoutRequest secondLogout = new LogoutRequest(refreshToken);
+        assertThatCode(() -> authenticationService.logout(secondLogout)).doesNotThrowAnyException();
     }
 
     @Test
@@ -271,7 +273,7 @@ class AuthenticationServiceImplTest extends AbstractServiceIntegrationTest {
         // Arrange
         String email = "candidate-" + UUID.randomUUID() + "@example.com";
         createEnabledUser(email);
-        seedOtp(email, "123456");
+        seedOtp(email);
 
         // Act & Assert
         VerifyEmailRequest request = new VerifyEmailRequest();
@@ -322,7 +324,7 @@ class AuthenticationServiceImplTest extends AbstractServiceIntegrationTest {
         // Arrange
         String email = "candidate-" + UUID.randomUUID() + "@example.com";
         createEnabledUser(email);
-        seedOtp(email, "123456");
+        seedOtp(email);
 
         // Act
         ResetPasswordRequest request = new ResetPasswordRequest();
@@ -354,9 +356,9 @@ class AuthenticationServiceImplTest extends AbstractServiceIntegrationTest {
                 .isEqualTo(ErrorCode.OTP_INVALID);
     }
 
-    private void seedOtp(String email, String otp) {
+    private void seedOtp(String email) {
         stringRedisTemplate.opsForValue().set(
-                RedisKeys.otp(email), HashUtil.sha256(otp), OtpConstant.OTP_TTL);
+                RedisKeys.otp(email), HashUtil.sha256("123456"), OtpConstant.OTP_TTL);
     }
 
     private RegisterRequest register(String email) {

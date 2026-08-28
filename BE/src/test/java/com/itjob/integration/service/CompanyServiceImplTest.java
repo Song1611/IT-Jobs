@@ -242,4 +242,164 @@ class CompanyServiceImplTest extends AbstractServiceIntegrationTest {
 
         assertThat(suspended.getStatus()).isEqualTo(CompanyStatus.SUSPENDED.getValue());
     }
+
+    @Test
+    @DisplayName("getTopCompanies -> throws INVALID_LIMIT for a non-positive limit")
+    void getTopCompaniesInvalidLimitThrows() {
+        assertThatThrownBy(() -> companyService.getTopCompanies(0))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_LIMIT);
+    }
+
+    @Test
+    @DisplayName("getTopCompanies -> throws LIMIT_EXCEEDED above the max limit")
+    void getTopCompaniesLimitExceededThrows() {
+        assertThatThrownBy(() -> companyService.getTopCompanies(101))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.LIMIT_EXCEEDED);
+    }
+
+    @Test
+    @DisplayName("updateCompany -> throws FORBIDDEN when the user does not own the company")
+    void updateCompanyForbiddenThrows() {
+        User owner = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(owner.getId(), owner.getEmail(), "EMPLOYER");
+        var created = companyService.createCompany(companyRequest("Owned Co"), owner.getId());
+
+        User other = createVerifiedUser("other-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(other.getId(), other.getEmail(), "EMPLOYER");
+
+        UUID companyId = created.getId();
+        UUID otherId = other.getId();
+        CompanyRequest request = companyRequest("Hijacked Co");
+        assertThatThrownBy(() -> companyService.updateCompany(companyId, request, otherId))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("updateCompany -> throws COMPANY_NOT_FOUND for a non-existent company")
+    void updateCompanyNotFoundThrows() {
+        User employer = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+
+        UUID randomId = UUID.randomUUID();
+        UUID employerId = employer.getId();
+        CompanyRequest request = companyRequest("Ghost Co");
+        assertThatThrownBy(() -> companyService.updateCompany(randomId, request, employerId))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.COMPANY_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("createCompany -> appends a suffix when the slug already exists")
+    void createCompanyGeneratesUniqueSlugOnCollision() {
+        User user1 = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(user1.getId(), user1.getEmail(), "EMPLOYER");
+        var first = companyService.createCompany(companyRequest("Collision Co"), user1.getId());
+
+        User user2 = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(user2.getId(), user2.getEmail(), "EMPLOYER");
+        var second = companyService.createCompany(companyRequest("Collision Co"), user2.getId());
+
+        assertThat(second.getSlug()).isNotEqualTo(first.getSlug());
+    }
+
+    @Test
+    @DisplayName("updateCompany -> keeps the slug when the name is unchanged")
+    void updateCompanySameNameKeepsSlug() {
+        User employer = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+        var created = companyService.createCompany(companyRequest("Stable Name"), employer.getId());
+
+        CompanyResponse updated = companyService.updateCompany(
+                created.getId(), companyRequest("Stable Name"), employer.getId());
+
+        assertThat(updated.getSlug()).isEqualTo(created.getSlug());
+    }
+
+    @Test
+    @DisplayName("updateCompany -> tolerates a null name without regenerating the slug")
+    void updateCompanyNullNameKeepsSlug() {
+        User employer = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+        var created = companyService.createCompany(companyRequest("Original Name"), employer.getId());
+
+        CompanyRequest request = new CompanyRequest();
+        request.setDescription("Only description update");
+        CompanyResponse updated = companyService.updateCompany(created.getId(), request, employer.getId());
+
+        assertThat(updated.getSlug()).isEqualTo(created.getSlug());
+    }
+
+    @Test
+    @DisplayName("updateCompany -> appends a suffix when the new slug collides with another company")
+    void updateCompanySlugCollisionAppendsSuffix() {
+        User employer1 = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer1.getId(), employer1.getEmail(), "EMPLOYER");
+        companyService.createCompany(companyRequest("Same Slug Co"), employer1.getId());
+
+        User employer2 = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer2.getId(), employer2.getEmail(), "EMPLOYER");
+        var second = companyService.createCompany(companyRequest("Other Co"), employer2.getId());
+
+        CompanyResponse updated = companyService.updateCompany(
+                second.getId(), companyRequest("Same Slug Co"), employer2.getId());
+
+        assertThat(updated.getSlug()).isNotEqualTo("same-slug-co");
+    }
+
+    @Test
+    @DisplayName("getAllCompanies -> filters by status")
+    void getAllCompaniesFiltersByStatus() {
+        User employer = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+        companyService.createCompany(companyRequest("Filter Status Co"), employer.getId());
+
+        User admin = createAdmin();
+        authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
+
+        var page = companyService.getAllCompanies(CompanyStatus.PENDING.getValue(), PageRequest.of(0, 100));
+
+        assertThat(page.getItems()).extracting("name").contains("Filter Status Co");
+    }
+
+    @Test
+    @DisplayName("rejectCompany -> throws COMPANY_ALREADY_PROCESSED for a non-pending company")
+    void rejectCompanyAlreadyProcessedThrows() {
+        User employer = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+        var created = companyService.createCompany(companyRequest("Reject Later Co"), employer.getId());
+        User admin = createAdmin();
+        authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
+        companyService.approveCompany(created.getId(), admin.getId());
+
+        UUID companyId = created.getId();
+        UUID adminId = admin.getId();
+        assertThatThrownBy(() -> companyService.rejectCompany(companyId, adminId, "nope"))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.COMPANY_ALREADY_PROCESSED);
+    }
+
+    @Test
+    @DisplayName("suspendCompany -> throws COMPANY_ALREADY_PROCESSED for a non-active company")
+    void suspendCompanyAlreadyProcessedThrows() {
+        User employer = createVerifiedUser("emp-" + UUID.randomUUID() + "@example.com");
+        authenticateAs(employer.getId(), employer.getEmail(), "EMPLOYER");
+        var created = companyService.createCompany(companyRequest("Suspend Pending Co"), employer.getId());
+        User admin = createAdmin();
+        authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
+
+        UUID companyId = created.getId();
+        UUID adminId = admin.getId();
+        assertThatThrownBy(() -> companyService.suspendCompany(companyId, adminId, "violation"))
+                .isInstanceOf(AppException.class)
+                .extracting(e -> ((AppException) e).getErrorCode())
+                .isEqualTo(ErrorCode.COMPANY_ALREADY_PROCESSED);
+    }
 }
