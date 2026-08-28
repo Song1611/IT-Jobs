@@ -195,7 +195,8 @@ class BlogServiceImplTest extends AbstractServiceIntegrationTest {
     @DisplayName("getBlogsByCategory -> throws BLOG_CATEGORY_NOT_FOUND for a missing category")
     void getBlogsByCategoryNotFoundThrows() {
         UUID randomId = UUID.randomUUID();
-        assertThatThrownBy(() -> blogService.getBlogsByCategory(randomId, org.springframework.data.domain.PageRequest.of(0, 10)))
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 10);
+        assertThatThrownBy(() -> blogService.getBlogsByCategory(randomId, pageable))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.BLOG_CATEGORY_NOT_FOUND);

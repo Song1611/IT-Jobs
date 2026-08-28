@@ -88,7 +88,8 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
         authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
 
         UUID randomId = UUID.randomUUID();
-        assertThatThrownBy(() -> userService.getUserById(randomId.toString()))
+        String userIdStr = randomId.toString();
+        assertThatThrownBy(() -> userService.getUserById(userIdStr))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
@@ -171,7 +172,8 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
         request.setCurrentPassword("password123");
         request.setNewPassword("newpassword123");
         request.setOtp("000000");
-        assertThatThrownBy(() -> userService.changePassword(user.getId().toString(), request))
+        String userIdStr = user.getId().toString();
+        assertThatThrownBy(() -> userService.changePassword(userIdStr, request))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.OTP_INVALID);
@@ -187,7 +189,8 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
         request.setCurrentPassword("wrong-password");
         request.setNewPassword("newpassword123");
         request.setOtp("123456");
-        assertThatThrownBy(() -> userService.changePassword(user.getId().toString(), request))
+        String userIdStr = user.getId().toString();
+        assertThatThrownBy(() -> userService.changePassword(userIdStr, request))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.CURRENT_PASSWORD_INCORRECT);
@@ -197,7 +200,8 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
     @DisplayName("getMedia -> throws USER_NOT_FOUND for a missing user")
     void getMediaUserNotFoundThrows() {
         UUID randomId = UUID.randomUUID();
-        assertThatThrownBy(() -> userService.getMedia(randomId, PageRequest.of(0, 10)))
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(0, 10);
+        assertThatThrownBy(() -> userService.getMedia(randomId, pageable))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);
@@ -239,7 +243,8 @@ class UserServiceImplTest extends AbstractServiceIntegrationTest {
         authenticateAs(admin.getId(), admin.getEmail(), "ADMIN");
 
         String[] filters = {"fullName@nonexistent-user-xyz"};
-        assertThatThrownBy(() -> userService.getUsers(filters, PageRequest.of(0, 10)))
+        org.springframework.data.domain.Pageable pageable = PageRequest.of(0, 10);
+        assertThatThrownBy(() -> userService.getUsers(filters, pageable))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.USER_NOT_FOUND);

@@ -107,7 +107,8 @@ class SkillServiceImplTest extends AbstractServiceIntegrationTest {
         skillService.createSkill(existingName);
         Skill skill = skillRepository.save(Skill.builder().name("Other-" + UUID.randomUUID()).build());
 
-        assertThatThrownBy(() -> skillService.updateSkill(skill.getId(), existingName))
+        UUID skillId = skill.getId();
+        assertThatThrownBy(() -> skillService.updateSkill(skillId, existingName))
                 .isInstanceOf(AppException.class)
                 .extracting(e -> ((AppException) e).getErrorCode())
                 .isEqualTo(ErrorCode.SKILL_ALREADY_EXISTS);
